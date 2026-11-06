@@ -1,0 +1,43 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-burgundy: #7a1f2b;
+  --color-burgundy-dark: #5a1520;
+  --color-gold: #c9a24b;
+  --color-gold-light: #e6cf8f;
+  --color-cream: #fbf5ea;
+  --color-cream-dark: #f1e6d2;
+  --color-ink: #2b1a14;
+
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-cream font-sans text-ink antialiased;
+  }
+}
+
+@utility gold-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-fade-up {
+  animation: fade-up 0.8s ease-out both;
+}
