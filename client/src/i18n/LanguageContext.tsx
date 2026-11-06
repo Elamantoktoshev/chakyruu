@@ -43,6 +43,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
+/**
+ * Renders a subtree in a fixed language (e.g. the builder preview in the invitation's language)
+ * while the language switch keeps changing the outer UI language.
+ */
+export function FixedLanguage({ lang, children }: { lang: Language; children: ReactNode }) {
+  const outer = useI18n();
+  const value = useMemo(
+    () => ({ lang, t: dictionaries[lang], locale: locales[lang], setLang: outer.setLang }),
+    [lang, outer.setLang],
+  );
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+}
+
 export function useI18n(): LanguageContextValue {
   const ctx = useContext(LanguageContext);
   if (!ctx) throw new Error('useI18n must be used inside <LanguageProvider>');

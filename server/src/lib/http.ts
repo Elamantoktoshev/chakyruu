@@ -33,6 +33,13 @@ export const notFoundHandler: RequestHandler = (_req, res) => {
   sendFail(res, 404, 'Route not found');
 };
 
+/** body-parser marks its client errors (413 too large, 415 charset…) with `type` and a 4xx `status`. */
+function isBodyParserError(err: unknown): err is { status: number; type: string } {
+  if (typeof err !== 'object' || err === null) return false;
+  const { status, type } = err as { status?: unknown; type?: unknown };
+  return typeof type === 'string' && typeof status === 'number' && status >= 400 && status < 500;
+}
+
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   if (err instanceof ZodError) {
     const details = err.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message }));
@@ -45,6 +52,10 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   }
   if (err instanceof SyntaxError && 'body' in err) {
     sendFail(res, 400, 'Malformed JSON body');
+    return;
+  }
+  if (isBodyParserError(err)) {
+    sendFail(res, err.status, err.status === 413 ? 'Request body is too large' : 'Invalid request body');
     return;
   }
   console.error(`[${req.method} ${req.originalUrl}]`, err);

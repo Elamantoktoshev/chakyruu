@@ -24,6 +24,7 @@ enum UserRole {
 
 enum TemplateType {
   WEDDING
+  KYZ_UZATUU
   BESHIK
   SUNNOT
   MAARAKE
@@ -38,6 +39,18 @@ enum InvitationStatus {
   DRAFT
   PAID
   PUBLISHED
+}
+
+enum GuestStatus {
+  INVITED
+  ATTENDING
+  DECLINED
+}
+
+/// INVITED — added by the host (personal link); SELF — answered through the shared link.
+enum GuestSource {
+  INVITED
+  SELF
 }
 
 enum PaymentProvider {
@@ -73,10 +86,36 @@ model User {
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   organizationId String?
   invitations    Invitation[]
+  sessions       Session[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
   @@index([organizationId])
+}
+
+/// One-time SMS login code. Only an HMAC of the code is stored.
+model OtpCode {
+  id         String    @id @default(cuid())
+  phone      String
+  codeHash   String
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([phone, createdAt])
+}
+
+/// Login session. The cookie holds a random token; only its sha256 is stored.
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Template {
@@ -99,17 +138,25 @@ model Invitation {
   ownerId        String
   organization   Organization?    @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   organizationId String?
-  hostNames      String
-  eventDate      DateTime
-  venueName      String
+  eventType      TemplateType     @default(WEDDING)
+  /// Drafts start empty; publishing requires hostNames, eventDate and venueName.
+  hostNames      String           @default("")
+  eventDate      DateTime?
+  venueName      String           @default("")
   venueAddress   String?
   venueMapUrl    String?
   photoUrl       String?
-  musicUrl       String?
+  /// Storage key of the uploaded photo (to delete it when replaced).
+  photoKey       String?
+  /// One of MUSIC_TRACKS in @chakyruu/shared.
+  musicTrackId   String?
   message        String?
   language       Language         @default(KY)
+  adultsOnly     Boolean          @default(false)
   status         InvitationStatus @default(DRAFT)
-  rsvps          Rsvp[]
+  publishedAt    DateTime?
+  guests         Guest[]
+  tilekter       Tilek[]
   payments       Payment[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -119,16 +166,24 @@ model Invitation {
   @@index([templateId])
 }
 
-model Rsvp {
-  id           String     @id @default(cuid())
-  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+model Guest {
+  id           String      @id @default(cuid())
+  invitation   Invitation  @relation(fields: [invitationId], references: [id], onDelete: Cascade)
   invitationId String
-  guestName    String
-  attending    Boolean
-  guestsCount  Int        @default(1)
-  comment      String?
-  createdAt    DateTime   @default(now())
+  name         String
+  phone        String?
+  /// Secret for the personal link /:slug?g=<token>.
+  token        String      @unique
+  status       GuestStatus @default(INVITED)
+  /// People coming including the guest (meaningful when ATTENDING).
+  guestsCount  Int         @default(1)
+  source       GuestSource @default(INVITED)
+  respondedAt  DateTime?
+  tilekter     Tilek[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
+  @@index([invitationId, status])
   @@index([invitationId, createdAt])
 }
 
@@ -145,4 +200,45 @@ model Payment {
   updatedAt    DateTime        @updatedAt
 
   @@index([invitationId])
+}
+
+/// Wish (тилек) left by a guest on the invitation page.
+model Tilek {
+  id           String      @id @default(cuid())
+  invitation   Invitation  @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  invitationId String
+  /// Set when written through a personal link.
+  guest        Guest?      @relation(fields: [guestId], references: [id], onDelete: SetNull)
+  guestId      String?
+  authorName   String
+  text         String
+  /// Hidden by the owner: not shown publicly.
+  hidden       Boolean     @default(false)
+  likesCount   Int         @default(0)
+  likes        TilekLike[]
+  createdAt    DateTime    @default(now())
+
+  @@index([invitationId, hidden, createdAt])
+}
+
+/// One like per browser (anonymous client id kept in localStorage).
+model TilekLike {
+  tilek     Tilek    @relation(fields: [tilekId], references: [id], onDelete: Cascade)
+  tilekId   String
+  clientId  String
+  createdAt DateTime @default(now())
+
+  @@id([tilekId, clientId])
+}
+
+/// Partnership request from a тойкана / agency on the landing page.
+model PartnerLead {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  venueName String
+  city      String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

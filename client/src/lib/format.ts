@@ -78,9 +78,16 @@ export function formatDateTime(iso: string, locale: string): string {
   }).format(new Date(iso));
 }
 
-/** Returns the URL only if it uses http(s); blocks `javascript:` / `data:` injection in href/src. */
+/** Same-site absolute path ("/uploads/x.png"), but not protocol-relative "//host" or "/\host". */
+const SAME_SITE_PATH = /^\/(?![/\\])/;
+
+/**
+ * Returns the URL only if it uses http(s) or is a same-site path (uploaded photos);
+ * blocks `javascript:` / `data:` injection in href/src.
+ */
 export function safeUrl(url: string | null): string | undefined {
   if (!url) return undefined;
+  if (SAME_SITE_PATH.test(url)) return url;
   try {
     const { protocol } = new URL(url);
     return protocol === 'https:' || protocol === 'http:' ? url : undefined;

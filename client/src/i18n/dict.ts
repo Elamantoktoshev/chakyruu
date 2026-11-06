@@ -1,6 +1,13 @@
 import type { Language } from '../api/types';
+import { builderDict } from './builder';
+import { dashboardDict } from './dashboard';
+import { guestsDict } from './guests';
+import { tilekDict } from './tilek';
+import { invitationDict } from './invitation';
+import { landingDict } from './landing';
+import { layoutDict } from './layout';
 
-const ky = {
+const commonKy = {
   invitationTitle: 'Той чакыруусу',
   weddingInvite: 'Сиздерди үйлөнүү тоюбузга чакырабыз',
   dateLabel: 'Той күнү',
@@ -47,11 +54,28 @@ const ky = {
   noResponses: 'Азырынча жооп жок',
   backToInvitation: '← Чакырууга кайтуу',
   footer: 'Chakyruu.kg аркылуу түзүлдү',
+  loginTitle: 'Кирүү',
+  loginSubtitle: 'Конокторду көрүү үчүн телефон номериңизди жазыңыз',
+  phoneLabel: 'Телефон номери',
+  sendCode: 'Код алуу',
+  sending: 'Жөнөтүлүүдө…',
+  codeLabel: 'SMS-код',
+  codeSentTo: 'Код жөнөтүлдү:',
+  verify: 'Кирүү',
+  verifying: 'Текшерилүүдө…',
+  resendIn: 'Кайра жөнөтүү {s} сек. кийин',
+  resend: 'Кодду кайра жөнөтүү',
+  changePhone: 'Номерди өзгөртүү',
+  errorPhone: 'Номерди +996 жана 9 сан түрүндө жазыңыз',
+  errorCode: 'Код туура эмес же мөөнөтү бүткөн',
+  errorTooManyAttempts: 'Аракет өтө көп. Жаңы код алыңыз.',
+  logout: 'Чыгуу',
+  noAccess: 'Чакыруу табылган жок же сизде уруксат жок',
 };
 
-export type Dict = typeof ky;
+type CommonDict = typeof commonKy;
 
-const ru: Dict = {
+const commonRu: CommonDict = {
   invitationTitle: 'Приглашение на той',
   weddingInvite: 'Приглашаем вас на нашу свадьбу',
   dateLabel: 'Дата',
@@ -98,7 +122,29 @@ const ru: Dict = {
   noResponses: 'Пока нет ответов',
   backToInvitation: '← К приглашению',
   footer: 'Создано на Chakyruu.kg',
+  loginTitle: 'Вход',
+  loginSubtitle: 'Введите номер телефона, чтобы увидеть список гостей',
+  phoneLabel: 'Номер телефона',
+  sendCode: 'Получить код',
+  sending: 'Отправка…',
+  codeLabel: 'Код из SMS',
+  codeSentTo: 'Код отправлен на',
+  verify: 'Войти',
+  verifying: 'Проверка…',
+  resendIn: 'Отправить повторно через {s} сек.',
+  resend: 'Отправить код ещё раз',
+  changePhone: 'Изменить номер',
+  errorPhone: 'Введите номер в формате +996 и 9 цифр',
+  errorCode: 'Неверный или просроченный код',
+  errorTooManyAttempts: 'Слишком много попыток. Запросите новый код.',
+  logout: 'Выйти',
+  noAccess: 'Приглашение не найдено или у вас нет доступа',
 };
+
+const ky = { ...commonKy, ...layoutDict.ky, ...invitationDict.ky, ...builderDict.ky, ...guestsDict.ky, ...tilekDict.ky, ...dashboardDict.ky, ...landingDict.ky };
+const ru = { ...commonRu, ...layoutDict.ru, ...invitationDict.ru, ...builderDict.ru, ...guestsDict.ru, ...tilekDict.ru, ...dashboardDict.ru, ...landingDict.ru };
+
+export type Dict = typeof ky;
 
 export const dictionaries: Record<Language, Dict> = { KY: ky, RU: ru };
 
