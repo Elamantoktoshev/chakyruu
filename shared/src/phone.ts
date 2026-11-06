@@ -14,9 +14,22 @@ export function isValidPhone(phone: string): boolean {
   return PHONE_PATTERN.test(phone);
 }
 
-/** Keeps only digits and caps the length of the part typed after +996. */
+const COUNTRY_CODE = '996';
+const TRUNK_PREFIX = '0';
+
+/**
+ * The 9 digits typed after the fixed "+996" prefix. People also paste the whole number
+ * ("+996 700 …", "996700…", "0700…"), so the country code or the leading 0 is stripped first.
+ */
 export function sanitizeLocalPart(input: string): string {
-  return input.replace(/\D/g, '').slice(0, PHONE_LOCAL_DIGITS);
+  const digits = input.replace(/\D/g, '');
+  const local =
+    digits.length > PHONE_LOCAL_DIGITS && digits.startsWith(COUNTRY_CODE)
+      ? digits.slice(COUNTRY_CODE.length)
+      : digits.length > PHONE_LOCAL_DIGITS && digits.startsWith(TRUNK_PREFIX)
+        ? digits.slice(TRUNK_PREFIX.length)
+        : digits;
+  return local.slice(0, PHONE_LOCAL_DIGITS);
 }
 
 export function toE164(localPart: string): string {

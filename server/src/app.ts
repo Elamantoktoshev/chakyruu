@@ -31,12 +31,14 @@ export interface AppConfig {
   trustProxyHops?: number;
   /** Injectable clock (tests use it to expire codes and sessions). */
   now?: () => Date;
+  /** DEV_LOGIN_WITHOUT_SMS: the login code is returned to the browser. Refused in production by index.ts. */
+  exposeOtpInResponse?: boolean;
 }
 
 export function createApp(config: AppConfig): Express {
   const { corsOrigin, otpSecret, isProduction, sms, storage, payments, uploadsDir, trustProxyHops = 1, now } = config;
   const app = express();
-  const auth = createAuthService({ otpSecret, sms, now });
+  const auth = createAuthService({ otpSecret, sms, now, exposeOtpInResponse: config.exposeOtpInResponse && !isProduction });
 
   app.disable('x-powered-by');
   app.set('trust proxy', trustProxyHops);

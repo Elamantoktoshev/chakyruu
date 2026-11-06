@@ -32,6 +32,12 @@ describe('client helpers', () => {
     expect(sanitizeLocalPart('abc')).toBe('');
   });
 
+  it('accepts a whole pasted number in any common form', () => {
+    for (const input of ['+996700000001', '996700000001', '0700000001', '+996 (700) 00-00-01', '0 700 000 001']) {
+      expect(sanitizeLocalPart(input), input).toBe('700000001');
+    }
+  });
+
   it('builds and validates E.164 numbers', () => {
     expect(isValidPhone(toE164('700123456'))).toBe(true);
     expect(isValidPhone(toE164('70012345'))).toBe(false);

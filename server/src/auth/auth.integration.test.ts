@@ -180,3 +180,24 @@ describe('OTP login', () => {
     expect(sms.sent).toHaveLength(0);
   });
 });
+
+describe('dev login without SMS', () => {
+  it('returns the code in the response only when the dev flag is on', async () => {
+    const devApp = createApp({
+      corsOrigin: ORIGIN,
+      otpSecret: 'integration-test-secret-integration-test',
+      isProduction: false,
+      sms,
+      storage: new MemoryStorageProvider(),
+      payments: new FakePaymentProvider(),
+      exposeOtpInResponse: true,
+    });
+    const agent = request.agent(devApp);
+    const res = await agent.post('/api/auth/request-code').send({ phone: OWNER_PHONE }).expect(200);
+    expect(res.body.data.devCode).toBe(sms.lastCodeFor(OWNER_PHONE));
+    await agent.post('/api/auth/verify').send({ phone: OWNER_PHONE, code: res.body.data.devCode }).expect(200);
+
+    const normal = await request(buildApp()).post('/api/auth/request-code').send({ phone: STRANGER_PHONE }).expect(200);
+    expect(normal.body.data.devCode).toBeUndefined();
+  });
+});

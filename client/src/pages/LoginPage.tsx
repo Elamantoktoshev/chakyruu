@@ -61,7 +61,13 @@ export function LoginPage() {
     setIsBusy(true);
     setError(null);
     try {
-      await api.requestOtp(phone);
+      const { devCode } = await api.requestOtp(phone);
+      if (devCode) {
+        // Development without SMS: skip the code step entirely.
+        signIn(await api.verifyOtp(phone, devCode));
+        navigate(next, { replace: true });
+        return;
+      }
       setCodeSentTo(phone);
       setCode('');
       setResendAt(Date.now() + RESEND_COOLDOWN_S * 1000);

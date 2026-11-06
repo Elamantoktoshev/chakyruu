@@ -91,6 +91,8 @@ export interface SessionUser {
 
 export interface OtpRequestResult {
   expiresInSeconds: number;
+  /** Only when the server runs with DEV_LOGIN_WITHOUT_SMS: log in right away, no SMS step. */
+  devCode?: string;
 }
 
 export interface Tilek {

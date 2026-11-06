@@ -29,6 +29,13 @@ function readConfig() {
   }
 
   const isProduction = process.env.NODE_ENV === 'production';
+  const exposeOtpInResponse = process.env.DEV_LOGIN_WITHOUT_SMS === 'true';
+  if (exposeOtpInResponse && isProduction) {
+    throw new Error('DEV_LOGIN_WITHOUT_SMS must never be enabled in production');
+  }
+  if (exposeOtpInResponse) {
+    console.warn('[auth] DEV_LOGIN_WITHOUT_SMS is on: anyone can log in with just a phone number');
+  }
   if (isProduction) {
     // ConsoleSmsProvider would write login codes into production logs,
     // and FakePaymentProvider would publish invitations without payment.
@@ -41,6 +48,7 @@ function readConfig() {
     otpSecret,
     isProduction,
     trustProxyHops,
+    exposeOtpInResponse,
     sms: new ConsoleSmsProvider(),
     storage: new LocalStorageProvider(UPLOADS_DIR),
     payments: new FakePaymentProvider(),

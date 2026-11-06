@@ -29,6 +29,8 @@ export interface CreatedSession {
 
 export interface OtpRequestResult {
   expiresInSeconds: number;
+  /** Development only (DEV_LOGIN_WITHOUT_SMS): the code itself, so the client can log in by phone alone. */
+  devCode?: string;
 }
 
 export interface AuthService {
@@ -42,13 +44,20 @@ export interface AuthServiceDeps {
   otpSecret: string;
   sms: SmsProvider;
   now?: () => Date;
+  /** Never in production: return the code in the response instead of relying on SMS. */
+  exposeOtpInResponse?: boolean;
 }
 
 const sessionUserSelect = { id: true, phone: true, name: true, role: true, organizationId: true } as const;
 
 const invalidCode = (): HttpError => new HttpError(400, 'Invalid or expired code');
 
-export function createAuthService({ otpSecret, sms, now = () => new Date() }: AuthServiceDeps): AuthService {
+export function createAuthService({
+  otpSecret,
+  sms,
+  now = () => new Date(),
+  exposeOtpInResponse = false,
+}: AuthServiceDeps): AuthService {
   async function assertCanIssueCode(phone: string, issuedAt: Date): Promise<void> {
     const [latest, issuedToday] = await Promise.all([
       prisma.otpCode.findFirst({ where: { phone }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } }),
@@ -86,7 +95,8 @@ export function createAuthService({ otpSecret, sms, now = () => new Date() }: Au
       console.error(`[auth] SMS delivery failed for ${maskPhone(phone)}`, error);
       throw new HttpError(503, 'Could not send SMS, please try again later');
     }
-    return { expiresInSeconds: OTP_TTL_MS / 1000 };
+    const expiresInSeconds = OTP_TTL_MS / 1000;
+    return exposeOtpInResponse ? { expiresInSeconds, devCode: code } : { expiresInSeconds };
   }
 
   async function verifyOtp(phone: string, code: string): Promise<CreatedSession> {
