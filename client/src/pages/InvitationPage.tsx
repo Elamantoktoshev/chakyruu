@@ -27,7 +27,7 @@ export function InvitationPage() {
 function LiveInvitation({ invitation, guestToken }: { invitation: Invitation; guestToken: string | null }) {
   const { lang } = useI18n();
   const greeting = invitation.guest && (
-    <p className="mb-4 font-serif text-2xl italic text-cream drop-shadow">{guestGreeting(invitation.guest.name, lang)}</p>
+    <p className="mb-4 font-serif text-2xl italic">{guestGreeting(invitation.guest.name, lang)}</p>
   );
   return (
     <div className="min-h-dvh bg-cream-dark/40">
@@ -38,6 +38,7 @@ function LiveInvitation({ invitation, guestToken }: { invitation: Invitation; gu
         mode="live"
         topBar={<LanguageSwitch />}
         greeting={greeting}
+        opening={{ doorLabel: invitation.guest?.name ?? invitation.hostNames }}
         rsvp={
           invitation.isDraft ? undefined : (
             <RsvpForm slug={invitation.slug} guestToken={guestToken} guest={invitation.guest} />

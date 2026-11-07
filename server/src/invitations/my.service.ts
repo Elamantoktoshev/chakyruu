@@ -1,8 +1,9 @@
-import { summarizeGroups, type GuestGroup, type InvitationDraftInput } from '@chakyruu/shared';
+import { isPaletteOf, summarizeGroups, type GuestGroup, type InvitationDraftInput } from '@chakyruu/shared';
 import type { Prisma } from '@prisma/client';
 import type { SessionUser } from '../auth/auth.service.js';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
+import { templateSelect } from '../templates/template.routes.js';
 import { replaceImage } from '../storage/imageUpload.js';
 import type { StorageProvider } from '../storage/storage.provider.js';
 import { attachGift, findRedeemableGift, giftPrefill } from '../gifts/gift.service.js';
@@ -31,12 +32,17 @@ export const ownerInvitationSelect = {
   message: true,
   language: true,
   adultsOnly: true,
+  paletteId: true,
+  heroNumber: true,
+  openingAnimation: true,
+  program: true,
+  hideBranding: true,
   publishedAt: true,
   updatedAt: true,
   venueOrgId: true,
   tamadaOrgId: true,
   hallId: true,
-  template: { select: { id: true, name: true, type: true, config: true } },
+  template: { select: templateSelect },
   giftCode: { select: { cancelledAt: true, organization: { select: { name: true, type: true } } } },
 } as const;
 
@@ -49,7 +55,7 @@ function toOwnerDto({ giftCode, ...invitation }: OwnerInvitationRow) {
 }
 
 async function assertTemplateExists(templateId: string) {
-  const template = await prisma.template.findUnique({ where: { id: templateId }, select: { id: true, type: true } });
+  const template = await prisma.template.findUnique({ where: { id: templateId }, select: { id: true, type: true, componentKey: true } });
   if (!template) throw new HttpError(400, 'Unknown template');
   return template;
 }
@@ -131,10 +137,37 @@ function toUpdateData(input: InvitationDraftInput) {
   return eventDate === undefined ? rest : { ...rest, eventDate: eventDate === null ? null : new Date(eventDate) };
 }
 
+/**
+ * Template + palette consistency: a palette must belong to the (new) template, and switching
+ * the template without a palette falls back to the new template's first palette (null).
+ */
+async function resolveDesign(invitationId: string, input: InvitationDraftInput): Promise<{ paletteId?: string | null }> {
+  if (input.templateId === undefined && input.paletteId === undefined) return {};
+  const current = await prisma.invitation.findUniqueOrThrow({
+    where: { id: invitationId },
+    select: { templateId: true, template: { select: { componentKey: true } } },
+  });
+  const isTemplateChange = input.templateId !== undefined && input.templateId !== current.templateId;
+  const componentKey = isTemplateChange && input.templateId
+    ? (await assertTemplateExists(input.templateId)).componentKey
+    : current.template.componentKey;
+  if (input.paletteId && !isPaletteOf(componentKey, input.paletteId)) {
+    throw new HttpError(400, 'This colour palette does not belong to the template');
+  }
+  return isTemplateChange && input.paletteId === undefined ? { paletteId: null } : {};
+}
+
+/** Hiding "made with Chakyruu.kg" is a perk of invitations a partner paid for with a gift. */
+async function assertGiftInvitation(invitationId: string): Promise<void> {
+  const gift = await prisma.giftCode.count({ where: { invitationId, cancelledAt: null } });
+  if (gift === 0) throw new HttpError(400, 'Only invitations gifted by a partner can hide the Chakyruu.kg line');
+}
+
 /** Autosave. While the invitation is a draft its slug follows the host names; publishing freezes it. */
 export async function updateDraft(id: string, user: SessionUser, input: InvitationDraftInput) {
   const invitation = await findManagedInvitation(id, user);
-  if (input.templateId) await assertTemplateExists(input.templateId);
+  const design = await resolveDesign(id, input);
+  if (input.hideBranding) await assertGiftInvitation(id);
   const links = await assertPartnerLinks(id, input);
   const followsNames = invitation.status === 'DRAFT' && Boolean(input.hostNames?.trim());
 
@@ -143,7 +176,7 @@ export async function updateDraft(id: string, user: SessionUser, input: Invitati
     try {
       const updated = await prisma.invitation.update({
         where: { id },
-        data: { ...toUpdateData(input), ...links, ...(slug ? { slug } : {}) },
+        data: { ...toUpdateData(input), ...design, ...links, ...(slug ? { slug } : {}) },
         select: ownerInvitationSelect,
       });
       return toOwnerDto(updated);

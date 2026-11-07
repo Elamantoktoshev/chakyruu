@@ -8,6 +8,9 @@
   --color-cream: #fbf5ea;
   --color-cream-dark: #f1e6d2;
   --color-ink: #2b1a14;
+  --color-graphite: #1f1b1a;
+  /** Card background: white, or a lifted shade on dark templates. */
+  --color-surface: #ffffff;
 
   --font-serif: 'Playfair Display', Georgia, serif;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -40,4 +43,36 @@
 
 @utility animate-fade-up {
   animation: fade-up 0.8s ease-out both;
+}
+
+/* Sections fade in once while scrolling. Only opacity + transform; disabled for reduced motion. */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .animate-fade-up {
+    animation: none;
+  }
+}
+
+/* Landing "3 кадам" mini animations — run only once the block is visible. */
+@keyframes step-draw { from { stroke-dashoffset: 60; } to { stroke-dashoffset: 0; } }
+@keyframes step-fly { 0% { transform: translate(-14px, 10px) rotate(-8deg); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(18px, -14px) rotate(4deg); opacity: 0; } }
+@keyframes step-pop { 0%, 60% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+.is-visible .step-draw { stroke-dasharray: 60; animation: step-draw 1.6s ease-out infinite alternate; }
+.is-visible .step-fly { animation: step-fly 2.2s ease-in-out infinite; }
+.is-visible .step-pop { transform-box: fill-box; transform-origin: center; animation: step-pop 2.4s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .is-visible .step-draw, .is-visible .step-fly, .is-visible .step-pop { animation: none; }
 }

@@ -47,6 +47,8 @@ function Builder({ invitation: initial, templates, partners }: BuilderData) {
   const navigate = useNavigate();
   const [invitation, setInvitation] = useState(initial);
   const [tab, setTab] = useState<Tab>('form');
+  // Remounting the preview replays the opening animation.
+  const [replayKey, setReplayKey] = useState(0);
 
   const autosave = useAutosave({
     save: (patch) => api.updateInvitation(initial.id, patch),
@@ -66,13 +68,26 @@ function Builder({ invitation: initial, templates, partners }: BuilderData) {
 
   const isPublished = invitation.status === 'PUBLISHED';
   const preview = (
-    <PhoneFrame>
-      <InvitationView
-        invitation={{ ...invitation, ...previewPartnerBlocks(invitation, partners) }}
-        lang={invitation.language}
-        mode="preview"
-      />
-    </PhoneFrame>
+    <div className="space-y-3">
+      <PhoneFrame>
+        <InvitationView
+          key={`${replayKey}-${invitation.openingAnimation}`}
+          invitation={{ ...invitation, ...previewPartnerBlocks(invitation, partners) }}
+          lang={invitation.language}
+          mode="preview"
+          opening={{ doorLabel: invitation.hostNames || '…' }}
+        />
+      </PhoneFrame>
+      {invitation.openingAnimation !== 'NONE' && (
+        <button
+          type="button"
+          onClick={() => setReplayKey((n) => n + 1)}
+          className="mx-auto flex min-h-11 items-center rounded-full border border-burgundy/40 px-5 text-sm font-medium text-burgundy"
+        >
+          ↻ {t.replayOpening}
+        </button>
+      )}
+    </div>
   );
 
   return (

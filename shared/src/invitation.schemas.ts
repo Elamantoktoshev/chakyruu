@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { EVENT_TYPES, LANGUAGES, MUSIC_TRACK_IDS, PAYMENT_PROVIDERS } from './catalog.js';
+import { OPENING_ANIMATIONS } from './openings.js';
+import { programSchema } from './program.js';
 import { giftCodeSchema } from './partners.js';
 import { SLUG_MAX_LENGTH, SLUG_PATTERN } from './slug.js';
 import { isTwoGisUrl } from './urls.js';
@@ -44,6 +46,14 @@ export const invitationDraftSchema = z
     language: z.enum(LANGUAGES),
     adultsOnly: z.boolean(),
     musicTrackId: z.enum(MUSIC_TRACK_IDS).nullable(),
+    /** Must be one of the template's palettes (checked on the server). */
+    paletteId: z.string().regex(/^[a-z0-9-]{2,40}$/).nullable(),
+    /** Age on the "Юбилей" template. */
+    heroNumber: z.number().int().min(1).max(150).nullable(),
+    openingAnimation: z.enum(OPENING_ANIMATIONS),
+    program: programSchema,
+    /** Hide "made with Chakyruu.kg" — only on partner gifts (checked on the server). */
+    hideBranding: z.boolean(),
     /** Partners shown on the invitation (validated on the server against the catalogue). */
     venueOrgId: partnerIdSchema.nullable(),
     tamadaOrgId: partnerIdSchema.nullable(),

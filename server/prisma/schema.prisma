@@ -16,6 +16,14 @@ enum OrgPlan {
   BUSINESS
 }
 
+enum OpeningAnimation {
+  BOZ_UY
+  ENVELOPE
+  CURTAINS
+  TUNDUK
+  NONE
+}
+
 enum OrgType {
   VENUE
   TAMADA
@@ -250,9 +258,14 @@ model Session {
 }
 
 model Template {
-  id          String       @id @default(cuid())
-  name        String
-  type        TemplateType
+  id           String       @id @default(cuid())
+  name         String
+  type         TemplateType
+  /// React component in client/src/templates (one of TEMPLATE_KEYS in @chakyruu/shared).
+  componentKey String       @default("classic")
+  /// Listed under every toi type filter.
+  isUniversal  Boolean      @default(false)
+  sortOrder    Int          @default(0)
   previewUrl  String?
   config      Json         @default("{}")
   invitations Invitation[]
@@ -284,6 +297,15 @@ model Invitation {
   message        String?
   language       Language         @default(KY)
   adultsOnly     Boolean          @default(false)
+  /// One of the template's palettes (null = its first).
+  paletteId      String?
+  /// Big number on the "Юбилей" template (age).
+  heroNumber     Int?
+  openingAnimation OpeningAnimation @default(BOZ_UY)
+  /// Toi programme: [{ time: "18:00", title: "Тосуп алуу" }], validated by programSchema.
+  program        Json             @default("[]")
+  /// "Made with Chakyruu.kg" hidden — allowed only on partner gifts.
+  hideBranding   Boolean          @default(false)
   /// Partner branding only — these never grant access to the client's guests.
   venueOrg       Organization?    @relation("VenueInvitations", fields: [venueOrgId], references: [id], onDelete: SetNull)
   venueOrgId     String?

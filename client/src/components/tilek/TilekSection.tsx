@@ -50,7 +50,7 @@ export function TilekSection({ slug, guestToken }: Props) {
       {state.status === 'success' && tilekter.length === 0 && <p className="mt-8 text-center text-ink/60">{t.tilekEmpty}</p>}
       <ul className="mt-8 space-y-3">
         {tilekter.map((tilek) => (
-          <li key={tilek.id} className="rounded-2xl border border-gold/30 bg-white/70 p-4">
+          <li key={tilek.id} className="rounded-2xl border border-gold/30 bg-surface/70 p-4">
             <p className="whitespace-pre-line break-words text-ink/85">{tilek.text}</p>
             <div className="mt-3 flex items-center justify-between gap-3">
               <span className="truncate text-sm font-medium text-burgundy">— {tilek.authorName}</span>
@@ -109,7 +109,7 @@ function TilekForm({ slug, guestToken, onAdded }: FormProps) {
   }
 
   const inputClass =
-    'w-full min-h-12 rounded-xl border border-gold/50 bg-white/80 px-4 py-3 text-base outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20';
+    'w-full min-h-12 rounded-xl border border-gold/50 bg-surface/80 px-4 py-3 text-base outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20';
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-3">

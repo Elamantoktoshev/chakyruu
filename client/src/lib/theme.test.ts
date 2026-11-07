@@ -1,20 +1,35 @@
+import { TEMPLATE_CATALOG } from '@chakyruu/shared';
 import { describe, expect, it } from 'vitest';
-import { templateThemeStyle } from './theme';
+import { mixHex, paletteStyle } from './theme';
 
-describe('templateThemeStyle', () => {
-  it('maps the template palette to theme CSS variables', () => {
-    const style = templateThemeStyle({ palette: { primary: '#1F4E5F', accent: '#C9A24B', background: '#F4EFE6' } });
-    expect(style).toMatchObject({
-      '--color-burgundy': '#1F4E5F',
+describe('mixHex', () => {
+  it('mixes two colours linearly', () => {
+    expect(mixHex('#000000', '#ffffff', 0.5)).toBe('#808080');
+    expect(mixHex('#7A1F2B', '#000000', 0)).toBe('#7a1f2b');
+    expect(mixHex('#7A1F2B', '#000000', 1)).toBe('#000000');
+  });
+
+  it('refuses anything that is not #RRGGBB (the result goes into inline CSS)', () => {
+    expect(() => mixHex('red', '#000000', 0.5)).toThrow();
+  });
+});
+
+describe('paletteStyle', () => {
+  it('maps a palette to the theme variables', () => {
+    const [classic] = TEMPLATE_CATALOG.classic.palettes;
+    expect(paletteStyle(classic!)).toMatchObject({
+      '--color-burgundy': '#7A1F2B',
       '--color-gold': '#C9A24B',
-      '--color-cream': '#F4EFE6',
+      '--color-cream': '#FBF5EA',
+      '--color-surface': '#ffffff',
+      colorScheme: 'light',
     });
   });
 
-  it('ignores anything that is not a strict hex colour', () => {
-    const style = templateThemeStyle({ palette: { primary: 'red; background:url(x)', accent: '#fff', background: 42 } });
-    expect(style).toEqual({});
-    expect(templateThemeStyle(null)).toEqual({});
-    expect(templateThemeStyle({ palette: 'oops' })).toEqual({});
+  it('gives dark templates a dark card surface so light text stays readable', () => {
+    const [dark] = TEMPLATE_CATALOG.yubiley.palettes;
+    const style = paletteStyle(dark!) as Record<string, string>;
+    expect(style['--color-surface']).not.toBe('#ffffff');
+    expect(style.colorScheme).toBe('dark');
   });
 });

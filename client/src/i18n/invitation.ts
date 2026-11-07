@@ -1,4 +1,4 @@
-import type { EventType } from '@chakyruu/shared';
+import type { EventType, OpeningAnimation } from '@chakyruu/shared';
 
 const ky = {
   eventTypes: {
@@ -23,6 +23,16 @@ const ky = {
   musicPause: 'Музыканы токтотуу',
   previewRsvpHint: 'Конокторуңуз бул жерден жооп беришет',
   rsvpChangeHint: 'Жообуңузду каалаган убакта өзгөртсөңүз болот',
+  openingEnter: 'Кириңиз',
+  actionsLabel: 'Тез аракеттер',
+  actionMap: 'Картаны ачуу',
+  actionCalendar: 'Календарга кошуу',
+  actionRsvp: 'Келем / Келе албайм',
+  actionTilek: 'Тилек калтыруу',
+  programTitle: 'Той программасы',
+  brandingLine: 'Chakyruu.kg аркылуу түзүлгөн — өзүңүздүкүн түзүңүз',
+  openingSkip: 'Өткөрүп жиберүү',
+  openingNames: { BOZ_UY: 'Боз үй', ENVELOPE: 'Конверт', CURTAINS: 'Пардалар', TUNDUK: 'Түндүк', NONE: 'Жөнөкөй' } satisfies Record<OpeningAnimation, string>,
 };
 
 export type InvitationDict = typeof ky;
@@ -50,6 +60,16 @@ const ru: InvitationDict = {
   musicPause: 'Выключить музыку',
   previewRsvpHint: 'Здесь гости ответят на приглашение',
   rsvpChangeHint: 'Ответ можно изменить в любой момент',
+  openingEnter: 'Войти',
+  actionsLabel: 'Быстрые действия',
+  actionMap: 'Открыть карту',
+  actionCalendar: 'В календарь',
+  actionRsvp: 'Приду / Не приду',
+  actionTilek: 'Оставить тилек',
+  programTitle: 'Программа тоя',
+  brandingLine: 'Создано на Chakyruu.kg — создайте своё',
+  openingSkip: 'Пропустить',
+  openingNames: { BOZ_UY: 'Юрта', ENVELOPE: 'Конверт', CURTAINS: 'Шторы', TUNDUK: 'Түндүк', NONE: 'Без анимации' },
 };
 
 export const invitationDict = { ky, ru };

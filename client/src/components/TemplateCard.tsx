@@ -17,6 +17,11 @@ export function sampleInvitation(template: Template, lang: Language): Invitation
     message: null,
     language: lang,
     adultsOnly: false,
+    paletteId: null,
+    heroNumber: template.componentKey === 'yubiley' ? 60 : null,
+    openingAnimation: 'NONE',
+    program: [],
+    hideBranding: false,
     template,
   };
 }
@@ -41,7 +46,7 @@ export function TemplateCard({ template, actionLabel, isBusy = false, onSelect }
           style={{ transform: `translateX(-50%) scale(${PREVIEW_SCALE})` }}
           inert
         >
-          <InvitationView invitation={sampleInvitation(template, lang)} lang={lang} mode="preview" />
+          <InvitationView invitation={sampleInvitation(template, lang)} lang={lang} mode="thumbnail" />
         </div>
       </div>
       <div className="flex items-center justify-between gap-3 p-4">

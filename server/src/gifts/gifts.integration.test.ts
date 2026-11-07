@@ -157,6 +157,8 @@ describe('redeeming gifts', () => {
     // Other fields, and a tamada from the catalogue, stay editable.
     await client.patch(`/api/my/invitations/${id}`).send({ hostNames: 'Асан & Айгүл' }).expect(200);
     expect((await prisma.invitation.findUniqueOrThrow({ where: { id } })).venueOrgId).toBe(venueId);
+    // A gift may hide the "made with Chakyruu.kg" line.
+    await client.patch(`/api/my/invitations/${id}`).send({ hideBranding: true }).expect(200);
   });
 
   it('does not give the partner access to the client guests', async () => {

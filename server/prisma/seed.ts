@@ -11,36 +11,27 @@ interface TemplateSeed {
   id: string;
   name: string;
   type: TemplateType;
-  config: Prisma.InputJsonObject;
+  componentKey: string;
+  isUniversal?: boolean;
+  sortOrder: number;
 }
 
-/** [primary, accent, background] — primary must stay dark enough for white text. */
-type Palette = readonly [string, string, string];
-
-function template(id: string, name: string, type: TemplateType, [primary, accent, background]: Palette, ornament: string): TemplateSeed {
-  return { id, name, type, config: { palette: { primary, accent, background }, ornament } };
-}
-
+/** The 8 component templates (client/src/templates). Kept in sync with the templates_v2 migration. */
 const TEMPLATES: readonly TemplateSeed[] = [
-  template('tpl-wedding-classic', 'Үйлөнүү той — Классика', TemplateType.WEDDING, ['#7A1F2B', '#C9A24B', '#FBF5EA'], 'kochkor-muiuz'),
-  template('tpl-wedding-silk', 'Үйлөнүү той — Жибек', TemplateType.WEDDING, ['#8C2F4B', '#D9A5B3', '#FDF4F6'], 'tumar'),
-  template('tpl-kyz-shyrdak', 'Кыз узатуу — Шырдак', TemplateType.KYZ_UZATUU, ['#9B1C1C', '#E0B04B', '#FCF3E8'], 'shyrdak'),
-  template('tpl-kyz-tender', 'Кыз узатуу — Назик', TemplateType.KYZ_UZATUU, ['#7B3F61', '#E6C3A5', '#FBF6F2'], 'tumar'),
-  template('tpl-beshik-soft', 'Бешик той — Назик', TemplateType.BESHIK, ['#3F6577', '#E3C68F', '#F5F2EC'], 'tumar'),
-  template('tpl-beshik-sun', 'Бешик той — Күн', TemplateType.BESHIK, ['#8A5A12', '#F2C14E', '#FFF9EC'], 'kochkor-muiuz'),
-  template('tpl-sunnot-heritage', 'Сүннөт той — Мурас', TemplateType.SUNNOT, ['#1F4E5F', '#C9A24B', '#F4EFE6'], 'kochkor-muiuz'),
-  template('tpl-sunnot-mountain', 'Сүннөт той — Тоо', TemplateType.SUNNOT, ['#2F5D3A', '#D4B26A', '#F3F4EC'], 'shyrdak'),
-  template('tpl-maarake-gold', 'Маараке — Алтын', TemplateType.MAARAKE, ['#3E2A1E', '#D4AF37', '#FAF6EE'], 'shyrdak'),
-  template('tpl-maarake-night', 'Маараке — Түн', TemplateType.MAARAKE, ['#1E2A4A', '#C9A24B', '#F3F1EA'], 'kochkor-muiuz'),
+  { id: 'tpl-classic', name: 'Классика', type: TemplateType.WEDDING, componentKey: 'classic', sortOrder: 10 },
+  { id: 'tpl-minimal', name: 'Минимализм', type: TemplateType.WEDDING, componentKey: 'minimal', sortOrder: 11 },
+  { id: 'tpl-alatoo', name: 'Ала-Тоо', type: TemplateType.WEDDING, componentKey: 'alatoo', sortOrder: 12 },
+  { id: 'tpl-nazik', name: 'Назик', type: TemplateType.KYZ_UZATUU, componentKey: 'nazik', sortOrder: 20 },
+  { id: 'tpl-bala', name: 'Бала', type: TemplateType.BESHIK, componentKey: 'bala', sortOrder: 30 },
+  { id: 'tpl-batyr', name: 'Баатыр', type: TemplateType.SUNNOT, componentKey: 'batyr', sortOrder: 40 },
+  { id: 'tpl-yubiley', name: 'Юбилей', type: TemplateType.MAARAKE, componentKey: 'yubiley', sortOrder: 50 },
+  { id: 'tpl-shyrdak', name: 'Шырдак', type: TemplateType.WEDDING, componentKey: 'shyrdak', isUniversal: true, sortOrder: 60 },
 ];
 
 async function seedTemplates(): Promise<void> {
-  for (const template of TEMPLATES) {
-    await prisma.template.upsert({
-      where: { id: template.id },
-      update: { name: template.name, type: template.type, config: template.config },
-      create: { ...template },
-    });
+  for (const { id, ...template } of TEMPLATES) {
+    const data = { ...template, isUniversal: template.isUniversal ?? false, config: {} as Prisma.InputJsonObject };
+    await prisma.template.upsert({ where: { id }, update: data, create: { id, ...data } });
   }
 }
 
@@ -52,7 +43,15 @@ async function seedDemoInvitation(): Promise<void> {
   });
 
   const data = {
-    templateId: 'tpl-wedding-classic',
+    templateId: 'tpl-classic',
+    paletteId: 'bordo-gold',
+    openingAnimation: 'BOZ_UY' as const,
+    program: [
+      { time: '17:00', title: 'Конокторду тосуп алуу' },
+      { time: '18:00', title: 'Нике кыюу, бата' },
+      { time: '19:00', title: 'Той дасторконү' },
+      { time: '21:00', title: 'Бий жана концерт' },
+    ],
     ownerId: owner.id,
     hostNames: 'Айбек & Айзада',
     // 15.06.2027 17:00 Asia/Bishkek (UTC+6)

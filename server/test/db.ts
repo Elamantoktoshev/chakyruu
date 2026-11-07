@@ -32,8 +32,9 @@ export const TEST_TEMPLATE_ID = 'tpl-test';
 export async function createTemplateFixtures(): Promise<void> {
   await prisma.template.createMany({
     data: [
-      { id: TEST_TEMPLATE_ID, name: 'Test wedding', type: 'WEDDING', config: { palette: { primary: '#7A1F2B' } } },
-      { id: 'tpl-test-beshik', name: 'Test beshik', type: 'BESHIK' },
+      { id: TEST_TEMPLATE_ID, name: 'Test wedding', type: 'WEDDING', componentKey: 'classic', sortOrder: 1 },
+      { id: 'tpl-test-beshik', name: 'Test beshik', type: 'BESHIK', componentKey: 'bala', sortOrder: 2 },
+      { id: 'tpl-test-shyrdak', name: 'Test shyrdak', type: 'WEDDING', componentKey: 'shyrdak', isUniversal: true, sortOrder: 3 },
     ],
     skipDuplicates: true,
   });

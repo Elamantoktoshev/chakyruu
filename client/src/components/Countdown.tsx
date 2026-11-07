@@ -26,17 +26,20 @@ function getTimeLeft(target: number, now: number): TimeLeft | null {
 
 interface CountdownProps {
   date: string;
+  /** Previews show a frozen value: a ticking timer in every template card costs CPU on cheap phones. */
+  isStatic?: boolean;
 }
 
-export function Countdown({ date }: CountdownProps) {
+export function Countdown({ date, isStatic = false }: CountdownProps) {
   const { t } = useI18n();
   const target = new Date(date).getTime();
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
+    if (isStatic) return undefined;
     const id = window.setInterval(() => setNow(Date.now()), SECOND);
     return () => window.clearInterval(id);
-  }, []);
+  }, [isStatic]);
 
   const left = getTimeLeft(target, now);
   if (!left) return <p className="font-serif text-2xl text-burgundy">{t.eventStarted}</p>;
@@ -53,7 +56,7 @@ export function Countdown({ date }: CountdownProps) {
       {units.map(([value, label]) => (
         <div
           key={label}
-          className="rounded-2xl border border-gold/50 bg-white/60 px-1 py-3 text-center shadow-sm"
+          className="rounded-2xl border border-gold/50 bg-surface/60 px-1 py-3 text-center shadow-sm"
         >
           <div className="font-serif text-3xl font-bold tabular-nums text-burgundy sm:text-4xl">
             {String(value).padStart(2, '0')}

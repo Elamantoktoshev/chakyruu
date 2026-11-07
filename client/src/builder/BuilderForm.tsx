@@ -14,6 +14,9 @@ import type { OwnerInvitation, Template } from '../api/types';
 import { useI18n } from '../i18n/LanguageContext';
 import { fromEventIso, toEventIso, type LocalDateTime } from '../lib/datetime';
 import { ChoiceChips, Field, inputClass } from './fields';
+import { OpeningPicker } from './OpeningPicker';
+import { PalettePicker } from './PalettePicker';
+import { ProgramEditor } from './ProgramEditor';
 import { PartnerPicker, type PartnerOptions } from './PartnerPicker';
 import { PhotoField } from './PhotoField';
 
@@ -57,7 +60,8 @@ export function BuilderForm({ invitation, templates, partners, onChange }: Props
 
   function setTemplate(templateId: string) {
     const template = templates.find((candidate) => candidate.id === templateId);
-    if (template) onChange({ patch: { templateId }, view: { templateId, template } });
+    // The server resets the palette to the new template's first one; mirror that in the preview.
+    if (template) onChange({ patch: { templateId }, view: { templateId, template, paletteId: null } });
   }
 
   return (
@@ -78,6 +82,35 @@ export function BuilderForm({ invitation, templates, partners, onChange }: Props
           ))}
         </select>
       </Field>
+
+      <PalettePicker
+        componentKey={invitation.template.componentKey}
+        paletteId={invitation.paletteId}
+        onChange={(paletteId) => onChange({ patch: { paletteId }, view: { paletteId } })}
+      />
+
+      <OpeningPicker
+        value={invitation.openingAnimation}
+        onChange={(openingAnimation) => onChange({ patch: { openingAnimation }, view: { openingAnimation } })}
+      />
+
+      {invitation.template.componentKey === 'yubiley' && (
+        <Field label={t.fieldHeroNumber}>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={150}
+            value={invitation.heroNumber ?? ''}
+            onChange={(e) => {
+              const value = e.target.value === '' ? null : Number(e.target.value);
+              const isValid = value === null || (Number.isInteger(value) && value >= 1 && value <= 150);
+              onChange({ patch: isValid ? { heroNumber: value } : undefined, view: { heroNumber: value } });
+            }}
+            className={inputClass}
+          />
+        </Field>
+      )}
 
       <Field label={t.fieldHostNames}>
         <input
@@ -144,6 +177,8 @@ export function BuilderForm({ invitation, templates, partners, onChange }: Props
         onChange={(id) => onChange({ patch: { musicTrackId: id || null }, view: { musicTrackId: id || null } })}
       />
 
+      <ProgramEditor value={invitation.program} onChange={(program) => onChange({ patch: { program }, view: { program } })} />
+
       <Field label={t.fieldMessage}>
         <textarea
           rows={5}
@@ -161,6 +196,18 @@ export function BuilderForm({ invitation, templates, partners, onChange }: Props
         value={invitation.language}
         onChange={(language) => onChange({ patch: { language }, view: { language } })}
       />
+
+      {invitation.isGift && (
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl border border-gold/40 bg-white/60 p-4">
+          <input
+            type="checkbox"
+            checked={invitation.hideBranding}
+            onChange={(e) => onChange({ patch: { hideBranding: e.target.checked }, view: { hideBranding: e.target.checked } })}
+            className="h-5 w-5 accent-burgundy"
+          />
+          <span className="font-medium text-ink">{t.fieldHideBranding}</span>
+        </label>
+      )}
 
       <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl border border-gold/40 bg-white/60 p-4">
         <input

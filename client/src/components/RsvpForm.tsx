@@ -45,7 +45,7 @@ export function RsvpForm({ slug, guestToken, guest }: Props) {
             aria-invalid={nameError}
             onChange={(e) => setTypedName(e.target.value)}
             placeholder={t.namePlaceholder}
-            className="min-h-12 w-full rounded-xl border border-gold/50 bg-white/80 px-4 py-3 text-base outline-none transition focus:border-burgundy focus:ring-2 focus:ring-burgundy/20"
+            className="min-h-12 w-full rounded-xl border border-gold/50 bg-surface/80 px-4 py-3 text-base outline-none transition focus:border-burgundy focus:ring-2 focus:ring-burgundy/20"
           />
         </label>
       )}
@@ -63,7 +63,7 @@ export function RsvpForm({ slug, guestToken, guest }: Props) {
               className={`min-h-14 rounded-2xl border-2 px-3 text-lg font-semibold transition disabled:opacity-70 ${
                 isSelected
                   ? 'border-burgundy bg-burgundy text-cream shadow-md'
-                  : 'border-gold/50 bg-white/70 text-burgundy hover:border-burgundy/60'
+                  : 'border-gold/50 bg-surface/70 text-burgundy hover:border-burgundy/60'
               }`}
             >
               {attending ? t.attendYes : t.attendNo}

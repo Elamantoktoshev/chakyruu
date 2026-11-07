@@ -8,3 +8,7 @@ export * from './summary.js';
 export * from './partners.js';
 export * from './urls.js';
 export * from './admin.js';
+export * from './templates.js';
+export * from './openings.js';
+export * from './ics.js';
+export * from './program.js';

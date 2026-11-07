@@ -1,21 +1,33 @@
 import { findMusicTrack } from '@chakyruu/shared';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../../i18n/LanguageContext';
 
-type Props = { trackId: string | null };
+type Props = {
+  trackId: string | null;
+  /** Changes when the guest taps "Кириңиз" — start playing within that user gesture. */
+  startSignal?: number;
+};
 
 /** Floating play/pause button. Hidden when no track is chosen or its file is missing. */
-export function MusicButton({ trackId }: Props) {
+export function MusicButton({ trackId, startSignal = 0 }: Props) {
   // Picking another track in the builder remounts the player, which resets play/availability state.
-  return <MusicPlayer key={trackId ?? 'none'} trackId={trackId} />;
+  return <MusicPlayer key={trackId ?? 'none'} trackId={trackId} startSignal={startSignal} />;
 }
 
-function MusicPlayer({ trackId }: Props) {
+function MusicPlayer({ trackId, startSignal = 0 }: Props) {
   const { t } = useI18n();
   const track = findMusicTrack(trackId);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isUnavailable, setIsUnavailable] = useState(false);
+
+  useEffect(() => {
+    if (startSignal === 0 || !audioRef.current || !track) return;
+    audioRef.current
+      .play()
+      .then(() => setIsPlaying(true))
+      .catch(() => setIsUnavailable(true));
+  }, [startSignal, track]);
 
   if (!track || isUnavailable) return null;
 

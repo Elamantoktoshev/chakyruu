@@ -76,7 +76,7 @@ export function createApp(config: AppConfig): Express {
   app.get('/api/health', (_req, res) => sendOk(res, { status: 'ok' }));
   app.use('/api/auth', createAuthRouter({ auth, isProduction }));
   app.use('/api/public/templates', templateRouter);
-  app.use('/api/public/invitations', createPublicInvitationRouter());
+  app.use('/api/public/invitations', createPublicInvitationRouter({ appUrl: checkout.appUrl }));
   app.use('/api/public/tilekter', createTilekLikeRouter());
   app.use('/api/public/partner-leads', createPartnerLeadRouter());
   app.use('/api/public', createCatalogRouter());

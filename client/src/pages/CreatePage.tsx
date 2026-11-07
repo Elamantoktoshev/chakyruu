@@ -1,5 +1,5 @@
 import { EVENT_TYPES, type EventType } from '@chakyruu/shared';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api/client';
 import type { Template } from '../api/types';
@@ -17,6 +17,9 @@ export function CreatePage() {
   const [searchParams] = useSearchParams();
   // Code of a partner gift chosen in the dashboard: the new invitation is created from it.
   const giftCode = searchParams.get('gift') ?? undefined;
+  // "Ушуну колдонуу" on the landing page links here with the chosen template.
+  const preselectedId = searchParams.get('template');
+  const autoCreated = useRef(false);
   const [filter, setFilter] = useState<Filter>('ALL');
   const [creatingId, setCreatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,9 +38,18 @@ export function CreatePage() {
     }
   }
 
+  useEffect(() => {
+    if (autoCreated.current || !preselectedId || state.status !== 'success') return;
+    const template = state.data.find((candidate) => candidate.id === preselectedId);
+    if (!template) return;
+    autoCreated.current = true;
+    void handleSelect(template);
+  }, [preselectedId, state]); // eslint-disable-line react-hooks/exhaustive-deps -- runs once when templates arrive
+
   if (state.status === 'loading') return <LoadingView />;
   if (state.status === 'error') return <ErrorView error={state.error} onRetry={state.reload} />;
-  const templates = filter === 'ALL' ? state.data : state.data.filter((template) => template.type === filter);
+  // Universal templates (Шырдак) fit every kind of toi.
+  const templates = filter === 'ALL' ? state.data : state.data.filter((template) => template.type === filter || template.isUniversal);
 
   return (
     <div className="min-h-dvh">

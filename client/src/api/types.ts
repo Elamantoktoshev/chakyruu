@@ -1,4 +1,4 @@
-import type { EventType, GuestStatus, GuestSummary, Language } from '@chakyruu/shared';
+import type { EventType, GuestStatus, GuestSummary, Language, OpeningAnimation } from '@chakyruu/shared';
 
 export type { EventType, GuestStatus, Language } from '@chakyruu/shared';
 export type TemplateType = EventType;
@@ -14,6 +14,10 @@ export interface Template {
   id: string;
   name: string;
   type: TemplateType;
+  /** Component in client/src/templates (TEMPLATE_KEYS). */
+  componentKey: string;
+  /** Shown under every toi type filter. */
+  isUniversal: boolean;
   config: unknown;
 }
 
@@ -31,6 +35,17 @@ export interface InvitationContent {
   message: string | null;
   language: Language;
   adultsOnly: boolean;
+  /** One of the template's palettes; null = its first. */
+  paletteId: string | null;
+  /** Age on the "Юбилей" template. */
+  heroNumber: number | null;
+  openingAnimation: OpeningAnimation;
+  /** Toi programme, raw JSON from the server (read with readProgram). */
+  program: unknown;
+  /** Partner gifts may hide "made with Chakyruu.kg". */
+  hideBranding: boolean;
+  /** Unpublished (owner preview): no public calendar file yet. */
+  isDraft?: boolean;
   template: Template;
   /** Partner branding blocks (public page and builder preview). */
   venue?: VenueBlock | null;

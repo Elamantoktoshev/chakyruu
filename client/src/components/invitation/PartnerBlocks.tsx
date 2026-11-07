@@ -38,7 +38,7 @@ export function TamadaBrandBlock({ tamada, invitationSlug }: TamadaProps) {
     'mt-4 inline-flex min-h-12 items-center justify-center rounded-full bg-[#25D366] px-6 font-semibold text-white shadow';
 
   return (
-    <section className="bg-white/50 px-6 py-8 text-center">
+    <section className="bg-surface/50 px-6 py-8 text-center">
       <p className="text-xs uppercase tracking-[0.3em] text-gold">{t.tamadaBlockTitle}</p>
       {photo ? (
         <img src={photo} alt={tamada.displayName} className="mx-auto mt-4 h-24 w-24 rounded-full object-cover shadow-md" />

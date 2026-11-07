@@ -3,6 +3,7 @@ import { canManageInvitation, type PolicyUser } from '../auth/policy.js';
 import { findGuestByToken } from '../guests/rsvp.service.js';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
+import { templateSelect } from '../templates/template.routes.js';
 
 /** Fields that are safe to expose on the public invitation page. */
 const publicInvitationSelect = {
@@ -19,7 +20,12 @@ const publicInvitationSelect = {
   language: true,
   eventType: true,
   adultsOnly: true,
-  template: { select: { id: true, name: true, type: true, config: true } },
+  paletteId: true,
+  heroNumber: true,
+  openingAnimation: true,
+  program: true,
+  hideBranding: true,
+  template: { select: templateSelect },
   // Partner branding. The tamada's phone is never selected: contact goes through /contact.
   venueOrg: { select: { name: true, logoUrl: true, address: true, mapUrl: true } },
   hall: { select: { name: true } },
