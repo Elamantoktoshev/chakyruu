@@ -9,7 +9,7 @@ region: fra
 services:
   - name: web
     github:
-      repo: GITHUB_USER/chakyruu # ← replace with your repository
+      repo: Elamantoktoshev/chakyruu
       branch: main
       # Deploys are started by GitHub Actions after CI is green (.github/workflows/ci.yml).
       deploy_on_push: false
@@ -86,7 +86,7 @@ jobs:
   - name: migrate
     kind: PRE_DEPLOY
     github:
-      repo: GITHUB_USER/chakyruu # ← same repository
+      repo: Elamantoktoshev/chakyruu
       branch: main
       deploy_on_push: false
     source_dir: /
