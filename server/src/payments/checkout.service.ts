@@ -6,6 +6,7 @@ import { prisma } from '../lib/prisma.js';
 import { isUniqueViolation } from '../invitations/slug.service.js';
 import { fulfillPayment, markPaymentFailed } from './fulfill.service.js';
 import type { CheckoutResult, ManualInstructions, PaymentGateway } from './gateway.js';
+import { logger } from '../lib/logger.js';
 
 const REFERENCE_LENGTH = 5;
 const MAX_REFERENCE_ATTEMPTS = 3;
@@ -70,7 +71,7 @@ export async function runCheckout(gateway: PaymentGateway, input: RunCheckoutInp
       returnUrl: `${input.appUrl.replace(/\/+$/, '')}/pay/result/${payment.id}`,
     });
   } catch (error: unknown) {
-    console.error(`[payments] ${gateway.id} checkout failed for payment ${payment.id}`, error);
+    logger.error({ err: error }, `[payments] ${gateway.id} checkout failed for payment ${payment.id}`);
     await markPaymentFailed(payment.id, { error: error instanceof Error ? error.message : 'unknown' });
     throw new HttpError(502, 'Payment provider is unavailable, please try again later');
   }

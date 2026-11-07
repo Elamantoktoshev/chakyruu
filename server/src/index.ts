@@ -5,11 +5,13 @@ import { createApp, type AppConfig } from './app.js';
 import { NikitaSmsProvider } from './auth/nikita.provider.js';
 import { ConsoleSmsProvider, type SmsProvider } from './auth/sms.js';
 import { EnvError, parseEnv, type Env } from './config/env.js';
+import { createSentryReporter, silentReporter, type ErrorReporter } from './lib/errorReporter.js';
 import { prisma } from './lib/prisma.js';
 import { installGracefulShutdown } from './lib/shutdown.js';
 import { createGatewayFromEnv } from './payments/registry.js';
 import { SpacesStorageProvider, createSpacesClient } from './storage/spaces.provider.js';
 import { LocalStorageProvider, type StorageProvider } from './storage/storage.provider.js';
+import { logger } from './lib/logger.js';
 
 /** server/uploads — next to src/ and dist/. */
 const UPLOADS_DIR = fileURLToPath(new URL('../uploads', import.meta.url));
@@ -49,7 +51,7 @@ function createStorage(env: Env): StorageProvider {
 
 function buildConfig(env: Env): AppConfig & { port: number } {
   if (env.DEV_LOGIN_WITHOUT_SMS) {
-    console.warn('[auth] DEV_LOGIN_WITHOUT_SMS is on: anyone can log in with just a phone number');
+    logger.warn('[auth] DEV_LOGIN_WITHOUT_SMS is on: anyone can log in with just a phone number');
   }
   const storage = createStorage(env);
   return {
@@ -69,6 +71,13 @@ function buildConfig(env: Env): AppConfig & { port: number } {
     clientDir: findClientDir(env),
     commitSha: env.COMMIT_SHA,
     clientIpHeader: env.CLIENT_IP_HEADER,
+    browser: {
+      sentryDsn: env.SENTRY_DSN_CLIENT ?? env.SENTRY_DSN,
+      environment: env.NODE_ENV,
+      release: env.COMMIT_SHA,
+      umamiWebsiteId: env.UMAMI_WEBSITE_ID,
+      umamiScriptUrl: env.UMAMI_SCRIPT_URL,
+    },
     testLoginPhones: env.TEST_LOGIN_PHONES,
     mediaOrigins: env.SPACES_CDN_URL ? [new URL(env.SPACES_CDN_URL).origin] : [],
     smsDailyLimit: env.SMS_DAILY_LIMIT,
@@ -80,15 +89,21 @@ function loadEnv(): Env {
     return parseEnv(process.env);
   } catch (error: unknown) {
     if (error instanceof EnvError) {
-      console.error(error.message);
+      logger.error(error.message);
       process.exit(1);
     }
     throw error;
   }
 }
 
-const config = buildConfig(loadEnv());
+async function createErrorReporter(env: Env): Promise<ErrorReporter> {
+  if (!env.SENTRY_DSN) return silentReporter;
+  return createSentryReporter({ dsn: env.SENTRY_DSN, environment: env.NODE_ENV, release: env.COMMIT_SHA });
+}
+
+const env = loadEnv();
+const config = { ...buildConfig(env), errorReporter: await createErrorReporter(env) };
 const server = createApp(config).listen(config.port, () => {
-  console.info(`API listening on http://localhost:${config.port}`);
+  logger.info(`API listening on http://localhost:${config.port}`);
 });
 installGracefulShutdown(server, () => prisma.$disconnect());

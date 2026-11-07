@@ -1,4 +1,5 @@
 import type { Server } from 'node:http';
+import { logger } from './logger.js';
 
 /** App Platform sends SIGTERM and waits a bit before killing the container. */
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -17,7 +18,7 @@ export function installGracefulShutdown(
   const shutdown = (): Promise<void> => {
     shuttingDown ??= (async () => {
       const forced = setTimeout(() => {
-        console.error(`[shutdown] requests still running after ${timeoutMs} ms, exiting`);
+        logger.error(`[shutdown] requests still running after ${timeoutMs} ms, exiting`);
         exit(1);
       }, timeoutMs);
       forced.unref();

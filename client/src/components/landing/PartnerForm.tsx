@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react';
 import { api, ApiError } from '../../api/client';
 import { useI18n } from '../../i18n/LanguageContext';
 import { PHONE_PREFIX, sanitizeLocalPart, toE164 } from '../../lib/phone';
+import { track } from '../../lib/analytics';
 
 const inputClass =
   'w-full min-h-12 rounded-xl border border-gold/50 bg-white/90 px-4 py-3 text-base text-ink outline-none focus:border-gold focus:ring-2 focus:ring-gold/30';
@@ -37,6 +38,7 @@ export function PartnerForm() {
     setError(null);
     try {
       await api.sendPartnerLead(lead);
+      track('partner_lead', { type });
       setStatus('sent');
     } catch (err: unknown) {
       setError(err instanceof ApiError && err.status === 429 ? t.errorTooMany : t.errorGeneric);

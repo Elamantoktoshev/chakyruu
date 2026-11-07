@@ -1,5 +1,5 @@
 import { guestGreeting } from '@chakyruu/shared';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { api } from '../api/client';
 import { takeEmbeddedInvitation } from '../api/embeddedInvitation';
@@ -11,6 +11,7 @@ import { RsvpForm } from '../components/RsvpForm';
 import { ErrorView, LoadingView } from '../components/StatusView';
 import { TilekSection } from '../components/tilek/TilekSection';
 import { useI18n } from '../i18n/LanguageContext';
+import { track } from '../lib/analytics';
 
 export function InvitationPage() {
   const { slug = '' } = useParams();
@@ -34,6 +35,12 @@ function FetchedInvitation({ slug, guestToken }: { slug: string; guestToken: str
 
 function LiveInvitation({ invitation, guestToken }: { invitation: Invitation; guestToken: string | null }) {
   const { lang } = useI18n();
+  const isGuestView = !invitation.isDraft;
+  const isPersonal = Boolean(invitation.guest);
+  useEffect(() => {
+    // Owners previewing a draft are not guests.
+    if (isGuestView) track('guest_opened', { personal: isPersonal });
+  }, [isGuestView, isPersonal]);
   const greeting = invitation.guest && (
     <p className="mb-4 font-serif text-2xl italic">{guestGreeting(invitation.guest.name, lang)}</p>
   );

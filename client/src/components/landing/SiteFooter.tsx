@@ -29,6 +29,7 @@ export function SiteFooter() {
           <ul>
             <li><Link to="/oferta" className={linkClass}>{t.footerOffer}</Link></li>
             <li><Link to="/privacy" className={linkClass}>{t.footerPrivacy}</Link></li>
+            <li><Link to="/contacts" className={linkClass}>{t.footerContacts}</Link></li>
             <li><Link to="/tamadalar" className={linkClass}>{t.catalogTitle}</Link></li>
           </ul>
           <p className="mt-4 text-xs text-cream/50">{t.footerCopyright.replace('{year}', String(new Date().getFullYear()))}</p>

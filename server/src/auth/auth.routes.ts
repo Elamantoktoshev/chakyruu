@@ -8,6 +8,7 @@ import { HttpError } from '../lib/http.js';
 import { maskPhone } from './sms.js';
 import type { AuthService } from './auth.service.js';
 import { clientIp } from '../lib/clientIp.js';
+import { logger } from '../lib/logger.js';
 
 const WINDOW_MS = 10 * 60 * 1000;
 const OTP_REQUESTS_PER_PHONE = 3;
@@ -38,7 +39,7 @@ export function createAuthRouter({ auth, isProduction }: AuthRouterOptions): Rou
       const { phone, website, elapsedMs } = requestCodeSchema.parse(req.body);
       if (website) {
         // Honeypot filled: answer like a success so the bot learns nothing, but send no SMS.
-        console.warn(`[auth] honeypot triggered for ${maskPhone(phone)} from ${clientIp(req)}`);
+        logger.warn(`[auth] honeypot triggered for ${maskPhone(phone)} from ${clientIp(req)}`);
         sendOk(res, { expiresInSeconds: OTP_TTL_MS / 1000 });
         return;
       }

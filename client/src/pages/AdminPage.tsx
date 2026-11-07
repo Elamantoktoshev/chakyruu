@@ -3,11 +3,12 @@ import { useAuth } from '../auth/AuthContext';
 import { LeadsTab } from '../components/admin/LeadsTab';
 import { OrganizationsTab } from '../components/admin/OrganizationsTab';
 import { PricesTab } from '../components/admin/PricesTab';
+import { StatsTab } from '../components/admin/StatsTab';
 import { TracksTab } from '../components/admin/TracksTab';
 import { AppHeader } from '../components/AppHeader';
 import { useI18n } from '../i18n/LanguageContext';
 
-type Tab = 'leads' | 'orgs' | 'catalog' | 'payments' | 'prices' | 'tracks';
+type Tab = 'stats' | 'leads' | 'orgs' | 'catalog' | 'payments' | 'prices' | 'tracks';
 
 type Props = {
   /** Payments tab (manual confirmation) is plugged in by the payments module. */
@@ -18,10 +19,11 @@ type Props = {
 export function AdminPage({ paymentsTab }: Props) {
   const { t } = useI18n();
   const { state } = useAuth();
-  const [tab, setTab] = useState<Tab>('leads');
+  const [tab, setTab] = useState<Tab>('stats');
   const isAdmin = state.status === 'authenticated' && state.user.role === 'ADMIN';
 
   const tabs: { value: Tab; label: string }[] = [
+    { value: 'stats', label: t.adminTabStats },
     { value: 'leads', label: t.adminTabLeads },
     { value: 'orgs', label: t.adminTabOrgs },
     { value: 'catalog', label: t.adminTabCatalog },
@@ -55,6 +57,7 @@ export function AdminPage({ paymentsTab }: Props) {
                 </button>
               ))}
             </div>
+            {tab === 'stats' && <StatsTab />}
             {tab === 'leads' && <LeadsTab />}
             {tab === 'orgs' && <OrganizationsTab />}
             {tab === 'catalog' && <OrganizationsTab fixedType="TAMADA" />}

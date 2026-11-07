@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { HttpError } from '../lib/http.js';
+import { logger } from '../lib/logger.js';
 
 /** MPEG-1/2 Layer III frame: 11 sync bits, then version and layer (layer bits 00 are reserved). */
 function isMpegFrameHeader(data: Buffer): boolean {
@@ -86,7 +87,7 @@ export async function compressMp3(data: Buffer, run: FfmpegRunner = spawnFfmpeg)
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       if (!hasWarnedMissingFfmpeg) {
         hasWarnedMissingFfmpeg = true;
-        console.warn('[audio] ffmpeg is not installed: mp3 uploads are stored without compression');
+        logger.warn('[audio] ffmpeg is not installed: mp3 uploads are stored without compression');
       }
       return { data, isCompressed: false };
     }

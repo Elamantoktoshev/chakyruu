@@ -1,5 +1,6 @@
 import type { RequestHandler } from 'express';
 import { prisma } from './prisma.js';
+import { logger } from './logger.js';
 
 const DB_TIMEOUT_MS = 2000;
 
@@ -19,7 +20,7 @@ export function createHealthHandler(commitSha: string | undefined): RequestHandl
       await withTimeout(prisma.$queryRaw`SELECT 1`, DB_TIMEOUT_MS);
       res.json({ success: true, data: { status: 'ok', database: 'ok', commit }, error: null });
     } catch (error: unknown) {
-      console.error('[health] database check failed', error);
+      logger.error({ err: error }, '[health] database check failed');
       res.status(503).json({ success: false, data: { status: 'degraded', database: 'unavailable', commit }, error: { message: 'Database unavailable' } });
     }
   };

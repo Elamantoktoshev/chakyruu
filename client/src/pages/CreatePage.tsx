@@ -8,6 +8,7 @@ import { AppHeader } from '../components/AppHeader';
 import { ErrorView, LoadingView } from '../components/StatusView';
 import { TemplateCard } from '../components/TemplateCard';
 import { useI18n } from '../i18n/LanguageContext';
+import { track } from '../lib/analytics';
 
 type Filter = EventType | 'ALL';
 
@@ -31,6 +32,7 @@ export function CreatePage() {
     setError(null);
     try {
       const draft = await api.createInvitation(template.id, giftCode);
+      track('create_started', { template: template.componentKey, isGift: Boolean(giftCode) });
       navigate(`/create/${draft.id}`);
     } catch {
       setError(t.errorGeneric);

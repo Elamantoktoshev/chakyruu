@@ -2,6 +2,15 @@ import type { LeadStatus } from '../api/types';
 
 const ky = {
   adminTitle: 'Администратор',
+  adminTabStats: 'Статистика',
+  statsPeriods: { day: 'Бүгүн', week: '7 күн', month: '30 күн' },
+  statsNewUsers: 'Жаңы колдонуучулар',
+  statsCreated: 'Түзүлгөн чакыруулар',
+  statsPublished: 'Жарыяланган',
+  statsRevenue: 'Киреше',
+  statsPayments: '{n} төлөм',
+  statsConversion: 'Түзүүдөн жарыялоого',
+  statsConversionHint: 'Ушул мезгилде түзүлгөн чакыруулардын канчасы жарыяланды',
   adminTabOrgs: 'Уюмдар',
   adminTabCatalog: 'Каталог',
   adminTabLeads: 'Өтүнмөлөр',
@@ -49,6 +58,15 @@ export type AdminDict = typeof ky;
 
 const ru: AdminDict = {
   adminTitle: 'Администратор',
+  adminTabStats: 'Статистика',
+  statsPeriods: { day: 'Сутки', week: '7 дней', month: '30 дней' },
+  statsNewUsers: 'Новые пользователи',
+  statsCreated: 'Созданные приглашения',
+  statsPublished: 'Опубликованные',
+  statsRevenue: 'Выручка',
+  statsPayments: '{n} платежей',
+  statsConversion: 'Создание → публикация',
+  statsConversionHint: 'Какая доля приглашений, созданных за период, уже опубликована',
   adminTabOrgs: 'Организации',
   adminTabCatalog: 'Каталог',
   adminTabLeads: 'Заявки',

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../api/client';
 import type { GuestStatus, PublicGuest } from '../api/types';
 import { loadStoredRsvp, saveStoredRsvp } from './rsvpStorage';
+import { track } from '../lib/analytics';
 
 /** Changing the party size is saved after the guest stops tapping +/−. */
 const COUNT_SAVE_DELAY_MS = 700;
@@ -47,6 +48,7 @@ export function useRsvp(slug: string, personalToken: string | null, guest: Publi
     try {
       const result = await api.answerRsvp(slug, { ...identity, attending, guestsCount: count });
       setStatus(result.guest.status);
+      track('guest_rsvp', { attending, people: attending ? count : 0, personal: Boolean(identity.token) });
       if (result.token) {
         token.current = result.token;
         saveStoredRsvp(slug, { token: result.token, name: result.guest.name });

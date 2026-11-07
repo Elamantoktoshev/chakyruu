@@ -1,6 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { installAnalytics } from './lib/analytics';
+import { initMonitoring, reportError } from './lib/monitoring';
 // Self-hosted fonts: unicode-range makes the browser fetch only the Cyrillic / Latin subsets it needs.
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -14,7 +16,16 @@ import './index.css';
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element #root not found');
 
-createRoot(rootElement).render(
+installAnalytics();
+void initMonitoring();
+
+createRoot(rootElement, {
+  onUncaughtError: (error, info) => {
+    reportError(error);
+    console.error(error, info.componentStack);
+  },
+  onCaughtError: (error) => reportError(error),
+}).render(
   <StrictMode>
     <App />
   </StrictMode>,

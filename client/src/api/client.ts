@@ -19,6 +19,7 @@ import type {
   AdminOrganization,
   AdminPayment,
   AdminPrice,
+  AdminStats,
   AdminTrack,
   GalleryPhoto,
   MusicView,
@@ -201,6 +202,7 @@ export const api = {
   paymentStatus: (paymentId: string) => request<PaymentStatusView>(`/my/payments/${encode(paymentId)}`),
 
   admin: {
+    stats: (period: AdminStats['period']) => request<AdminStats>(`/admin/stats?period=${period}`),
     tracks: () => request<AdminTrack[]>('/admin/tracks'),
     createTrack: (input: TrackCreateInput) => request<AdminTrack>('/admin/tracks', json('POST', input)),
     updateTrack: (id: string, patch: TrackPatchInput) => request<AdminTrack>(`/admin/tracks/${encode(id)}`, json('PATCH', patch)),

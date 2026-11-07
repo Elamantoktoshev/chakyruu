@@ -4,6 +4,7 @@ import {
   adminOrgPatchSchema,
   adminOrgQuerySchema,
   adminPaymentQuerySchema,
+  adminStatsQuerySchema,
   convertLeadSchema,
   grantCreditsSchema,
   leadPatchSchema,
@@ -17,6 +18,7 @@ import { sendOk } from '../lib/http.js';
 import { createAdminTrackRouter, type AdminTrackDeps } from '../music/track.routes.js';
 import { confirmPaymentByAdmin, listPaymentsForAdmin } from '../payments/status.service.js';
 import { listAllPrices, updatePrice } from '../pricing/price.service.js';
+import { getAdminStats } from './stats.service.js';
 import { convertLead, grantCredits, listLeads, listOrganizations, setCatalogStatus, setLeadStatus } from './admin.service.js';
 
 /** Mounted at /api/admin — super-admin only (everyone else gets 403). */
@@ -24,6 +26,8 @@ export function createAdminRouter(tracks: AdminTrackDeps): Router {
   const router = Router();
   router.use(requireAuth, requireAdmin);
   router.use('/tracks', createAdminTrackRouter(tracks));
+
+  router.get('/stats', async (req, res) => sendOk(res, await getAdminStats(adminStatsQuerySchema.parse(req.query).period)));
 
   router.get('/organizations', async (req, res) => {
     sendOk(res, await listOrganizations(adminOrgQuerySchema.parse(req.query).type));

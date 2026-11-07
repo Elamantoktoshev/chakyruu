@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LEAD_STATUSES, MAX_ADMIN_CREDIT_GRANT, PAYMENT_STATUSES } from './admin.js';
+import { LEAD_STATUSES, MAX_ADMIN_CREDIT_GRANT, PAYMENT_STATUSES, STATS_PERIODS } from './admin.js';
 import { CATALOG_STATUSES, ORG_TYPES } from './partners.js';
 
 export const adminIdParamsSchema = z.object({ id: z.string().min(1).max(40) });
@@ -16,3 +16,4 @@ export const pricePatchSchema = z
   .strict()
   .refine((patch) => Object.keys(patch).length > 0, 'Nothing to update');
 export const adminPaymentQuerySchema = z.object({ status: z.enum(PAYMENT_STATUSES).optional() });
+export const adminStatsQuerySchema = z.object({ period: z.enum(STATS_PERIODS).default('week') });

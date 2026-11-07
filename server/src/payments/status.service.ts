@@ -4,6 +4,7 @@ import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
 import { fulfillPayment, markPaymentFailed } from './fulfill.service.js';
 import type { PaymentGateway } from './gateway.js';
+import { logger } from '../lib/logger.js';
 
 const statusSelect = {
   id: true,
@@ -37,7 +38,7 @@ async function refreshFromGateway(payment: { id: string; gateway: string; extern
     if (status === 'SUCCEEDED') await fulfillPayment(payment.id, { raw: { checkStatus: status } });
     if (status === 'FAILED') await markPaymentFailed(payment.id, { checkStatus: status });
   } catch (error: unknown) {
-    console.error(`[payments] checkStatus failed for payment ${payment.id}`, error);
+    logger.error({ err: error }, `[payments] checkStatus failed for payment ${payment.id}`);
   }
 }
 

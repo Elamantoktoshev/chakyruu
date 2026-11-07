@@ -6,6 +6,7 @@ import { AppHeader } from '../components/AppHeader';
 import { CheckoutPanel } from '../components/payments/CheckoutPanel';
 import { ErrorView, LoadingView } from '../components/StatusView';
 import { useI18n } from '../i18n/LanguageContext';
+import { trackOnce } from '../lib/analytics';
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -25,6 +26,7 @@ export function PayResultPage() {
         const next = await api.paymentStatus(paymentId);
         if (cancelled) return;
         setPayment(next);
+        if (next.status === 'SUCCEEDED' && next.purpose === 'INVITATION') trackOnce(`published:${next.id}`, 'published', { isGift: false });
         if (next.status === 'PENDING') timer = window.setTimeout(() => void poll(), POLL_INTERVAL_MS);
       } catch (err: unknown) {
         if (!cancelled) setError(err);

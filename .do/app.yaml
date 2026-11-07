@@ -68,6 +68,10 @@ services:
         value: fra1
       - key: SPACES_CDN_URL
         value: https://chakyruu.fra1.cdn.digitaloceanspaces.com
+      - key: SENTRY_DSN
+        type: SECRET
+      - key: UMAMI_WEBSITE_ID
+        value: "" # ← ID сайта из Umami Cloud (необязательно)
       - key: PAYMENT_PROVIDER
         value: manual
       - key: MANUAL_PAYMENT_RECEIVER

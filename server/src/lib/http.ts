@@ -1,5 +1,7 @@
 import type { ErrorRequestHandler, RequestHandler, Response } from 'express';
 import { ZodError } from 'zod';
+import { silentReporter, type ErrorReporter } from './errorReporter.js';
+import { logger } from './logger.js';
 
 /** Consistent API envelope: { success, data, error }. */
 export interface ApiResponse<T> {
@@ -40,24 +42,31 @@ function isBodyParserError(err: unknown): err is { status: number; type: string 
   return typeof type === 'string' && typeof status === 'number' && status >= 400 && status < 500;
 }
 
-export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
-  if (err instanceof ZodError) {
-    const details = err.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message }));
-    sendFail(res, 400, 'Validation failed', details);
-    return;
-  }
-  if (err instanceof HttpError) {
-    sendFail(res, err.status, err.message, err.details);
-    return;
-  }
-  if (err instanceof SyntaxError && 'body' in err) {
-    sendFail(res, 400, 'Malformed JSON body');
-    return;
-  }
-  if (isBodyParserError(err)) {
-    sendFail(res, err.status, err.status === 413 ? 'Request body is too large' : 'Invalid request body');
-    return;
-  }
-  console.error(`[${req.method} ${req.originalUrl}]`, err);
-  sendFail(res, 500, 'Internal server error');
-};
+/** Turns errors into the JSON envelope; unexpected ones are logged and reported (Sentry). */
+export function createErrorHandler(reporter: ErrorReporter = silentReporter): ErrorRequestHandler {
+  return (err, req, res, _next) => {
+    if (err instanceof ZodError) {
+      const details = err.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message }));
+      sendFail(res, 400, 'Validation failed', details);
+      return;
+    }
+    if (err instanceof HttpError) {
+      sendFail(res, err.status, err.message, err.details);
+      return;
+    }
+    if (err instanceof SyntaxError && 'body' in err) {
+      sendFail(res, 400, 'Malformed JSON body');
+      return;
+    }
+    if (isBodyParserError(err)) {
+      sendFail(res, err.status, err.status === 413 ? 'Request body is too large' : 'Invalid request body');
+      return;
+    }
+    // req.log carries the requestId (pino-http); the id is also in the response header.
+    (req.log ?? logger).error({ err }, 'Unhandled error');
+    reporter.capture(err, { requestId: typeof req.id === 'string' ? req.id : undefined, method: req.method, path: req.originalUrl });
+    sendFail(res, 500, 'Internal server error');
+  };
+}
+
+export const errorHandler = createErrorHandler();

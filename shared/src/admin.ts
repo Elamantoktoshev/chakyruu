@@ -15,3 +15,6 @@ export function packageAudience(type: OrgType): PriceAudience {
 }
 
 export const PAYMENT_STATUSES = ['PENDING', 'SUCCEEDED', 'FAILED'] as const;
+
+export const STATS_PERIODS = ['day', 'week', 'month'] as const;
+export type StatsPeriod = (typeof STATS_PERIODS)[number];

@@ -1,3 +1,5 @@
+import { logger } from '../lib/logger.js';
+
 const VISIBLE_TAIL_DIGITS = 2;
 const COUNTRY_PREFIX_LENGTH = 4; // "+996"
 
@@ -20,7 +22,7 @@ export interface SmsProvider {
 /** Development only: prints the message to the server log instead of sending it. */
 export class ConsoleSmsProvider implements SmsProvider {
   async send(phone: string, text: string): Promise<void> {
-    console.info(`[sms:dev] → ${maskPhone(phone)}: ${text}`);
+    logger.info(`[sms:dev] → ${maskPhone(phone)}: ${text}`);
   }
 }
 

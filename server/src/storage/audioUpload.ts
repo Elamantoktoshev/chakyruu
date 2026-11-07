@@ -5,6 +5,7 @@ import { compressMp3, type CompressedAudio } from './audio.js';
 import { detectMp3 } from './audio.js';
 import { receiveFile } from './receiveFile.js';
 import type { StorageProvider, StoredFile } from './storage.provider.js';
+import { logger } from '../lib/logger.js';
 
 /** Re-encodes an uploaded mp3; injectable so tests do not depend on ffmpeg being installed. */
 export type AudioCompressor = (data: Buffer) => Promise<CompressedAudio>;
@@ -41,6 +42,6 @@ export async function replaceAudio(
 /** A leftover file costs a few MB; failing the user's request for it would be worse. */
 export async function removeQuietly(storage: StorageProvider, key: string): Promise<void> {
   await storage.remove(key).catch((error: unknown) => {
-    console.error(`[storage] could not delete replaced file ${key}`, error);
+    logger.error({ err: error }, `[storage] could not delete replaced file ${key}`);
   });
 }

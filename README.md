@@ -169,7 +169,10 @@ Integration-тесты сервера работают в отдельной с�
 - OG-теги `/:slug` экранируются; токен гостя в HTML не попадает; черновики не раскрываются. Приглашения — `noindex`.
 - Slug не может совпасть с маршрутом приложения (`create`, `dashboard`, `login`, `pay`, `api`, `uploads`…).
 - `TRUST_PROXY` — число reverse-proxy перед API; от него зависит IP в rate limit.
-- С `NODE_ENV=production` сервер не стартует, пока нет реальных SMS- и платёжного провайдеров.
+- С `NODE_ENV=production` сервер не стартует без https-адреса, Nikita.kg, Spaces и реального платёжного режима.
+- helmet + CSP (свой домен и CDN Spaces), очистка текста от управляющих и bidi-символов, лимиты на все публичные POST и на загрузки (на пользователя), IP клиента из `do-connecting-ip`.
+- Вход: ловушка для ботов, минимальное время заполнения формы, суточный лимит SMS на весь сайт (`SMS_DAILY_LIMIT`).
+- Логи (pino, JSON) с `requestId`; телефоны, коды, cookie и токены гостей скрыты. Sentry и Umami — только при заданных ключах.
 
 ## Структура
 
@@ -208,21 +211,34 @@ client/src
 `Organization` (VENUE | TAMADA | AGENCY, кредиты, `Hall`, `TamadaProfile`, `TamadaBusyDate`, `CreditTransaction`, `GiftCode`, `TamadaClick`) → `User` (OWNER | ORG_ADMIN | ADMIN) → `Invitation` (по `Template`, тип тоя, DRAFT → PUBLISHED, `venueOrgId` / `tamadaOrgId` / `hallId` — только брендинг) → `Guest` (токен, INVITED | ATTENDING | DECLINED), `Tilek` → `TilekLike`, `InvitationPhoto` (галерея), `Track` (музыка), `Payment` (INVITATION | CREDIT_PACKAGE). Отдельно `Price`, `PartnerLead`, `OtpCode`, `Session`.
 Суммы платежей хранятся в тыйынах (`Int`).
 
+## Продакшен
+
+- **[DEPLOY.md](DEPLOY.md)** — запуск на DigitalOcean по шагам: база, Spaces, Nikita.kg, секреты, первый деплой, автодеплой из GitHub, домен chakyruu.kg, откат, бэкапы.
+- **[LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)** — что проверить руками перед первыми клиентами.
+- Один сервис: API отдаёт и собранный сайт (`client/dist`); `.do/app.yaml`, `server/Dockerfile`, `.github/workflows/ci.yml`.
+- Все переменные окружения проверяются при старте (`server/src/config/env.ts`), описание — в `.env.example`.
+
+| Команда (из `server/`) | Что делает |
+| --- | --- |
+| `npm run migrate:deploy` | Применить миграции (в проде — задача PRE_DEPLOY) |
+| `npm run seed:prod` | Справочники без демо-данных |
+| `npm run uploads:to-spaces -- --dry-run` | Перенести `server/uploads` в Spaces |
+| `npm run db:dump` | Ручной дамп базы в Spaces (`backups/`) |
+| `npm run brand:render` | Пересоздать иконки PWA и OG-картинку главной |
+
 ## TODO
 
-- [ ] E2E Playwright после настройки CI (вход → конструктор → публикация → ответ гостя → кабинет).
+- [ ] E2E Playwright (CI уже настроен): вход → конструктор → публикация → ответ гостя → кабинет.
+- [ ] SSR / пререндер, если PageSpeed Insights после деплоя покажет < 85 (локально 60–78, LCP ≈ 4,3 с).
+- [ ] Заполнить `[ЗАПОЛНИТЬ: …]` в `client/src/legal/*` и проверить тексты у юриста.
 - [ ] Реальная оплата: реализовать `MBankGateway` / `ODengiGateway` / `ElsomGateway` (создание платежа, проверка подписи webhook, статус) и добавить их в `PRODUCTION_READY` в `payments/registry.ts`. До этого в проде — `PAYMENT_PROVIDER=manual`.
 - [ ] Возвраты платежей (`REFUNDED`) и отмена пакета.
 - [ ] Автоматически помечать FAILED брошенные `PENDING`-платежи (manual) старше N дней, чтобы не копились в `/admin`.
 - [ ] Маркетплейс тамад: бронирование даты через Chakyruu, отзывы.
-- [ ] Реальные SMS: Nikita.kg / SMSPro через `SmsProvider` вместо `ConsoleSmsProvider`.
-- [ ] Хранилище фото и mp3 в DigitalOcean Spaces через `StorageProvider` (шаг 5).
 - [ ] Музыка: добавить лицензионно чистые файлы — положить в `client/public/music/` или загрузить в `/admin` → «Музыка», затем включить трек. Пять треков из миграции `music_tracks` выключены, пока нет файлов.
-- [ ] Установить ffmpeg на сервере (в Docker-образ), иначе свои mp3 сохраняются без сжатия.
 - [ ] Удаление приглашения: сейчас его нет; при появлении — удалять файлы галереи и музыки из хранилища.
 - [ ] Rate limit в памяти работает только на одном инстансе — перенести в Redis/Postgres при масштабировании.
 - [ ] Периодическая очистка просроченных `OtpCode` и `Session`.
-- [ ] Глобальный лимит SMS в час (защита бюджета при реальном провайдере).
 - [ ] Защита от блокировки входа жертвы: злоумышленник может исчерпать лимит запросов кода на чужой номер.
 - [ ] При ошибке `POST /auth/logout` клиент показывает выход, но сессия на сервере остаётся до истечения.
 - [ ] Отправка уведомлений тойкане по новым `PartnerLead` (сейчас заявки только сохраняются в БД).

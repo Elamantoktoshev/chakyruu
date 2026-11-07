@@ -67,7 +67,6 @@ const ky = {
   footerPrivacy: 'Купуялык саясаты',
   footerCopyright: '© {year} Chakyruu.kg',
   mobileCta: 'Түзүү',
-  legalPending: 'Бул барактын тексти даярдалып жатат.',
 };
 
 export type LandingDict = typeof ky;
@@ -139,7 +138,6 @@ const ru: LandingDict = {
   footerPrivacy: 'Политика конфиденциальности',
   footerCopyright: '© {year} Chakyruu.kg',
   mobileCta: 'Создать',
-  legalPending: 'Текст этой страницы готовится.',
 };
 
 export const landingDict = { ky, ru };

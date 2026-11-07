@@ -375,3 +375,14 @@ export interface AdminLead {
   organizationId: string | null;
   createdAt: string;
 }
+
+export interface AdminStats {
+  period: 'day' | 'week' | 'month';
+  since: string;
+  newUsers: number;
+  invitationsCreated: number;
+  invitationsPublished: number;
+  revenueSom: number;
+  paidPayments: number;
+  conversionPercent: number;
+}

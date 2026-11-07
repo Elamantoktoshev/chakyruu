@@ -77,6 +77,13 @@ const baseSchema = z.object({
   /** https://<bucket>.<region>.cdn.digitaloceanspaces.com (or a custom CDN domain). */
   SPACES_CDN_URL: unsetIfEmpty(z.url()),
 
+  /** Error tracking (sentry.io); empty → off. The browser uses SENTRY_DSN_CLIENT, or the same DSN. */
+  SENTRY_DSN: unsetIfEmpty(z.url()),
+  SENTRY_DSN_CLIENT: unsetIfEmpty(z.url()),
+  /** Cookieless analytics (Umami Cloud); empty → off. */
+  UMAMI_WEBSITE_ID: unsetIfEmpty(z.string().regex(/^[a-f0-9-]{36}$/i, 'must be the Umami website id (UUID)')),
+  UMAMI_SCRIPT_URL: z.preprocess((value) => (value === '' ? undefined : value), z.url().default('https://cloud.umami.is/script.js')),
+  LOG_LEVEL: unsetIfEmpty(z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])),
   /** Set by the platform (App Platform: ${_self.COMMIT_HASH}); shown in /api/health. */
   COMMIT_SHA: optionalText,
   CLIENT_DIST_DIR: optionalText,

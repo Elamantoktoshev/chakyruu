@@ -12,6 +12,7 @@ import { ErrorView, LoadingView } from '../components/StatusView';
 import type { Dict } from '../i18n/dict';
 import { useI18n } from '../i18n/LanguageContext';
 import { copyText } from '../lib/share';
+import { track } from '../lib/analytics';
 
 const FIELD_LABEL_KEYS = { hostNames: 'fieldHostNames', eventDate: 'fieldDate', venueName: 'fieldVenueName' } as const;
 
@@ -60,6 +61,7 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
         setPending({ paymentId: result.paymentId, checkout: result.checkout });
         return;
       }
+      track('published', { isGift: invitation.isGift });
       setPublishedSlug(result.slug);
     } catch (err: unknown) {
       const labels = missingFieldLabels(err, t);

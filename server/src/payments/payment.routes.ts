@@ -7,6 +7,7 @@ import { prisma } from '../lib/prisma.js';
 import { fulfillPayment, markPaymentFailed } from './fulfill.service.js';
 import { WebhookRejected, type PaymentGateway } from './gateway.js';
 import { getPaymentStatus } from './status.service.js';
+import { logger } from '../lib/logger.js';
 
 const WEBHOOK_BODY_LIMIT = '64kb';
 /** Providers retry a few times; anything far above this is noise or an attack. */
@@ -41,7 +42,7 @@ export function createWebhookRouter(gateway: PaymentGateway): Router {
       event = await gateway.parseWebhook({ headers, rawBody: Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0) });
     } catch (error: unknown) {
       if (error instanceof WebhookRejected || error instanceof SyntaxError) {
-        console.warn(`[payments] rejected ${gateway.id} webhook: ${error.message}`);
+        logger.warn(`[payments] rejected ${gateway.id} webhook: ${error.message}`);
         throw new HttpError(401, 'Webhook rejected');
       }
       throw error;

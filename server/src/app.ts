@@ -8,9 +8,12 @@ import { createAuthService } from './auth/auth.service.js';
 import type { SmsProvider } from './auth/sms.js';
 import { createPublicInvitationRouter } from './invitations/invitation.routes.js';
 import { createMyInvitationsRouter } from './invitations/my.routes.js';
-import { errorHandler, notFoundHandler, sendOk } from './lib/http.js';
+import { createErrorHandler, notFoundHandler, sendOk } from './lib/http.js';
+import type { ErrorReporter } from './lib/errorReporter.js';
+import { integrationOrigins, integrationTags, type BrowserIntegrations } from './web/integrations.js';
 import { createHealthHandler } from './lib/health.js';
 import { resolveClientIp } from './lib/clientIp.js';
+import { requestLogger } from './lib/logger.js';
 import { sanitizeJsonBody, securityHeaders } from './lib/security.js';
 import { createAdminRouter } from './admin/admin.routes.js';
 import { createCatalogRouter } from './catalog/catalog.routes.js';
@@ -25,6 +28,7 @@ import type { StorageProvider } from './storage/storage.provider.js';
 import { createPublicTrackRouter } from './music/track.routes.js';
 import { createOgRouter } from './og/og.routes.js';
 import { createPictureRenderer } from './og/og.service.js';
+import { createSeoRouter } from './web/seo.js';
 import { createWebRouter } from './web/spa.js';
 import { templateRouter } from './templates/template.routes.js';
 import { createTilekLikeRouter } from './tilek/tilek.routes.js';
@@ -48,6 +52,10 @@ export interface AppConfig {
   trustProxyHops?: number;
   /** Injectable clock (tests use it to expire codes and sessions). */
   now?: () => Date;
+  /** Unexpected errors are reported here (Sentry) besides the logs. */
+  errorReporter?: ErrorReporter;
+  /** Browser error tracking and analytics added to every page. */
+  browser?: BrowserIntegrations;
   /** Origins photos and music are served from besides this site (Spaces CDN), for the CSP. */
   mediaOrigins?: readonly string[];
   /** Header with the real client IP set by the hosting edge (DigitalOcean: do-connecting-ip). */
@@ -81,9 +89,11 @@ export function createApp(config: AppConfig): Express {
   });
 
   app.disable('x-powered-by');
+  app.use(requestLogger());
   // gzip for HTML, JS, CSS and JSON (images and mp3 are already compressed and skipped).
   app.use(compression());
-  app.use(securityHeaders({ isProduction, mediaOrigins: config.mediaOrigins }));
+  const browserOrigins = config.browser ? integrationOrigins(config.browser) : { scriptOrigins: [], connectOrigins: [] };
+  app.use(securityHeaders({ isProduction, mediaOrigins: config.mediaOrigins, ...browserOrigins }));
   app.set('trust proxy', trustProxyHops);
   app.use(resolveClientIp(config.clientIpHeader));
 
@@ -125,9 +135,13 @@ export function createApp(config: AppConfig): Express {
   app.use('/api/admin', createAdminRouter({ storage, compress: compressAudio }));
   app.use('/api/og', createOgRouter({ renderer: createPictureRenderer({ appUrl: checkout.appUrl }), appUrl: checkout.appUrl }));
 
-  if (config.clientDir) app.use(createWebRouter({ clientDir: config.clientDir, appUrl: checkout.appUrl }));
+  app.use(createSeoRouter(checkout.appUrl));
+  if (config.clientDir) {
+    const headTags = config.browser ? integrationTags(config.browser) : '';
+    app.use(createWebRouter({ clientDir: config.clientDir, appUrl: checkout.appUrl, headTags }));
+  }
 
   app.use(notFoundHandler);
-  app.use(errorHandler);
+  app.use(createErrorHandler(config.errorReporter));
   return app;
 }

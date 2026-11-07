@@ -16,6 +16,8 @@ interface WebDeps {
   /** client/dist */
   clientDir: string;
   appUrl: string;
+  /** Added to every page (Sentry settings, analytics script). */
+  headTags?: string;
 }
 
 /** A file name with an extension ("/assets/app-1a2b.js", "/robots.txt"): never answered with index.html. */
@@ -52,6 +54,11 @@ function embedInvitation(html: string, slug: string, data: unknown): string {
   return html.replace('</body>', `${script}\n  </body>`);
 }
 
+/** Crawlers need an absolute og:image; index.html ships a site-relative one. */
+function absoluteOgImage(html: string, appUrl: string): string {
+  return html.replace(/(<meta\s+property="og:image"\s+content=")\/(?!\/)/, `$1${appUrl}/`);
+}
+
 function addToHead(html: string, tags: string): string {
   return tags ? html.replace('</head>', `  ${tags}\n  </head>`) : html;
 }
@@ -61,7 +68,7 @@ function addToHead(html: string, tags: string): string {
  * For a published invitation (/:slug) the HTML carries Open Graph tags, so WhatsApp and
  * Telegram show the names, date and picture — bots do not run JavaScript.
  */
-export function createWebRouter({ clientDir, appUrl }: WebDeps): Router {
+export function createWebRouter({ clientDir, appUrl, headTags = '' }: WebDeps): Router {
   const router = Router();
   const readIndexHtml = indexHtmlReader(path.join(clientDir, 'index.html'));
   const preloadsFor = manifestPreloader(clientDir);
@@ -83,7 +90,7 @@ export function createWebRouter({ clientDir, appUrl }: WebDeps): Router {
       next();
       return;
     }
-    const indexHtml = readIndexHtml();
+    const indexHtml = addToHead(readIndexHtml(), headTags);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     // Pages change with every deploy; assets are versioned by name.
     res.setHeader('Cache-Control', 'no-cache');
@@ -91,7 +98,7 @@ export function createWebRouter({ clientDir, appUrl }: WebDeps): Router {
     const slug = invitationSlugOf(req.path);
     const card = slug ? await findPublishedCard(slug) : null;
     if (!slug || !card) {
-      res.send(indexHtml);
+      res.send(absoluteOgImage(indexHtml, appUrl));
       return;
     }
     // Everything the first paint needs arrives with the HTML: data, template chunk, hero photo.

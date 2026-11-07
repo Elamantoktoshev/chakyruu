@@ -79,8 +79,17 @@ export function renderMetaTags(meta: PageMeta): string {
   ].join('\n    ');
 }
 
-/** Replaces the default <title> and description of index.html with the page's tags. */
+/** Default page tags in index.html that a page with its own meta replaces. */
+const DEFAULT_TAGS = [
+  /<title>[\s\S]*?<\/title>\s*/gi,
+  /<meta\s+name="description"[^>]*>\s*/gi,
+  /<meta\s+property="og:[^"]*"[^>]*>\s*/gi,
+  /<meta\s+name="twitter:[^"]*"[^>]*>\s*/gi,
+  /<link\s+rel="canonical"[^>]*>\s*/gi,
+];
+
+/** Replaces the landing page's default <title>, description and Open Graph tags with the page's own. */
 export function injectMeta(html: string, meta: PageMeta): string {
-  const withoutDefaults = html.replace(/<title>[\s\S]*?<\/title>\s*/i, '').replace(/<meta\s+name="description"[^>]*>\s*/i, '');
+  const withoutDefaults = DEFAULT_TAGS.reduce((result, pattern) => result.replace(pattern, ''), html);
   return withoutDefaults.replace('</head>', `  ${renderMetaTags(meta)}\n  </head>`);
 }

@@ -44,6 +44,7 @@ export function App() {
             <Route path="/tamadalar" element={<TamadaCatalogPage />} />
             <Route path="/oferta" element={<LegalPage kind="offer" />} />
             <Route path="/privacy" element={<LegalPage kind="privacy" />} />
+            <Route path="/contacts" element={<LegalPage kind="contacts" />} />
             <Route path="/admin" element={<RequireAuth><AdminPage paymentsTab={<PaymentsTab />} /></RequireAuth>} />
             <Route path="/:slug" element={<InvitationPage />} />
           </Routes>

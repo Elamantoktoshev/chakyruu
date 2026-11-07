@@ -13,6 +13,9 @@ const RENDER_TIMEOUT_MS = 30_000;
 const INDEX_HTML = `<!doctype html><html lang="ky"><head>
     <title>Chakyruu.kg — той чакыруулары</title>
     <meta name="description" content="Default description" />
+    <meta property="og:title" content="Chakyruu.kg landing" />
+    <meta property="og:image" content="/og-landing.png" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head><body><div id="root"></div></body></html>`;
 
 let ctx: TestContext;
@@ -58,7 +61,8 @@ describe('web pages', () => {
       const res = await request(app()).get(page).expect(200);
       expect(res.headers['cache-control']).toBe('no-cache');
       expect(res.text).toContain('<title>Chakyruu.kg — той чакыруулары</title>');
-      expect(res.text).not.toContain('og:title');
+      // Every non-invitation page shares the landing's preview.
+      expect(metaContent(res.text, 'og:title')).toBe('Chakyruu.kg landing');
     }
   });
 
@@ -92,6 +96,22 @@ describe('web pages', () => {
     await request(app()).get('/missing.png').expect(404);
   });
 
+  it('gives the landing an absolute preview picture', async () => {
+    const res = await request(app()).get('/').expect(200);
+    expect(metaContent(res.text, 'og:image')).toBe('http://localhost:5173/og-landing.png');
+  });
+
+  it('serves robots.txt and a sitemap of public pages only', async () => {
+    const robots = await request(app()).get('/robots.txt').expect(200);
+    expect(robots.headers['content-type']).toContain('text/plain');
+    expect(robots.text).toContain('Allow: /api/og/');
+    expect(robots.text).toContain('Disallow: /api/');
+    expect(robots.text).toContain('Sitemap: http://localhost:5173/sitemap.xml');
+    const sitemap = await request(app()).get('/sitemap.xml').expect(200);
+    expect(sitemap.text).toContain('<loc>http://localhost:5173/oferta</loc>');
+    expect(sitemap.text).not.toContain(SLUG);
+  });
+
   it('keeps unknown API paths as JSON 404s', async () => {
     const res = await request(app()).get('/api/nope').expect(404);
     expect(res.body.success).toBe(false);
@@ -102,6 +122,9 @@ describe('web pages', () => {
     expect(res.headers['x-robots-tag']).toBe('noindex, nofollow');
     expect(res.text).toContain('<title>Test &amp; Test — Үйлөнүү той</title>');
     expect(res.text.match(/<title>/g)).toHaveLength(1);
+    // The landing's default Open Graph tags are replaced, not duplicated.
+    expect(res.text.match(/property="og:title"/g)).toHaveLength(1);
+    expect(res.text).not.toContain('og-landing.png');
     expect(metaContent(res.text, 'og:title')).toBe('Test &amp; Test — Үйлөнүү той');
     expect(metaContent(res.text, 'og:description')).toContain('15-июнь, 2027-ж. · 17:00 · Test hall');
     expect(metaContent(res.text, 'og:image')).toMatch(new RegExp(`/api/og/${SLUG}\\.png\\?v=\\d+$`));

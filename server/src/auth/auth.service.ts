@@ -3,6 +3,7 @@ import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
 import { loginCodeText, maskPhone, type SmsProvider } from './sms.js';
 import { generateOtpCode, generateSessionToken, hashOtp, hashSessionToken, safeEqualHex } from './tokens.js';
+import { logger } from '../lib/logger.js';
 
 export const OTP_TTL_MS = 5 * 60 * 1000;
 export const OTP_MAX_ATTEMPTS = 5;
@@ -73,7 +74,7 @@ export function createAuthService({
       where: { createdAt: { gt: new Date(issuedAt.getTime() - DAY_MS) }, phone: { notIn: demoPhones } },
     });
     if (sentToday >= smsDailyLimit) {
-      console.error(`[auth] daily SMS limit of ${smsDailyLimit} reached — login codes are paused`);
+      logger.error(`[auth] daily SMS limit of ${smsDailyLimit} reached — login codes are paused`);
       throw new HttpError(503, 'Login is temporarily unavailable, please try again later');
     }
   }
@@ -112,13 +113,13 @@ export function createAuthService({
     ]);
 
     if (demoCode) {
-      console.info(`[auth] demo number ${maskPhone(phone)}: fixed code, no SMS`);
+      logger.info(`[auth] demo number ${maskPhone(phone)}: fixed code, no SMS`);
       return { expiresInSeconds: OTP_TTL_MS / 1000 };
     }
     try {
       await sms.send(phone, loginCodeText(code));
     } catch (error: unknown) {
-      console.error(`[auth] SMS delivery failed for ${maskPhone(phone)}`, error);
+      logger.error({ err: error }, `[auth] SMS delivery failed for ${maskPhone(phone)}`);
       throw new HttpError(503, 'Could not send SMS, please try again later');
     }
     const expiresInSeconds = OTP_TTL_MS / 1000;
