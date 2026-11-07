@@ -52,6 +52,19 @@ GitHub (push в main) ──▶ GitHub Actions: проверки → депло�
 7. На странице кластера откройте вкладку **Users & Databases**:
    - **Add new database** → `chakyruu`;
    - **Add new user** → `chakyruu`.
+8. **Отдайте базу пользователю `chakyruu`.** Начиная с PostgreSQL 15 новый пользователь не может создавать таблицы в схеме `public`, и миграция падает с `permission denied for schema public`. Выполните один раз с компьютера, пока у базы нет Trusted Sources (сразу после создания, до шага 6):
+   ```bash
+   brew install libpq
+   CLUSTER_ID=$(doctl databases list --format ID,Name --no-header | awk '$2=="chakyruu-db"{print $1}')
+   # --show: без него doctl подставляет вместо пароля ******** и вход не проходит
+   ADMIN_URI=$(doctl databases connection "$CLUSTER_ID" --show --format URI --no-header)
+   /usr/local/opt/libpq/bin/psql "$(printf '%s' "$ADMIN_URI" | sed 's#/defaultdb?#/chakyruu?#')" -v ON_ERROR_STOP=1 \
+     -c 'ALTER DATABASE chakyruu OWNER TO chakyruu' \
+     -c 'ALTER SCHEMA public OWNER TO chakyruu'
+   ```
+   На Apple Silicon путь к `psql`: `/opt/homebrew/opt/libpq/bin/psql`. Если Trusted Sources уже включены, временно добавьте туда свой IP.
+
+Перед продолжением проверьте на странице кластера: регион **FRA1**, версия **16**. Если что-то не так, удалите пустой кластер и создайте заново, пока в нём нет данных.
 
 **Бэкапы.** У Managed PostgreSQL ежедневные бэкапы и восстановление на любой момент последних 7 дней включены автоматически. Найти их можно на вкладке **Backups** кластера. Отдельно включать ничего не нужно.
 
@@ -105,7 +118,9 @@ doctl apps list          # запомните ID приложения (перв�
 
 ## 7. Секреты
 
-Откройте **Apps → chakyruu → Settings**. Переменные есть у компонента **web** и у задачи **migrate**. Для каждой нажмите **Edit**, вставьте значение и отметьте **Encrypt**.
+Откройте **Apps → chakyruu → Settings**. Переменные есть у компонента **web** и у задачи **migrate**. Для каждой переменной из таблицы ниже нажмите **Edit**, вставьте значение и отметьте **Encrypt**.
+
+**Encrypt ставьте только у переменных из этой таблицы.** Остальные (`DATABASE_URL`, `CLIENT_URL`, `COMMIT_SHA`, `NODE_ENV` и т. д.) не трогайте: значения вида `${db.DATABASE_URL}` DigitalOcean подставляет только в незашифрованные переменные, а зашифрованные передаёт серверу буквально.
 
 | Переменная | Где взять |
 |---|---|

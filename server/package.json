@@ -13,6 +13,7 @@
     "test:unit": "vitest run --project unit",
     "seed:prod": "node --env-file-if-exists=../.env dist-seed/seed.js",
     "migrate:deploy": "prisma migrate deploy --schema prisma/schema.prisma",
+    "release": "npm run migrate:deploy && npm run seed:prod",
     "uploads:to-spaces": "tsx --env-file-if-exists=../.env scripts/migrate-uploads-to-spaces.ts",
     "db:dump": "tsx --env-file-if-exists=../.env scripts/db-dump-to-spaces.ts",
     "brand:render": "tsx scripts/render-brand-assets.ts",

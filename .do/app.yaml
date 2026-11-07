@@ -97,7 +97,9 @@ jobs:
     dockerfile_path: server/Dockerfile
     instance_size_slug: apps-s-1vcpu-0.5gb
     # Migrations, then reference data only (templates, ADMIN_PHONE). No demo data in production.
-    run_command: npm run migrate:deploy && npm run seed:prod
+    # App Platform runs this without a shell, so "a && b" here would pass "&&" as an argument:
+    # the chaining lives in the npm script instead.
+    run_command: npm run release
     envs:
       - key: NODE_ENV
         value: production

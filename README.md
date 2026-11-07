@@ -220,8 +220,10 @@ client/src
 
 | Команда (из `server/`) | Что делает |
 | --- | --- |
-| `npm run migrate:deploy` | Применить миграции (в проде — задача PRE_DEPLOY) |
+| `npm run release` | Миграции, затем справочники: это и запускает задача PRE_DEPLOY `migrate` |
+| `npm run migrate:deploy` | Только применить миграции |
 | `npm run seed:prod` | Справочники без демо-данных |
+| `npm run sms:test -- +996…` | Отправить тестовый код через Nikita.kg (из корня) |
 | `npm run uploads:to-spaces -- --dry-run` | Перенести `server/uploads` в Spaces |
 | `npm run db:dump` | Ручной дамп базы в Spaces (`backups/`) |
 | `npm run brand:render` | Пересоздать иконки PWA и OG-картинку главной |
