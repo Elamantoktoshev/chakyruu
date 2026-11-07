@@ -1,11 +1,13 @@
-import { PAYMENT_PROVIDERS, PUBLISH_PRICE_TYIYN, tyiynToSom, type PaymentProviderId } from '@chakyruu/shared';
+import { PAYMENT_PROVIDERS, type PaymentProviderId } from '@chakyruu/shared';
 import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { api, ApiError } from '../api/client';
-import type { OwnerInvitation } from '../api/types';
+import type { CheckoutView, OwnerInvitation } from '../api/types';
+import { usePrices } from '../api/usePrices';
 import { useAsync } from '../api/useAsync';
 import { AppHeader } from '../components/AppHeader';
 import { PAYMENT_LABELS, PaymentBadge } from '../components/PaymentBadges';
+import { CheckoutPanel } from '../components/payments/CheckoutPanel';
 import { ErrorView, LoadingView } from '../components/StatusView';
 import type { Dict } from '../i18n/dict';
 import { useI18n } from '../i18n/LanguageContext';
@@ -44,6 +46,9 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState<string[] | null>(null);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
+  const [pending, setPending] = useState<{ paymentId: string; checkout: CheckoutView } | null>(null);
+  const { publishPriceSom } = usePrices();
+  const priceLabel = invitation.isGift ? '0' : publishPriceSom === null ? '…' : publishPriceSom.toLocaleString('ru-RU');
 
   async function handlePay() {
     setIsPaying(true);
@@ -52,7 +57,7 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
     try {
       const result = await api.publishInvitation(invitation.id, provider);
       if (result.status === 'PENDING') {
-        window.location.assign(result.redirectUrl);
+        setPending({ paymentId: result.paymentId, checkout: result.checkout });
         return;
       }
       setPublishedSlug(result.slug);
@@ -65,13 +70,14 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
   }
 
   if (publishedSlug) return <Published slug={publishedSlug} />;
+  if (pending) return <CheckoutPanel checkout={pending.checkout} paymentId={pending.paymentId} />;
 
   return (
     <div className="space-y-6">
       <h1 className="font-serif text-3xl text-burgundy">{t.payTitle}</h1>
       <div className="rounded-3xl border border-gold/40 bg-white/70 p-6 text-center">
         <p className="text-sm text-ink/60">{t.payPrice}</p>
-        <p className="mt-1 font-serif text-5xl font-bold text-burgundy">{tyiynToSom(PUBLISH_PRICE_TYIYN)} сом</p>
+        <p className="mt-1 font-serif text-5xl font-bold text-burgundy">{priceLabel} сом</p>
         <p className="mt-2 text-sm text-ink/70">{invitation.hostNames}</p>
       </div>
 
@@ -117,7 +123,7 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
         onClick={() => void handlePay()}
         className="min-h-14 w-full rounded-full bg-burgundy font-semibold text-cream shadow-lg shadow-burgundy/20 transition hover:bg-burgundy-dark disabled:opacity-60"
       >
-        {isPaying ? t.paying : `${t.payButton} · ${tyiynToSom(PUBLISH_PRICE_TYIYN)} сом`}
+        {isPaying ? t.paying : invitation.isGift ? t.publishFree : `${t.payButton} · ${priceLabel} сом`}
       </button>
       <p className="text-center text-xs text-ink/50">{t.payFakeNote}</p>
       <Link to={`/create/${invitation.id}`} className="block text-center text-sm text-burgundy underline underline-offset-4">

@@ -1,7 +1,8 @@
 import request from 'supertest';
 import { createApp } from '../src/app.js';
 import { MemorySmsProvider } from '../src/auth/sms.js';
-import { FakePaymentProvider } from '../src/payments/payment.provider.js';
+import { FakeGateway } from '../src/payments/fake.gateway.js';
+import type { PaymentGateway } from '../src/payments/gateway.js';
 import { MemoryStorageProvider } from '../src/storage/storage.provider.js';
 
 export const TEST_ORIGIN = 'http://localhost:5173';
@@ -10,16 +11,16 @@ export const TEST_OTP_SECRET = 'integration-test-secret-integration-test';
 export interface TestContext {
   sms: MemorySmsProvider;
   storage: MemoryStorageProvider;
-  payments: FakePaymentProvider;
+  payments: PaymentGateway;
   /** Shift the app clock (codes, sessions) forward in tests. */
   clockOffsetMs: number;
 }
 
-export function createTestContext(): TestContext {
+export function createTestContext(payments: PaymentGateway = new FakeGateway()): TestContext {
   return {
     sms: new MemorySmsProvider(),
     storage: new MemoryStorageProvider(),
-    payments: new FakePaymentProvider(),
+    payments,
     clockOffsetMs: 0,
   };
 }

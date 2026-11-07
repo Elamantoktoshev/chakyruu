@@ -5,7 +5,7 @@ import { TEST_ORIGIN, buildTestApp, createTestContext, type TestContext } from '
 import { resetDatabase } from '../../test/db.js';
 
 const URL = '/api/public/partner-leads';
-const LEAD = { name: 'Нурлан', phone: '+996700123456', venueName: '«Ала-Тоо» тойканасы', city: 'Ош' };
+const LEAD = { type: 'VENUE', name: 'Нурлан', phone: '+996700123456', venueName: '«Ала-Тоо» тойканасы', city: 'Ош' };
 
 let ctx: TestContext;
 
@@ -22,7 +22,7 @@ describe('partner leads', () => {
   it('stores a partnership request from the landing page', async () => {
     const res = await request(buildTestApp(ctx)).post(URL).set('Origin', TEST_ORIGIN).send(LEAD).expect(201);
     expect(res.body.data).toEqual({ received: true });
-    expect(await prisma.partnerLead.findFirst()).toMatchObject(LEAD);
+    expect(await prisma.partnerLead.findFirst()).toMatchObject({ ...LEAD, status: 'NEW' });
   });
 
   it('validates the phone and required fields', async () => {

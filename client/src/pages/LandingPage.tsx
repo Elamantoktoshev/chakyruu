@@ -1,8 +1,9 @@
-import { EVENT_TYPES, PUBLISH_PRICE_TYIYN, tyiynToSom } from '@chakyruu/shared';
+import { EVENT_TYPES } from '@chakyruu/shared';
 import { useCallback } from 'react';
 import { Link } from 'react-router';
 import { api } from '../api/client';
 import type { Template } from '../api/types';
+import { usePrices } from '../api/usePrices';
 import { useAsync } from '../api/useAsync';
 import { useAuth } from '../auth/AuthContext';
 import { AppHeader } from '../components/AppHeader';
@@ -28,7 +29,8 @@ export function LandingPage() {
   const templates = useAsync(load);
   const examples = templates.status === 'success' ? onePerType(templates.data) : [];
   const createHref = auth.status === 'authenticated' ? '/create' : '/login?next=/create';
-  const price = String(tyiynToSom(PUBLISH_PRICE_TYIYN));
+  const { publishPriceSom } = usePrices();
+  const price = publishPriceSom === null ? '…' : publishPriceSom.toLocaleString('ru-RU');
 
   return (
     <div className="min-h-dvh">
@@ -128,9 +130,14 @@ export function LandingPage() {
         <section className="mx-auto max-w-6xl px-4 py-14">
           <div className="flex items-end justify-between gap-3">
             <h2 className="font-serif text-3xl text-burgundy">{t.templatesTitle}</h2>
-            <Link to={createHref} className="text-sm font-semibold text-burgundy underline underline-offset-4">
-              {t.templatesAll}
-            </Link>
+            <div className="flex gap-4">
+              <Link to="/tamadalar" className="text-sm font-semibold text-burgundy underline underline-offset-4">
+                {t.catalogTitle}
+              </Link>
+              <Link to={createHref} className="text-sm font-semibold text-burgundy underline underline-offset-4">
+                {t.templatesAll}
+              </Link>
+            </div>
           </div>
           <div className="-mx-4 mt-6 flex snap-x gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
             {examples.map((template) => (

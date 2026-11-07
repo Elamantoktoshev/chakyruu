@@ -8,13 +8,6 @@ export type Language = (typeof LANGUAGES)[number];
 export const PAYMENT_PROVIDERS = ['MBANK', 'ODENGI', 'ELSOM'] as const;
 export type PaymentProviderId = (typeof PAYMENT_PROVIDERS)[number];
 
-/** Creating and previewing is free; publishing costs this much (tyiyn, 1 som = 100 tyiyn). */
-export const PUBLISH_PRICE_TYIYN = 70_000;
-
-export function tyiynToSom(tyiyn: number): number {
-  return tyiyn / 100;
-}
-
 export interface MusicTrack {
   id: string;
   title: string;

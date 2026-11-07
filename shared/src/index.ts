@@ -6,3 +6,5 @@ export * from './guests.js';
 export * from './tilek.js';
 export * from './summary.js';
 export * from './partners.js';
+export * from './urls.js';
+export * from './admin.js';

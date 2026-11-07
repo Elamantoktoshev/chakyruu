@@ -17,11 +17,13 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   'login',
   'logout',
   'music',
+  'partner',
   'partners',
   'pay',
   'privacy',
   'settings',
   'static',
+  'tamadalar',
   'terms',
   'uploads',
 ]);

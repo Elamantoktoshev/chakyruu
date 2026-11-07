@@ -31,7 +31,7 @@ describe('slugify', () => {
 
 describe('reserved slugs', () => {
   it('blocks app routes so an invitation cannot shadow them', () => {
-    for (const slug of ['create', 'dashboard', 'login', 'pay', 'api', 'uploads']) {
+    for (const slug of ['create', 'dashboard', 'login', 'pay', 'api', 'uploads', 'partner', 'tamadalar', 'admin']) {
       expect(isReservedSlug(slug), slug).toBe(true);
       expect(RESERVED_SLUGS.has(slug)).toBe(true);
     }

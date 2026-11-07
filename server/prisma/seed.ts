@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { PrismaClient, TemplateType, type Prisma } from '@prisma/client';
+import { seedPartners } from './seed.partners.js';
 
 const prisma = new PrismaClient();
 
@@ -96,7 +97,8 @@ async function seedDemoGuests(invitationId: string): Promise<void> {
 async function main(): Promise<void> {
   await seedTemplates();
   await seedDemoInvitation();
-  console.info(`Seed done: ${TEMPLATES.length} templates, demo invitation "/${DEMO_SLUG}"`);
+  const partners = await seedPartners(prisma);
+  console.info(`Seed done: ${TEMPLATES.length} templates, demo invitation "/${DEMO_SLUG}", ${partners}`);
 }
 
 main()

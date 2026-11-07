@@ -32,6 +32,9 @@ export interface InvitationContent {
   language: Language;
   adultsOnly: boolean;
   template: Template;
+  /** Partner branding blocks (public page and builder preview). */
+  venue?: VenueBlock | null;
+  tamada?: TamadaBlock | null;
 }
 
 /** What the invitation page knows about the guest behind a personal link. */
@@ -75,9 +78,61 @@ export interface OwnerInvitation extends InvitationContent {
   templateId: string;
   publishedAt: string | null;
   updatedAt: string;
+  venueOrgId: string | null;
+  tamadaOrgId: string | null;
+  hallId: string | null;
+  /** Created from a partner's gift: publishing is free. */
+  isGift: boolean;
+  giftFrom: { name: string; type: OrgType } | null;
 }
 
-export type PublishResult = { status: 'PUBLISHED'; slug: string } | { status: 'PENDING'; redirectUrl: string };
+export interface ManualInstructions {
+  receiver: string;
+  reference: string;
+  amountSom: number;
+}
+
+/** What the payer must do next, as decided by the payment gateway. */
+export type CheckoutView =
+  | { kind: 'redirect'; url: string }
+  | { kind: 'qr'; qrPayload: string; url?: string }
+  | { kind: 'manual'; instructions: ManualInstructions };
+
+export type PublishResult =
+  | { status: 'PUBLISHED'; slug: string; paymentId: string | null }
+  | { status: 'PENDING'; slug: string; paymentId: string; checkout: CheckoutView };
+
+export interface CheckoutOutcome {
+  paymentId: string;
+  status: 'SUCCEEDED' | 'PENDING';
+  checkout?: CheckoutView;
+}
+
+export interface PaymentStatusView {
+  id: string;
+  purpose: 'INVITATION' | 'CREDIT_PACKAGE';
+  status: 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'REFUNDED';
+  amountSom: number;
+  reference: string | null;
+  credits: number | null;
+  invitationSlug: string | null;
+  checkout: CheckoutView | null;
+}
+
+export interface AdminPayment {
+  id: string;
+  purpose: 'INVITATION' | 'CREDIT_PACKAGE';
+  status: 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'REFUNDED';
+  amount: number;
+  provider: 'MBANK' | 'ODENGI' | 'ELSOM';
+  gateway: string;
+  reference: string | null;
+  credits: number | null;
+  createdAt: string;
+  paidAt: string | null;
+  invitation: { slug: string; hostNames: string; owner: { phone: string } } | null;
+  organization: { name: string; phone: string | null } | null;
+}
 
 export type UserRole = 'OWNER' | 'ORG_ADMIN' | 'ADMIN';
 
@@ -120,4 +175,148 @@ export interface DashboardInvitation {
   photoUrl: string | null;
   updatedAt: string;
   summary: GuestSummary;
+}
+
+export type OrgType = 'VENUE' | 'TAMADA' | 'AGENCY';
+export type PartnerLanguage = 'KY' | 'RU' | 'UZ';
+
+export interface Hall {
+  id: string;
+  name: string;
+  capacity: number;
+}
+
+export interface TamadaProfile {
+  displayName: string;
+  photoUrl: string | null;
+  bio: string | null;
+  languages: PartnerLanguage[];
+  priceFromSom: number | null;
+  videoUrls: string[];
+}
+
+export interface PartnerProfile {
+  id: string;
+  type: OrgType;
+  name: string;
+  phone: string | null;
+  whatsapp: string | null;
+  instagram: string | null;
+  city: string | null;
+  logoUrl: string | null;
+  address: string | null;
+  mapUrl: string | null;
+  invitationCredits: number;
+  catalogStatus: 'HIDDEN' | 'PUBLISHED';
+  halls: Hall[];
+  tamadaProfile: TamadaProfile | null;
+  busyDates: string[];
+}
+
+export type GiftStatus = 'ACTIVE' | 'IN_PROGRESS' | 'USED' | 'CANCELLED' | 'EXPIRED';
+
+export interface PartnerGift {
+  id: string;
+  code: string;
+  clientPhone: string;
+  eventDate: string;
+  expiresAt: string;
+  status: GiftStatus;
+  hall: { id: string; name: string } | null;
+  createdAt: string;
+}
+
+export interface MyGift {
+  id: string;
+  code: string;
+  eventDate: string;
+  expiresAt: string;
+  hall: { name: string } | null;
+  organization: { name: string; type: OrgType; city: string | null; logoUrl: string | null };
+}
+
+export interface CreditLedgerEntry {
+  id: string;
+  amount: number;
+  reason: 'PURCHASE' | 'GIFT_ISSUED' | 'GIFT_REFUND' | 'ADMIN_GRANT';
+  createdAt: string;
+}
+
+export interface PartnerStats {
+  gifts: Record<GiftStatus, number> & { issued: number };
+  invitations: number;
+  peopleComing: number;
+  tamadaClicks: { total: number; last30Days: number };
+  calendar: { slug: string; hostNames: string; eventDate: string; eventType: EventType; hall: { id: string; name: string } | null }[];
+}
+
+export interface TamadaCard extends TamadaProfile {
+  id: string;
+  city: string | null;
+  instagram: string | null;
+}
+
+export interface VenueOption {
+  id: string;
+  name: string;
+  city: string | null;
+  address: string | null;
+  logoUrl: string | null;
+  halls: Hall[];
+}
+
+export interface VenueBlock {
+  name: string;
+  logoUrl: string | null;
+  address: string | null;
+  mapUrl: string | null;
+  hallName: string | null;
+}
+
+export interface TamadaBlock {
+  id: string;
+  displayName: string;
+  photoUrl: string | null;
+}
+
+export type PriceAudience = 'CLIENT' | 'VENUE' | 'TAMADA';
+
+export interface PublicPrice {
+  code: string;
+  audience: PriceAudience;
+  amountSom: number;
+  credits: number | null;
+}
+
+export interface AdminPrice extends PublicPrice {
+  active: boolean;
+  sortOrder: number;
+}
+
+export interface AdminOrganization {
+  id: string;
+  type: OrgType;
+  name: string;
+  city: string | null;
+  phone: string | null;
+  invitationCredits: number;
+  catalogStatus: 'HIDDEN' | 'PUBLISHED';
+  createdAt: string;
+  adminPhones: string[];
+  giftsIssued: number;
+  invitations: number;
+}
+
+export type LeadStatus = 'NEW' | 'CONTACTED' | 'CONVERTED';
+
+export interface AdminLead {
+  id: string;
+  type: OrgType;
+  status: LeadStatus;
+  name: string;
+  phone: string;
+  venueName: string;
+  city: string | null;
+  organizationId: string | null;
+  createdAt: string;
 }

@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { createApp } from './app.js';
 import { ConsoleSmsProvider } from './auth/sms.js';
 import { prisma } from './lib/prisma.js';
-import { FakePaymentProvider } from './payments/payment.provider.js';
+import { createGatewayFromEnv } from './payments/registry.js';
 import { LocalStorageProvider } from './storage/storage.provider.js';
 
 /** server/uploads — next to src/ and dist/. */
@@ -37,9 +37,8 @@ function readConfig() {
     console.warn('[auth] DEV_LOGIN_WITHOUT_SMS is on: anyone can log in with just a phone number');
   }
   if (isProduction) {
-    // ConsoleSmsProvider would write login codes into production logs,
-    // and FakePaymentProvider would publish invitations without payment.
-    throw new Error('No real SMS / payment provider is configured for production yet');
+    // ConsoleSmsProvider would write login codes into production logs.
+    throw new Error('No real SMS provider is configured for production yet');
   }
 
   return {
@@ -51,7 +50,9 @@ function readConfig() {
     exposeOtpInResponse,
     sms: new ConsoleSmsProvider(),
     storage: new LocalStorageProvider(UPLOADS_DIR),
-    payments: new FakePaymentProvider(),
+    // Refuses fake/unimplemented gateways in production (see payments/registry.ts).
+    payments: createGatewayFromEnv(process.env, isProduction),
+    appUrl: process.env.PUBLIC_APP_URL ?? process.env.CORS_ORIGIN ?? 'http://localhost:5173',
     uploadsDir: UPLOADS_DIR,
   };
 }

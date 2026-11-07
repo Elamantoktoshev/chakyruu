@@ -14,6 +14,7 @@ import type { OwnerInvitation, Template } from '../api/types';
 import { useI18n } from '../i18n/LanguageContext';
 import { fromEventIso, toEventIso, type LocalDateTime } from '../lib/datetime';
 import { ChoiceChips, Field, inputClass } from './fields';
+import { PartnerPicker, type PartnerOptions } from './PartnerPicker';
 import { PhotoField } from './PhotoField';
 
 export type BuilderChange = {
@@ -26,12 +27,13 @@ export type BuilderChange = {
 type Props = {
   invitation: OwnerInvitation;
   templates: readonly Template[];
+  partners: PartnerOptions;
   onChange: (change: BuilderChange) => void;
 };
 
 const LANGUAGE_LABELS = { KY: 'Кыргызча', RU: 'Русский' } as const;
 
-export function BuilderForm({ invitation, templates, onChange }: Props) {
+export function BuilderForm({ invitation, templates, partners, onChange }: Props) {
   const { t } = useI18n();
   const [dateTime, setDateTime] = useState<LocalDateTime>(() => fromEventIso(invitation.eventDate));
   const [mapUrlError, setMapUrlError] = useState<string | null>(null);
@@ -126,6 +128,8 @@ export function BuilderForm({ invitation, templates, onChange }: Props) {
           className={inputClass}
         />
       </Field>
+
+      <PartnerPicker invitation={invitation} options={partners} onChange={onChange} />
 
       <PhotoField
         invitationId={invitation.id}

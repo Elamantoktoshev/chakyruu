@@ -8,8 +8,14 @@ import type { SmsProvider } from './auth/sms.js';
 import { createPublicInvitationRouter } from './invitations/invitation.routes.js';
 import { createMyInvitationsRouter } from './invitations/my.routes.js';
 import { errorHandler, notFoundHandler, sendOk } from './lib/http.js';
-import { createPartnerRouter } from './partners/partner.routes.js';
-import type { PaymentProvider } from './payments/payment.provider.js';
+import { createAdminRouter } from './admin/admin.routes.js';
+import { createCatalogRouter } from './catalog/catalog.routes.js';
+import { myGiftRouter } from './gifts/gift.routes.js';
+import { createPartnerLeadRouter } from './partners/lead.routes.js';
+import { createPartnerCabinetRouter } from './partners/partner.routes.js';
+import type { PaymentGateway } from './payments/gateway.js';
+import { createMyPaymentsRouter, createWebhookRouter } from './payments/payment.routes.js';
+import { listPublicPrices } from './pricing/price.service.js';
 import type { StorageProvider } from './storage/storage.provider.js';
 import { templateRouter } from './templates/template.routes.js';
 import { createTilekLikeRouter } from './tilek/tilek.routes.js';
@@ -24,7 +30,9 @@ export interface AppConfig {
   isProduction: boolean;
   sms: SmsProvider;
   storage: StorageProvider;
-  payments: PaymentProvider;
+  payments: PaymentGateway;
+  /** Public site URL for payment return links; defaults to corsOrigin. */
+  appUrl?: string;
   /** Directory served at /uploads (local storage only). */
   uploadsDir?: string;
   /** Reverse-proxy hops in front of the API (Express `trust proxy`). Defaults to 1. */
@@ -37,6 +45,7 @@ export interface AppConfig {
 
 export function createApp(config: AppConfig): Express {
   const { corsOrigin, otpSecret, isProduction, sms, storage, payments, uploadsDir, trustProxyHops = 1, now } = config;
+  const checkout = { gateway: payments, appUrl: config.appUrl ?? corsOrigin };
   const app = express();
   const auth = createAuthService({ otpSecret, sms, now, exposeOtpInResponse: config.exposeOtpInResponse && !isProduction });
 
@@ -55,6 +64,9 @@ export function createApp(config: AppConfig): Express {
     );
   }
 
+  // Provider webhooks need the raw body (signature) and come without an Origin: mount before JSON/CSRF.
+  app.use('/api/payments/webhook', createWebhookRouter(payments));
+
   app.use(cors({ origin: corsOrigin, credentials: true }));
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(cookieParser());
@@ -66,8 +78,14 @@ export function createApp(config: AppConfig): Express {
   app.use('/api/public/templates', templateRouter);
   app.use('/api/public/invitations', createPublicInvitationRouter());
   app.use('/api/public/tilekter', createTilekLikeRouter());
-  app.use('/api/public/partner-leads', createPartnerRouter());
-  app.use('/api/my/invitations', createMyInvitationsRouter({ storage, payments }));
+  app.use('/api/public/partner-leads', createPartnerLeadRouter());
+  app.use('/api/public', createCatalogRouter());
+  app.get('/api/public/prices', async (_req, res) => sendOk(res, await listPublicPrices()));
+  app.use('/api/my/invitations', createMyInvitationsRouter({ storage, checkout }));
+  app.use('/api/my/gifts', myGiftRouter);
+  app.use('/api/my/payments', createMyPaymentsRouter(payments));
+  app.use('/api/partner', createPartnerCabinetRouter({ storage, checkout }));
+  app.use('/api/admin', createAdminRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);

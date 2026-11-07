@@ -1,19 +1,13 @@
-import {
-  PUBLISH_PRICE_TYIYN,
-  summarizeGroups,
-  type GuestGroup,
-  type InvitationDraftInput,
-  type MissingForPublish,
-  type PaymentProviderId,
-} from '@chakyruu/shared';
+import { summarizeGroups, type GuestGroup, type InvitationDraftInput } from '@chakyruu/shared';
 import type { Prisma } from '@prisma/client';
 import type { SessionUser } from '../auth/auth.service.js';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
-import type { PaymentProvider } from '../payments/payment.provider.js';
-import { detectImageType } from '../storage/image.js';
+import { replaceImage } from '../storage/imageUpload.js';
 import type { StorageProvider } from '../storage/storage.provider.js';
+import { attachGift, findRedeemableGift, giftPrefill } from '../gifts/gift.service.js';
 import { findManagedInvitation } from './access.js';
+import { assertPartnerLinks } from './partnerLinks.js';
 import { allocateSlug, isUniqueViolation, temporaryDraftSlug } from './slug.service.js';
 
 const MAX_SLUG_RETRIES = 3;
@@ -39,8 +33,20 @@ export const ownerInvitationSelect = {
   adultsOnly: true,
   publishedAt: true,
   updatedAt: true,
+  venueOrgId: true,
+  tamadaOrgId: true,
+  hallId: true,
   template: { select: { id: true, name: true, type: true, config: true } },
+  giftCode: { select: { cancelledAt: true, organization: { select: { name: true, type: true } } } },
 } as const;
+
+type OwnerInvitationRow = Prisma.InvitationGetPayload<{ select: typeof ownerInvitationSelect }>;
+
+/** Builder DTO: the raw gift relation becomes "is this a gift, and from whom". */
+function toOwnerDto({ giftCode, ...invitation }: OwnerInvitationRow) {
+  const isGift = giftCode !== null && giftCode.cancelledAt === null;
+  return { ...invitation, isGift, giftFrom: isGift ? giftCode.organization : null };
+}
 
 async function assertTemplateExists(templateId: string) {
   const template = await prisma.template.findUnique({ where: { id: templateId }, select: { id: true, type: true } });
@@ -48,18 +54,28 @@ async function assertTemplateExists(templateId: string) {
   return template;
 }
 
-export async function createDraft(user: SessionUser, templateId: string) {
+export async function createDraft(user: SessionUser, templateId: string, giftCode?: string) {
   const template = await assertTemplateExists(templateId);
-  return prisma.invitation.create({
-    data: {
-      slug: temporaryDraftSlug(),
-      templateId: template.id,
-      eventType: template.type,
-      ownerId: user.id,
-      organizationId: user.organizationId,
-    },
-    select: ownerInvitationSelect,
+  const base = {
+    slug: temporaryDraftSlug(),
+    templateId: template.id,
+    eventType: template.type,
+    ownerId: user.id,
+    organizationId: user.organizationId,
+  };
+  if (!giftCode) return toOwnerDto(await prisma.invitation.create({ data: base, select: ownerInvitationSelect }));
+
+  // Gift from a partner: pre-fill the venue / tamada and attach the code in one transaction.
+  const created = await prisma.$transaction(async (tx) => {
+    const gift = await findRedeemableGift(tx, giftCode, user);
+    const invitation = await tx.invitation.create({
+      data: { ...base, ...giftPrefill(gift, gift.organization) },
+      select: { id: true },
+    });
+    await attachGift(tx, gift.id, invitation.id);
+    return invitation;
   });
+  return getOwnerInvitation(created.id, user);
 }
 
 /** Invitations the user may manage: their own, plus their organization's for an ORG_ADMIN. */
@@ -107,7 +123,7 @@ export async function listMyInvitations(user: SessionUser) {
 
 export async function getOwnerInvitation(id: string, user: SessionUser) {
   await findManagedInvitation(id, user);
-  return prisma.invitation.findUniqueOrThrow({ where: { id }, select: ownerInvitationSelect });
+  return toOwnerDto(await prisma.invitation.findUniqueOrThrow({ where: { id }, select: ownerInvitationSelect }));
 }
 
 function toUpdateData(input: InvitationDraftInput) {
@@ -119,16 +135,18 @@ function toUpdateData(input: InvitationDraftInput) {
 export async function updateDraft(id: string, user: SessionUser, input: InvitationDraftInput) {
   const invitation = await findManagedInvitation(id, user);
   if (input.templateId) await assertTemplateExists(input.templateId);
+  const links = await assertPartnerLinks(id, input);
   const followsNames = invitation.status === 'DRAFT' && Boolean(input.hostNames?.trim());
 
   for (let attempt = 1; ; attempt += 1) {
     const slug = followsNames ? await allocateSlug(input.hostNames ?? '', id) : undefined;
     try {
-      return await prisma.invitation.update({
+      const updated = await prisma.invitation.update({
         where: { id },
-        data: { ...toUpdateData(input), ...(slug ? { slug } : {}) },
+        data: { ...toUpdateData(input), ...links, ...(slug ? { slug } : {}) },
         select: ownerInvitationSelect,
       });
+      return toOwnerDto(updated);
     } catch (error: unknown) {
       // Another invitation grabbed the same slug between our check and the write.
       if (!slug || !isUniqueViolation(error) || attempt >= MAX_SLUG_RETRIES) throw error;
@@ -138,104 +156,8 @@ export async function updateDraft(id: string, user: SessionUser, input: Invitati
 
 export async function setPhoto(id: string, user: SessionUser, data: Buffer, storage: StorageProvider) {
   const invitation = await findManagedInvitation(id, user);
-  const type = detectImageType(data);
-  if (!type) throw new HttpError(400, 'Only JPEG, PNG or WebP images are allowed');
-
-  const stored = await storage.saveImage(data, type);
-  const updated = await prisma.invitation.update({
-    where: { id },
-    data: { photoUrl: stored.url, photoKey: stored.key },
-    select: { photoUrl: true },
+  const stored = await replaceImage(storage, data, invitation.photoKey, async ({ url, key }) => {
+    await prisma.invitation.update({ where: { id }, data: { photoUrl: url, photoKey: key } });
   });
-  if (invitation.photoKey) {
-    await storage.remove(invitation.photoKey).catch((error: unknown) => {
-      console.error(`[storage] could not delete replaced photo ${invitation.photoKey}`, error);
-    });
-  }
-  return updated;
-}
-
-async function missingForPublish(id: string): Promise<MissingForPublish[]> {
-  const fields = await prisma.invitation.findUniqueOrThrow({
-    where: { id },
-    select: { hostNames: true, eventDate: true, venueName: true },
-  });
-  return [
-    ...(fields.hostNames.trim().length < 2 ? (['hostNames'] as const) : []),
-    ...(fields.eventDate ? [] : (['eventDate'] as const)),
-    ...(fields.venueName.trim().length < 2 ? (['venueName'] as const) : []),
-  ];
-}
-
-/** A redirect checkout the guest abandoned stops blocking a new attempt after this long. */
-const PENDING_PAYMENT_TTL_MS = 30 * 60 * 1000;
-
-/**
- * Creates the PENDING payment under a row lock on the invitation, so a double tap on "Pay"
- * cannot start two checkouts: the second request waits, sees the first payment and gets 409.
- * The provider is called after this short transaction, never inside it.
- */
-async function startPayment(invitationId: string, provider: PaymentProviderId): Promise<{ id: string }> {
-  return prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "Invitation" WHERE id = ${invitationId} FOR UPDATE`;
-    const active = await tx.payment.findFirst({
-      where: {
-        invitationId,
-        OR: [{ status: 'SUCCEEDED' }, { status: 'PENDING', createdAt: { gt: new Date(Date.now() - PENDING_PAYMENT_TTL_MS) } }],
-      },
-      select: { id: true },
-    });
-    if (active) throw new HttpError(409, 'A payment for this invitation is already in progress');
-    return tx.payment.create({ data: { invitationId, amount: PUBLISH_PRICE_TYIYN, provider }, select: { id: true } });
-  });
-}
-
-export type PublishResult =
-  | { status: 'PUBLISHED'; slug: string }
-  | { status: 'PENDING'; redirectUrl: string };
-
-export async function publishInvitation(
-  id: string,
-  user: SessionUser,
-  provider: PaymentProviderId,
-  payments: PaymentProvider,
-): Promise<PublishResult> {
-  const invitation = await findManagedInvitation(id, user);
-  if (invitation.status === 'PUBLISHED') throw new HttpError(409, 'Invitation is already published');
-  const missing = await missingForPublish(id);
-  if (missing.length > 0) throw new HttpError(400, 'Invitation is not ready to publish', missing);
-
-  const payment = await startPayment(id, provider);
-
-  let checkout;
-  try {
-    checkout = await payments.createCheckout({
-      paymentId: payment.id,
-      amountTyiyn: PUBLISH_PRICE_TYIYN,
-      provider,
-      description: `Chakyruu.kg: ${invitation.slug}`,
-    });
-  } catch (error: unknown) {
-    console.error(`[payments] checkout failed for payment ${payment.id}`, error);
-    await prisma.payment.update({ where: { id: payment.id }, data: { status: 'FAILED' } });
-    throw new HttpError(502, 'Payment provider is unavailable, please try again');
-  }
-
-  if (checkout.kind === 'redirect') {
-    await prisma.payment.update({ where: { id: payment.id }, data: { externalId: checkout.externalId } });
-    return { status: 'PENDING', redirectUrl: checkout.url };
-  }
-
-  const [, published] = await prisma.$transaction([
-    prisma.payment.update({
-      where: { id: payment.id },
-      data: { status: 'SUCCEEDED', externalId: checkout.externalId },
-    }),
-    prisma.invitation.update({
-      where: { id },
-      data: { status: 'PUBLISHED', publishedAt: new Date() },
-      select: { slug: true },
-    }),
-  ]);
-  return { status: 'PUBLISHED', slug: published.slug };
+  return { photoUrl: stored.url };
 }

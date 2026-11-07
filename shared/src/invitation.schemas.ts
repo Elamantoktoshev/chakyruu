@@ -1,22 +1,14 @@
 import { z } from 'zod';
 import { EVENT_TYPES, LANGUAGES, MUSIC_TRACK_IDS, PAYMENT_PROVIDERS } from './catalog.js';
+import { giftCodeSchema } from './partners.js';
 import { SLUG_MAX_LENGTH, SLUG_PATTERN } from './slug.js';
+import { isTwoGisUrl } from './urls.js';
 
 export const HOST_NAMES_MAX = 120;
 export const VENUE_NAME_MAX = 150;
 export const VENUE_ADDRESS_MAX = 200;
 export const MESSAGE_MAX = 1000;
 
-const TWO_GIS_HOSTS = ['2gis.kg', '2gis.ru', '2gis.kz', 'go.2gis.com', '2gis.com'];
-
-function isTwoGisUrl(value: string): boolean {
-  try {
-    const { protocol, hostname } = new URL(value);
-    return protocol === 'https:' && TWO_GIS_HOSTS.some((host) => hostname === host || hostname.endsWith(`.${host}`));
-  } catch {
-    return false;
-  }
-}
 
 /** Empty strings from form inputs become null. */
 const optionalText = (max: number) =>
@@ -27,11 +19,16 @@ const optionalText = (max: number) =>
     .transform((value) => (value === '' ? null : value))
     .nullable();
 
+const partnerIdSchema = z.string().min(1).max(40);
+
 export const slugSchema = z.string().trim().toLowerCase().min(3).max(SLUG_MAX_LENGTH).regex(SLUG_PATTERN);
 
 export const invitationIdSchema = z.object({ id: z.string().min(1).max(40) });
 
-export const createInvitationSchema = z.object({ templateId: z.string().min(1).max(60) });
+/** A gift code from a partner makes the invitation free and pre-fills the venue. */
+export const createInvitationSchema = z
+  .object({ templateId: z.string().min(1).max(60), giftCode: giftCodeSchema.optional() })
+  .strict();
 
 /** Autosave payload: every field optional, unknown keys rejected. */
 export const invitationDraftSchema = z
@@ -47,6 +44,10 @@ export const invitationDraftSchema = z
     language: z.enum(LANGUAGES),
     adultsOnly: z.boolean(),
     musicTrackId: z.enum(MUSIC_TRACK_IDS).nullable(),
+    /** Partners shown on the invitation (validated on the server against the catalogue). */
+    venueOrgId: partnerIdSchema.nullable(),
+    tamadaOrgId: partnerIdSchema.nullable(),
+    hallId: partnerIdSchema.nullable(),
   })
   .partial()
   .strict();

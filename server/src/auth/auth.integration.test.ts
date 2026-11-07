@@ -12,7 +12,7 @@ import {
   createAuthService,
 } from './auth.service.js';
 import { MemorySmsProvider } from './sms.js';
-import { FakePaymentProvider } from '../payments/payment.provider.js';
+import { FakeGateway } from '../payments/fake.gateway.js';
 import { MemoryStorageProvider } from '../storage/storage.provider.js';
 
 const ORIGIN = 'http://localhost:5173';
@@ -30,7 +30,7 @@ function buildApp() {
     isProduction: false,
     sms,
     storage: new MemoryStorageProvider(),
-    payments: new FakePaymentProvider(),
+    payments: new FakeGateway(),
     now: () => new Date(Date.now() + clockOffsetMs),
   });
 }
@@ -189,7 +189,7 @@ describe('dev login without SMS', () => {
       isProduction: false,
       sms,
       storage: new MemoryStorageProvider(),
-      payments: new FakePaymentProvider(),
+      payments: new FakeGateway(),
       exposeOtpInResponse: true,
     });
     const agent = request.agent(devApp);

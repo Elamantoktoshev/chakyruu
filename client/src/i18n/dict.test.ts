@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dictionaries } from './dict';
+import { dictionaries, featureDictionaries } from './dict';
 
 function keyPaths(value: unknown, prefix = ''): string[] {
   if (typeof value !== 'object' || value === null) return [prefix];
@@ -19,5 +19,14 @@ describe('dictionaries', () => {
       });
       expect(empty, lang).toEqual([]);
     }
+  });
+
+  it('never define the same key in two feature files (a later one would silently override)', () => {
+    const owners = new Map<string, string[]>();
+    for (const [feature, dict] of Object.entries(featureDictionaries)) {
+      for (const key of Object.keys(dict.ky)) owners.set(key, [...(owners.get(key) ?? []), feature]);
+    }
+    const duplicates = [...owners].filter(([, features]) => features.length > 1).map(([key, features]) => `${key}: ${features.join(', ')}`);
+    expect(duplicates).toEqual([]);
   });
 });

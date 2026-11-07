@@ -6,6 +6,7 @@ import { templateThemeStyle } from '../../lib/theme';
 import { Countdown } from '../Countdown';
 import { OrnamentBand, OrnamentDivider } from '../Ornament';
 import { MusicButton } from './MusicButton';
+import { TamadaBrandBlock, VenueBrandBlock } from './PartnerBlocks';
 
 export type InvitationViewMode = 'live' | 'preview';
 
@@ -130,6 +131,11 @@ function InvitationBody({ invitation, mode, topBar, greeting, rsvp, children }: 
             </a>
           )}
         </Section>
+      )}
+
+      {invitation.venue && <VenueBrandBlock venue={invitation.venue} />}
+      {invitation.tamada && (
+        <TamadaBrandBlock tamada={invitation.tamada} invitationSlug={isPreview ? undefined : invitation.slug} />
       )}
 
       <Section className="bg-white/50">

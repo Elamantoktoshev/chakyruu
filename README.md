@@ -30,7 +30,50 @@ npm run dev                   # shared (watch) + server :4000 + client :5173
 - Демо-приглашение: <http://localhost:5173/aibek-aizada>
 - Кабинет: <http://localhost:5173/dashboard> — вход владельца демо по номеру `+996700000001`.
 - В dev SMS не отправляются: код печатается в лог сервера строкой `[sms:dev] → +996… : … ваш код 123456`.
-- Оплата в dev — заглушка (`FakePaymentProvider`): любая «оплата» сразу успешна.
+- Вход без SMS в dev: `DEV_LOGIN_WITHOUT_SMS=true` — достаточно ввести номер (в проде сервер с этим флагом не стартует).
+- Оплата в dev — `PAYMENT_PROVIDER=fake`: любая «оплата» сразу успешна.
+- Партнёры из seed: тойкана «Ала-Тоо» — `+996700000010`, тамада «Нурбек» — `+996700000020` (кабинет `/partner`), супер-админ — номер из `ADMIN_PHONE` (`/admin`).
+
+## Партнёры (B2B)
+
+- **Типы:** `VENUE` (тойкана: адрес, 2ГИС, залы), `TAMADA` (профиль, языки, цена «от», видео, занятые даты), `AGENCY` (общий профиль, покупает пакеты по ценам тойкан).
+- **Кабинет `/partner`** доступен пользователю с ролью `ORG_ADMIN`. Организация всегда берётся из сессии: адресовать чужую нельзя.
+- **Кредиты:** `Organization.invitationCredits` — баланс, `CreditTransaction` — журнал (покупка, подарок, возврат, начисление админом). Пакеты 10 / 30 / 100 покупаются в «Кредитах».
+- **Каталог `/tamadalar`:** только опубликованные админом тамады, фильтры по городу, языку, цене и свободной дате (свободен = не отмечен занятым и не стоит на другом опубликованном приглашении). WhatsApp тамады наружу не отдаётся — «Жазуу» идёт через `/api/public/tamadas/:id/contact`, который считает клик и перенаправляет на `wa.me`.
+
+### Как работает подарок от партнёра
+
+1. Партнёр в «Белектер» вводит номер клиента `+996…`, дату тоя и (для тойканы) зал. **1 кредит резервируется сразу**, создаётся одноразовый код вида `K7MQ-3XPA`. Кодом можно поделиться в WhatsApp.
+2. Клиент входит **с этим же номером** — в кабинете появляется «Сизге белек бар!» → «Пайдалануу» → выбор шаблона. Тойкана, адрес, 2ГИС, дата и зал подставляются сами.
+3. Публикация такого приглашения бесплатна, код помечается использованным. Использовать код повторно, с другого номера, после отмены или после срока (дата тоя + 30 дней) нельзя.
+4. Неиспользованный подарок партнёр может отменить — кредит вернётся. Просроченные подарки возвращают кредит автоматически.
+5. На приглашении появляются блоки «Той өтүүчү жай» (тойкана) и «Тамада» с кнопкой «Тамадага жазуу». Партнёр **не получает доступа** к гостям клиента — только сводную статистику (сколько приглашений, сколько людей, клики, календарь тоев).
+
+### Как стать ADMIN
+
+Укажите свой номер в `.env` → `ADMIN_PHONE=+996XXXXXXXXX` и выполните `npm run seed` — пользователь с этим номером получит роль `ADMIN` (повторный запуск безопасен). Дальше войдите по номеру и откройте `/admin`: заявки (создание организации из заявки делает номер из заявки её `ORG_ADMIN`), организации и начисление кредитов, модерация каталога, ручное подтверждение платежей, цены.
+
+## Платежи
+
+| `PAYMENT_PROVIDER` | Что делает | Прод |
+| --- | --- | --- |
+| `fake` | Оплата сразу успешна (dev) | нет |
+| `manual` | Клиент переводит на MBank `MANUAL_PAYMENT_RECEIVER` с кодом `CH-XXXXX` в комментарии, админ подтверждает в `/admin` → «Төлөмдөр» | **да** (старт) |
+| `mbank`, `odengi`, `elsom` | Каркасы `server/src/payments/*.gateway.ts`: создание платежа, проверка подписи webhook и статус помечены `TODO` и пока явно падают | нет, пока не реализованы |
+
+- Все цены — в таблице `Price` (редактируются в `/admin` → «Баалар»), суммы платежей хранятся в тыйынах.
+- Проведение платежа — одна функция `fulfillPayment`: срабатывает только переход `PENDING → SUCCEEDED`, поэтому повторные/параллельные webhook, опрос статуса и ручное подтверждение безопасны.
+- Webhook: `POST /api/payments/webhook/:gateway`, подпись проверяется по сырому телу; неверная подпись → 401 и ничего не меняется. Идентификатор — `(gateway, externalId)`.
+
+**Что запросить у провайдеров при подключении** (имена переменных предварительные — уточнить по документации мерчанта):
+
+| Провайдер | Переменные | Что нужно от провайдера |
+| --- | --- | --- |
+| MBank | `MBANK_MERCHANT_ID`, `MBANK_SECRET_KEY`, `MBANK_API_URL` | ID мерчанта, ключ подписи запросов и webhook, адрес API (тест/прод), формат webhook и статусов, URL возврата |
+| O!Деньги | `ODENGI_MERCHANT_ID`, `ODENGI_SECRET_KEY`, `ODENGI_API_URL` | то же + способ получения QR / ссылки на оплату |
+| Элсом | `ELSOM_MERCHANT_ID`, `ELSOM_SECRET_KEY`, `ELSOM_API_URL` | то же |
+
+Webhook-адрес для провайдера: `https://<домен>/api/payments/webhook/<mbank|odengi|elsom>`, возврат клиента: `https://<домен>/pay/result/<paymentId>` (`PUBLIC_APP_URL`).
 
 ## Скрипты (из корня)
 
@@ -61,7 +104,12 @@ Integration-тесты сервера работают в отдельной с�
 | GET  | `/api/public/invitations/:slug/tilekter?clientId=` | Видимые тилектер + `likedByMe` |
 | POST | `/api/public/invitations/:slug/tilekter` | `{ token | authorName, text }` |
 | POST | `/api/public/tilekter/:id/like` | `{ clientId }` — один лайк на браузер |
-| POST | `/api/public/partner-leads` | Заявка тойканы `{ name, phone, venueName, city? }` |
+| POST | `/api/public/partner-leads` | Заявка партнёра `{ type: VENUE\|TAMADA\|AGENCY, name, phone, venueName, city? }` |
+| GET  | `/api/public/prices` | Активные цены |
+| GET  | `/api/public/tamadas?city=&lang=&priceMax=&date=` | Каталог тамад |
+| GET  | `/api/public/venues?city=` | Опубликованные тойканы (для конструктора) |
+| GET  | `/api/public/tamadas/:id/contact?invitation=` | Клик «Тамадага жазуу» → 302 на WhatsApp |
+| POST | `/api/payments/webhook/:gateway` | Webhook платёжного провайдера (подпись обязательна) |
 
 ### Авторизация
 
@@ -87,6 +135,18 @@ Integration-тесты сервера работают в отдельной с�
 | DELETE | `/api/my/invitations/:id/guests/:guestId` | Удалить гостя |
 | GET    | `/api/my/invitations/:id/tilekter` | Все тилектер, включая скрытые |
 | PATCH  | `/api/my/invitations/:id/tilekter/:tilekId` | `{ hidden }` — скрыть/показать |
+| GET    | `/api/my/gifts` | Подарки партнёров на мой номер |
+| GET    | `/api/my/payments/:id` | Статус платежа (плательщику) |
+
+`POST /api/my/invitations` принимает `giftCode`; автосохранение принимает `venueOrgId`, `tamadaOrgId`, `hallId` (только опубликованные партнёры или партнёр из подарка).
+
+### Партнёр (`/api/partner/*`, роль ORG_ADMIN, иначе 403)
+
+`GET/PATCH /profile`, `POST /logo`, `POST/PATCH/DELETE /halls` (VENUE), `PATCH /tamada`, `POST /tamada/photo`, `PUT/DELETE /busy-dates/:date` (TAMADA), `GET /credits`, `POST /credits/purchase { priceCode, provider }`, `GET /stats`, `GET/POST /gifts`, `POST /gifts/:id/cancel`.
+
+### Админ (`/api/admin/*`, роль ADMIN, иначе 403)
+
+`GET /organizations?type=`, `PATCH /organizations/:id { catalogStatus }`, `POST /organizations/:id/credits { amount }`, `GET /leads?status=`, `PATCH /leads/:id { status }`, `POST /leads/:id/convert`, `GET /prices`, `PATCH /prices/:code`, `GET /payments?status=`, `POST /payments/:id/confirm`.
 
 ### Безопасность
 
@@ -126,13 +186,16 @@ client/src
 
 ## Модель данных
 
-`Organization` → `User` (OWNER | ORG_ADMIN | ADMIN) → `Invitation` (по `Template`, тип тоя, DRAFT → PUBLISHED) → `Guest` (токен, INVITED | ATTENDING | DECLINED), `Tilek` → `TilekLike`, `Payment`. Отдельно `PartnerLead`, `OtpCode`, `Session`.
+`Organization` (VENUE | TAMADA | AGENCY, кредиты, `Hall`, `TamadaProfile`, `TamadaBusyDate`, `CreditTransaction`, `GiftCode`, `TamadaClick`) → `User` (OWNER | ORG_ADMIN | ADMIN) → `Invitation` (по `Template`, тип тоя, DRAFT → PUBLISHED, `venueOrgId` / `tamadaOrgId` / `hallId` — только брендинг) → `Guest` (токен, INVITED | ATTENDING | DECLINED), `Tilek` → `TilekLike`, `Payment` (INVITATION | CREDIT_PACKAGE). Отдельно `Price`, `PartnerLead`, `OtpCode`, `Session`.
 Суммы платежей хранятся в тыйынах (`Int`).
 
 ## TODO
 
 - [ ] E2E Playwright после настройки CI (вход → конструктор → публикация → ответ гостя → кабинет).
-- [ ] Реальная оплата: MBank / O!Деньги / Элсом через `PaymentProvider` (redirect + webhook) вместо `FakePaymentProvider`.
+- [ ] Реальная оплата: реализовать `MBankGateway` / `ODengiGateway` / `ElsomGateway` (создание платежа, проверка подписи webhook, статус) и добавить их в `PRODUCTION_READY` в `payments/registry.ts`. До этого в проде — `PAYMENT_PROVIDER=manual`.
+- [ ] Возвраты платежей (`REFUNDED`) и отмена пакета.
+- [ ] Автоматически помечать FAILED брошенные `PENDING`-платежи (manual) старше N дней, чтобы не копились в `/admin`.
+- [ ] Маркетплейс тамад: бронирование даты через Chakyruu, отзывы.
 - [ ] Реальные SMS: Nikita.kg / SMSPro через `SmsProvider` вместо `ConsoleSmsProvider`.
 - [ ] Хранилище фото в DigitalOcean Spaces через `StorageProvider`; ресайз фото перед сохранением.
 - [ ] Музыка: положить 5 лицензионно чистых треков в `client/public/music/` (имена в `shared/src/catalog.ts`); пока файлов нет, плеер скрыт.

@@ -1,0 +1,63 @@
+import type { PartnerLanguage } from '../api/types';
+
+const ky = {
+  catalogTitle: 'Тамадалар',
+  catalogSubtitle: 'Тоюңузга тамада тандаңыз — түз WhatsApp аркылуу жазыңыз',
+  filterCity: 'Шаар',
+  filterLanguage: 'Тил',
+  filterAnyLanguage: 'Каалаган тил',
+  filterPriceMax: 'Баасы, сомго чейин',
+  filterDate: 'Бош күнү',
+  catalogEmpty: 'Бул шарттар боюнча тамада табылган жок',
+  priceFrom: '{price} сомдон',
+  languageNames: { KY: 'Кыргызча', RU: 'Орусча', UZ: 'Өзбекче' } satisfies Record<PartnerLanguage, string>,
+  writeTamada: 'Тамадага жазуу',
+  write: 'Жазуу',
+  venueBlockTitle: 'Той өтүүчү жай',
+  tamadaBlockTitle: 'Тамада',
+  pickerVenue: 'Тойкана (Chakyruu.kg өнөктөшү)',
+  pickerVenueNone: 'Тандалган жок',
+  pickerHall: 'Зал',
+  pickerHallNone: 'Зал тандалган жок',
+  pickerTamada: 'Тамада',
+  pickerTamadaNone: 'Тамада тандалган жок',
+  pickerFromGift: 'белектен',
+  myGiftsTitle: 'Сизге белек бар!',
+  myGiftFrom: '{org} сизге бекер чакыруу белек кылды',
+  useGift: 'Пайдалануу',
+  giftBuilderBanner: '{org} белеги — жарыялоо бекер',
+  publishFree: 'Бекер жарыялоо',
+};
+
+export type CatalogDict = typeof ky;
+
+const ru: CatalogDict = {
+  catalogTitle: 'Тамады',
+  catalogSubtitle: 'Выберите тамаду для тоя — пишите напрямую в WhatsApp',
+  filterCity: 'Город',
+  filterLanguage: 'Язык',
+  filterAnyLanguage: 'Любой язык',
+  filterPriceMax: 'Цена до, сом',
+  filterDate: 'Свободен в дату',
+  catalogEmpty: 'По этим условиям тамада не найден',
+  priceFrom: 'от {price} сом',
+  languageNames: { KY: 'Кыргызский', RU: 'Русский', UZ: 'Узбекский' },
+  writeTamada: 'Написать тамаде',
+  write: 'Написать',
+  venueBlockTitle: 'Место проведения',
+  tamadaBlockTitle: 'Тамада',
+  pickerVenue: 'Тойкана (партнёр Chakyruu.kg)',
+  pickerVenueNone: 'Не выбрана',
+  pickerHall: 'Зал',
+  pickerHallNone: 'Зал не выбран',
+  pickerTamada: 'Тамада',
+  pickerTamadaNone: 'Тамада не выбран',
+  pickerFromGift: 'из подарка',
+  myGiftsTitle: 'У вас подарок!',
+  myGiftFrom: '{org} дарит вам бесплатное приглашение',
+  useGift: 'Использовать',
+  giftBuilderBanner: 'Подарок от {org} — публикация бесплатно',
+  publishFree: 'Опубликовать бесплатно',
+};
+
+export const catalogDict = { ky, ru };

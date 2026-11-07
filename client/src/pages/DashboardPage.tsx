@@ -4,6 +4,7 @@ import { api } from '../api/client';
 import type { DashboardInvitation } from '../api/types';
 import { useAsync } from '../api/useAsync';
 import { AppHeader } from '../components/AppHeader';
+import { MyGiftsBanner } from '../components/dashboard/MyGiftsBanner';
 import { StatusBadge } from '../components/dashboard/StatusBadge';
 import { SummaryStats } from '../components/dashboard/SummaryStats';
 import { ErrorView, LoadingView } from '../components/StatusView';
@@ -23,6 +24,9 @@ export function DashboardPage() {
       <AppHeader />
       <main className="mx-auto max-w-3xl px-4 pt-8">
         <h1 className="font-serif text-4xl text-burgundy">{t.dashboardTitle}</h1>
+        <div className="mt-4">
+          <MyGiftsBanner />
+        </div>
         {state.data.length === 0 ? (
           <p className="mt-10 text-center text-ink/60">{t.dashboardEmpty}</p>
         ) : (

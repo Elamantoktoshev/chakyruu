@@ -6,8 +6,24 @@ export async function resetDatabase(): Promise<void> {
     throw new Error('Refusing to reset a non-test database');
   }
   await prisma.$executeRawUnsafe(
-    'TRUNCATE "Session", "OtpCode", "PartnerLead", "TilekLike", "Tilek", "Guest", "Payment", "Invitation", "Template", "User", "Organization" CASCADE',
+    'TRUNCATE "Price", "Session", "OtpCode", "PartnerLead", "TamadaClick", "GiftCode", "CreditTransaction", "TamadaBusyDate", "TamadaProfile", "Hall", "TilekLike", "Tilek", "Guest", "Payment", "Invitation", "Template", "User", "Organization" CASCADE',
   );
+  await prisma.price.createMany({ data: DEFAULT_PRICES });
+}
+
+/** Same defaults as the `admin` migration inserts. */
+export const DEFAULT_PRICES = [
+  { code: 'INVITATION_PUBLISH', audience: 'CLIENT', amountSom: 700, credits: null, sortOrder: 0 },
+  { code: 'VENUE_PACK_10', audience: 'VENUE', amountSom: 5000, credits: 10, sortOrder: 10 },
+  { code: 'VENUE_PACK_30', audience: 'VENUE', amountSom: 13500, credits: 30, sortOrder: 11 },
+  { code: 'VENUE_PACK_100', audience: 'VENUE', amountSom: 40000, credits: 100, sortOrder: 12 },
+  { code: 'TAMADA_PACK_10', audience: 'TAMADA', amountSom: 4000, credits: 10, sortOrder: 20 },
+  { code: 'TAMADA_PACK_30', audience: 'TAMADA', amountSom: 10500, credits: 30, sortOrder: 21 },
+  { code: 'TAMADA_PACK_100', audience: 'TAMADA', amountSom: 30000, credits: 100, sortOrder: 22 },
+] as const;
+
+export async function createAdminUser(phone: string): Promise<void> {
+  await prisma.user.upsert({ where: { phone }, update: { role: 'ADMIN' }, create: { phone, role: 'ADMIN' } });
 }
 
 export const TEST_TEMPLATE_ID = 'tpl-test';
@@ -61,4 +77,42 @@ export async function createInvitationFixture(fixture: InvitationFixture): Promi
     },
   });
   return invitation.id;
+}
+
+export interface OrgFixture {
+  type: 'VENUE' | 'TAMADA' | 'AGENCY';
+  name: string;
+  adminPhone: string;
+  credits?: number;
+  city?: string;
+  catalogStatus?: 'HIDDEN' | 'PUBLISHED';
+  whatsapp?: string | null;
+}
+
+/** Organization + its ORG_ADMIN user. Tamadas also get a profile. */
+export async function createOrgFixture(fixture: OrgFixture): Promise<{ orgId: string; adminId: string }> {
+  const org = await prisma.organization.create({
+    data: {
+      type: fixture.type,
+      name: fixture.name,
+      slug: `${fixture.type.toLowerCase()}-${Math.random().toString(36).slice(2, 10)}`,
+      city: fixture.city ?? 'Ош',
+      invitationCredits: fixture.credits ?? 0,
+      catalogStatus: fixture.catalogStatus ?? 'HIDDEN',
+      whatsapp: fixture.whatsapp === undefined ? '+996700999000' : fixture.whatsapp,
+      address: fixture.type === 'VENUE' ? 'Ош ш., Ленин көч. 1' : null,
+      mapUrl: fixture.type === 'VENUE' ? 'https://2gis.kg/osh/firm/1' : null,
+      ...(fixture.type === 'TAMADA'
+        ? { tamadaProfile: { create: { displayName: fixture.name, languages: ['KY', 'RU'], priceFromSom: 20000 } } }
+        : {}),
+    },
+    select: { id: true },
+  });
+  const admin = await prisma.user.upsert({
+    where: { phone: fixture.adminPhone },
+    update: { role: 'ORG_ADMIN', organizationId: org.id },
+    create: { phone: fixture.adminPhone, role: 'ORG_ADMIN', organizationId: org.id },
+    select: { id: true },
+  });
+  return { orgId: org.id, adminId: admin.id };
 }

@@ -4,6 +4,7 @@ import { api } from '../api/client';
 import type { OwnerInvitation, Template } from '../api/types';
 import { useAsync } from '../api/useAsync';
 import { BuilderForm, type BuilderChange } from '../builder/BuilderForm';
+import { previewPartnerBlocks, type PartnerOptions } from '../builder/PartnerPicker';
 import { useAutosave, type SaveStatus } from '../builder/useAutosave';
 import { AppHeader } from '../components/AppHeader';
 import { InvitationView } from '../components/invitation/InvitationView';
@@ -15,14 +16,20 @@ import { useI18n } from '../i18n/LanguageContext';
 interface BuilderData {
   invitation: OwnerInvitation;
   templates: Template[];
+  partners: PartnerOptions;
 }
 
 export function BuilderPage() {
   const { id = '' } = useParams();
   const load = useCallback(
     async (): Promise<BuilderData> => {
-      const [invitation, templates] = await Promise.all([api.getMyInvitation(id), api.listTemplates()]);
-      return { invitation, templates };
+      const [invitation, templates, venues, tamadas] = await Promise.all([
+        api.getMyInvitation(id),
+        api.listTemplates(),
+        api.listVenues(),
+        api.listTamadas({}),
+      ]);
+      return { invitation, templates, partners: { venues, tamadas } };
     },
     [id],
   );
@@ -30,12 +37,12 @@ export function BuilderPage() {
 
   if (state.status === 'loading') return <LoadingView />;
   if (state.status === 'error') return <ErrorView error={state.error} onRetry={state.reload} />;
-  return <Builder key={id} initial={state.data.invitation} templates={state.data.templates} />;
+  return <Builder key={id} {...state.data} />;
 }
 
 type Tab = 'form' | 'preview';
 
-function Builder({ initial, templates }: { initial: OwnerInvitation; templates: Template[] }) {
+function Builder({ invitation: initial, templates, partners }: BuilderData) {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [invitation, setInvitation] = useState(initial);
@@ -60,7 +67,11 @@ function Builder({ initial, templates }: { initial: OwnerInvitation; templates: 
   const isPublished = invitation.status === 'PUBLISHED';
   const preview = (
     <PhoneFrame>
-      <InvitationView invitation={invitation} lang={invitation.language} mode="preview" />
+      <InvitationView
+        invitation={{ ...invitation, ...previewPartnerBlocks(invitation, partners) }}
+        lang={invitation.language}
+        mode="preview"
+      />
     </PhoneFrame>
   );
 
@@ -86,8 +97,13 @@ function Builder({ initial, templates }: { initial: OwnerInvitation; templates: 
         <section className={tab === 'form' ? '' : 'hidden lg:block'}>
           <h1 className="font-serif text-3xl text-burgundy">{t.builderTitle}</h1>
           <SlugHint slug={invitation.slug} t={t} />
+          {invitation.isGift && invitation.giftFrom && (
+            <p className="mt-3 rounded-2xl bg-emerald-50 p-3 text-sm font-medium text-emerald-800">
+              🎁 {t.giftBuilderBanner.replace('{org}', invitation.giftFrom.name)}
+            </p>
+          )}
           <div className="mt-6">
-            <BuilderForm invitation={invitation} templates={templates} onChange={handleChange} />
+            <BuilderForm invitation={invitation} templates={templates} partners={partners} onChange={handleChange} />
           </div>
         </section>
         <aside className={`${tab === 'preview' ? '' : 'hidden'} lg:sticky lg:top-20 lg:block lg:self-start`}>{preview}</aside>
@@ -107,7 +123,7 @@ function Builder({ initial, templates }: { initial: OwnerInvitation; templates: 
                 onClick={() => void handlePublish()}
                 className="min-h-12 rounded-full bg-burgundy px-7 font-semibold text-cream shadow-lg shadow-burgundy/20 transition hover:bg-burgundy-dark"
               >
-                {t.publish}
+                {invitation.isGift ? t.publishFree : t.publish}
               </button>
               <p className="mt-1 hidden text-xs text-ink/55 sm:block">{t.publishHint}</p>
             </div>

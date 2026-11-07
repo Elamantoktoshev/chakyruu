@@ -1,6 +1,6 @@
 import { EVENT_TYPES, type EventType } from '@chakyruu/shared';
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api/client';
 import type { Template } from '../api/types';
 import { useAsync } from '../api/useAsync';
@@ -14,6 +14,9 @@ type Filter = EventType | 'ALL';
 export function CreatePage() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // Code of a partner gift chosen in the dashboard: the new invitation is created from it.
+  const giftCode = searchParams.get('gift') ?? undefined;
   const [filter, setFilter] = useState<Filter>('ALL');
   const [creatingId, setCreatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +27,7 @@ export function CreatePage() {
     setCreatingId(template.id);
     setError(null);
     try {
-      const draft = await api.createInvitation(template.id);
+      const draft = await api.createInvitation(template.id, giftCode);
       navigate(`/create/${draft.id}`);
     } catch {
       setError(t.errorGeneric);

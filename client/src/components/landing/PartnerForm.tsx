@@ -1,4 +1,4 @@
-import { partnerLeadSchema } from '@chakyruu/shared';
+import { ORG_TYPES, partnerLeadSchema, type OrgType } from '@chakyruu/shared';
 import { useState, type FormEvent } from 'react';
 import { api, ApiError } from '../../api/client';
 import { useI18n } from '../../i18n/LanguageContext';
@@ -11,6 +11,7 @@ type Status = 'idle' | 'sending' | 'sent';
 
 export function PartnerForm() {
   const { t } = useI18n();
+  const [type, setType] = useState<OrgType>('VENUE');
   const [name, setName] = useState('');
   const [localPhone, setLocalPhone] = useState('');
   const [venueName, setVenueName] = useState('');
@@ -20,7 +21,7 @@ export function PartnerForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const lead = { name, phone: toE164(localPhone), venueName, city };
+    const lead = { type, name, phone: toE164(localPhone), venueName, city };
     if (!partnerLeadSchema.safeParse(lead).success) {
       setError(t.partnerErrorFields);
       return;
@@ -42,6 +43,21 @@ export function PartnerForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="grid gap-3 sm:grid-cols-2">
+      <fieldset className="flex flex-wrap gap-2 sm:col-span-2">
+        {ORG_TYPES.map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={type === value}
+            onClick={() => setType(value)}
+            className={`min-h-11 rounded-full border px-4 text-sm font-medium transition ${
+              type === value ? 'border-gold bg-gold text-burgundy-dark' : 'border-cream/40 text-cream hover:border-gold'
+            }`}
+          >
+            {t.leadType[value]}
+          </button>
+        ))}
+      </fieldset>
       <input aria-label={t.partnerName} placeholder={t.partnerName} value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
       <div className="flex gap-2">
         <span className="flex items-center rounded-xl border border-gold/50 bg-cream px-3 font-medium text-burgundy">{PHONE_PREFIX}</span>
@@ -55,7 +71,7 @@ export function PartnerForm() {
           className={inputClass}
         />
       </div>
-      <input aria-label={t.partnerVenue} placeholder={t.partnerVenue} value={venueName} onChange={(e) => setVenueName(e.target.value)} className={inputClass} />
+      <input aria-label={t.partnerVenueByType[type]} placeholder={t.partnerVenueByType[type]} value={venueName} onChange={(e) => setVenueName(e.target.value)} className={inputClass} />
       <input aria-label={t.partnerCity} placeholder={t.partnerCity} value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
       {error && (
         <p role="alert" className="text-sm font-medium text-gold-light sm:col-span-2">

@@ -1,6 +1,5 @@
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { PUBLISH_PRICE_TYIYN } from '@chakyruu/shared';
 import { prisma } from '../lib/prisma.js';
 import { TEST_ORIGIN, TINY_PNG, buildTestApp, createTestContext, loginAgent, type TestContext } from '../../test/app.js';
 import { TEST_TEMPLATE_ID, createTemplateFixtures, resetDatabase } from '../../test/db.js';
@@ -147,7 +146,7 @@ describe('publishing', () => {
     expect(res.body.data).toMatchObject({ status: 'PUBLISHED', slug: 'aibek-aizada' });
 
     const payment = await prisma.payment.findFirstOrThrow({ where: { invitationId: id } });
-    expect(payment).toMatchObject({ amount: PUBLISH_PRICE_TYIYN, provider: 'ODENGI', status: 'SUCCEEDED' });
+    expect(payment).toMatchObject({ amount: 70_000, provider: 'ODENGI', status: 'SUCCEEDED' } /* 700 som default price, in tyiyn */);
 
     const pub = await request(buildTestApp(ctx)).get('/api/public/invitations/aibek-aizada').expect(200);
     expect(pub.body.data.isDraft).toBe(false);

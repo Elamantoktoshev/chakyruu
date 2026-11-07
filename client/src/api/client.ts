@@ -1,15 +1,36 @@
 import type {
+  CatalogQuery,
+  CreateGiftInput,
   CreateTilekInput,
   EventType,
   GuestStatus,
   InvitationDraftInput,
+  OrgProfileInput,
   PartnerLeadInput,
   PaymentProviderId,
   RsvpInput,
+  TamadaProfileInput,
 } from '@chakyruu/shared';
 import type {
   AddGuestsResult,
+  AdminLead,
+  AdminOrganization,
+  AdminPayment,
+  AdminPrice,
+  CheckoutOutcome,
+  PaymentStatusView,
   ApiEnvelope,
+  LeadStatus,
+  OrgType,
+  PublicPrice,
+  CreditLedgerEntry,
+  Hall,
+  MyGift,
+  PartnerGift,
+  PartnerProfile,
+  PartnerStats,
+  TamadaCard,
+  VenueOption,
   DashboardInvitation,
   Guest,
   Invitation,
@@ -80,7 +101,8 @@ export const api = {
   logout: () => request<{ loggedOut: true }>('/auth/logout', { method: 'POST' }),
 
   listMyInvitations: () => request<DashboardInvitation[]>('/my/invitations'),
-  createInvitation: (templateId: string) => request<OwnerInvitation>('/my/invitations', json('POST', { templateId })),
+  createInvitation: (templateId: string, giftCode?: string) =>
+    request<OwnerInvitation>('/my/invitations', json('POST', giftCode ? { templateId, giftCode } : { templateId })),
   getMyInvitation: (id: string) => request<OwnerInvitation>(`/my/invitations/${encode(id)}`),
   updateInvitation: (id: string, patch: InvitationDraftInput) =>
     request<OwnerInvitation>(`/my/invitations/${encode(id)}`, json('PATCH', patch)),
@@ -101,4 +123,62 @@ export const api = {
     request<OwnerTilek>(`/my/invitations/${encode(id)}/tilekter/${encode(tilekId)}`, json('PATCH', { hidden })),
   deleteGuest: (id: string, guestId: string) =>
     request<{ deleted: true }>(`/my/invitations/${encode(id)}/guests/${encode(guestId)}`, { method: 'DELETE' }),
+
+  listMyGifts: () => request<MyGift[]>('/my/gifts'),
+
+  listTamadas: (query: Partial<Record<keyof CatalogQuery, string>>) => {
+    const params = new URLSearchParams(Object.entries(query).filter(([, value]) => value) as [string, string][]);
+    return request<TamadaCard[]>(`/public/tamadas${params.size ? `?${params}` : ''}`);
+  },
+  listVenues: (city?: string) => request<VenueOption[]>(`/public/venues${city ? `?city=${encode(city)}` : ''}`),
+
+  partner: {
+    profile: () => request<PartnerProfile>('/partner/profile'),
+    updateProfile: (patch: OrgProfileInput) => request<PartnerProfile>('/partner/profile', json('PATCH', patch)),
+    uploadLogo: (file: File) => {
+      const form = new FormData();
+      form.append('logo', file);
+      return request<{ logoUrl: string }>('/partner/logo', { method: 'POST', body: form });
+    },
+    addHall: (hall: Omit<Hall, 'id'>) => request<Hall>('/partner/halls', json('POST', hall)),
+    deleteHall: (hallId: string) => request<{ deleted: true }>(`/partner/halls/${encode(hallId)}`, { method: 'DELETE' }),
+    updateTamada: (patch: TamadaProfileInput) => request<PartnerProfile>('/partner/tamada', json('PATCH', patch)),
+    uploadTamadaPhoto: (file: File) => {
+      const form = new FormData();
+      form.append('photo', file);
+      return request<{ photoUrl: string }>('/partner/tamada/photo', { method: 'POST', body: form });
+    },
+    setBusy: (date: string, isBusy: boolean) =>
+      request<{ busy: boolean }>(`/partner/busy-dates/${encode(date)}`, { method: isBusy ? 'PUT' : 'DELETE' }),
+    credits: () => request<{ balance: number; ledger: CreditLedgerEntry[] }>('/partner/credits'),
+    stats: () => request<PartnerStats>('/partner/stats'),
+    gifts: () => request<PartnerGift[]>('/partner/gifts'),
+    issueGift: (input: CreateGiftInput) => request<PartnerGift>('/partner/gifts', json('POST', input)),
+    cancelGift: (giftId: string) =>
+      request<{ cancelled: true }>(`/partner/gifts/${encode(giftId)}/cancel`, { method: 'POST' }),
+    purchaseCredits: (priceCode: string, provider: PaymentProviderId) =>
+      request<CheckoutOutcome>('/partner/credits/purchase', json('POST', { priceCode, provider })),
+  },
+
+  listPrices: () => request<PublicPrice[]>('/public/prices'),
+  paymentStatus: (paymentId: string) => request<PaymentStatusView>(`/my/payments/${encode(paymentId)}`),
+
+  admin: {
+    organizations: (type?: OrgType) => request<AdminOrganization[]>(`/admin/organizations${type ? `?type=${type}` : ''}`),
+    setCatalogStatus: (id: string, catalogStatus: 'HIDDEN' | 'PUBLISHED') =>
+      request<{ id: string; catalogStatus: string }>(`/admin/organizations/${encode(id)}`, json('PATCH', { catalogStatus })),
+    grantCredits: (id: string, amount: number) =>
+      request<{ balance: number }>(`/admin/organizations/${encode(id)}/credits`, json('POST', { amount })),
+    leads: (status?: LeadStatus) => request<AdminLead[]>(`/admin/leads${status ? `?status=${status}` : ''}`),
+    setLeadStatus: (id: string, status: 'NEW' | 'CONTACTED') =>
+      request<AdminLead>(`/admin/leads/${encode(id)}`, json('PATCH', { status })),
+    convertLead: (id: string) =>
+      request<{ id: string; name: string; type: OrgType }>(`/admin/leads/${encode(id)}/convert`, json('POST', {})),
+    prices: () => request<AdminPrice[]>('/admin/prices'),
+    updatePrice: (code: string, patch: { amountSom?: number; active?: boolean }) =>
+      request<AdminPrice>(`/admin/prices/${encode(code)}`, json('PATCH', patch)),
+    payments: (status?: 'PENDING' | 'SUCCEEDED' | 'FAILED') =>
+      request<AdminPayment[]>(`/admin/payments${status ? `?status=${status}` : ''}`),
+    confirmPayment: (id: string) => request<{ confirmed: true }>(`/admin/payments/${encode(id)}/confirm`, { method: 'POST' }),
+  },
 };
