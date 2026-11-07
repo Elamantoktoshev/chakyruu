@@ -9,7 +9,7 @@ const GoldRule = () => <div className="mx-auto mb-6 h-px w-24 bg-gradient-to-r f
 
 /** Маараке — Юбилей: dark, gold, the age in huge numerals. */
 export default function Yubiley({ invitation, mode, slots }: TemplateProps) {
-  const photo = usePhoto(invitation.photoUrl);
+  const photo = usePhoto(invitation.photoUrl, mode);
   return (
     <div className="bg-cream text-ink">
       <header className="relative px-6 pb-12 pt-10 text-center">
@@ -23,8 +23,7 @@ export default function Yubiley({ invitation, mode, slots }: TemplateProps) {
         )}
         {photo.src && (
           <img
-            src={photo.src}
-            onError={photo.onError}
+            {...photo.props}
             alt={invitation.hostNames}
             className="mx-auto mt-4 h-36 w-36 rounded-full border-2 border-burgundy object-cover"
           />

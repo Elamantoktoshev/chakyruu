@@ -30,8 +30,11 @@ describe('invitationDraftSchema', () => {
     expect(invitationDraftSchema.safeParse({ slug: 'mine' }).success).toBe(false);
   });
 
-  it('rejects unknown music tracks and event types', () => {
-    expect(invitationDraftSchema.safeParse({ musicTrackId: 'pirated-hit' }).success).toBe(false);
+  it('rejects malformed music settings and unknown event types', () => {
+    // Whether the track exists and is active is checked on the server.
+    expect(invitationDraftSchema.safeParse({ musicTrackId: '../../etc' }).success).toBe(false);
+    expect(invitationDraftSchema.safeParse({ musicStartSec: -1 }).success).toBe(false);
+    expect(invitationDraftSchema.safeParse({ musicStartSec: 35 }).success).toBe(true);
     expect(invitationDraftSchema.safeParse({ eventType: 'PARTY' }).success).toBe(false);
   });
 });

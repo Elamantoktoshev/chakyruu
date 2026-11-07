@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_GUESTS_PER_PASTE, guestGreeting, guestLink, inviteMessage, parseGuestList, rsvpSchema, whatsappUrl } from './guests.js';
+import { MAX_GUESTS_PER_PASTE, guestGreeting, guestLink, inviteMessage, parseGuestList, rsvpSchema, whatsappUrl } from './index.js';
 
 describe('parseGuestList', () => {
   it('turns one name per line into guests, trimming and skipping blank lines', () => {

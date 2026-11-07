@@ -62,7 +62,7 @@ export function InvitationView({ invitation, lang, mode, topBar, greeting, rsvp,
           />
         )}
         <div className="absolute inset-x-4 top-4 z-10 flex items-start justify-between gap-3">
-          <MusicButton trackId={invitation.musicTrackId} startSignal={musicStart} />
+          <MusicButton music={invitation.music} startSignal={musicStart} />
           <div className="ml-auto">{topBar}</div>
         </div>
         <Suspense fallback={<TemplateLoading />}>

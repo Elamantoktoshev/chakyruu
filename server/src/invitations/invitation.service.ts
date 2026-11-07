@@ -4,6 +4,8 @@ import { findGuestByToken } from '../guests/rsvp.service.js';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
 import { templateSelect } from '../templates/template.routes.js';
+import { gallerySelect } from './gallery.service.js';
+import { invitationMusicSelect, withMusicView } from './music.service.js';
 
 /** Fields that are safe to expose on the public invitation page. */
 const publicInvitationSelect = {
@@ -15,7 +17,8 @@ const publicInvitationSelect = {
   venueAddress: true,
   venueMapUrl: true,
   photoUrl: true,
-  musicTrackId: true,
+  ...invitationMusicSelect,
+  ...gallerySelect,
   message: true,
   language: true,
   eventType: true,
@@ -59,5 +62,5 @@ export async function getPublicInvitation(slug: string, viewer: PolicyUser | und
   }
   const { status: _status, ownerId: _ownerId, organizationId: _organizationId, venueOrg, hall, tamadaOrg, ...rest } = invitation;
   const guest = await findGuestByToken(invitation.id, guestToken);
-  return { ...rest, ...partnerBlocks({ venueOrg, hall, tamadaOrg }), isDraft, guest };
+  return { ...withMusicView(rest), ...partnerBlocks({ venueOrg, hall, tamadaOrg }), isDraft, guest };
 }

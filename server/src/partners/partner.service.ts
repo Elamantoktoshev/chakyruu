@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
 import { replaceImage } from '../storage/imageUpload.js';
+import { AVATAR_MAX_SIZE } from '../storage/imageProcess.js';
 import type { StorageProvider } from '../storage/storage.provider.js';
 
 type OrgProfile = z.output<typeof orgProfileSchema>;
@@ -59,7 +60,7 @@ export async function setPartnerLogo(orgId: string, data: Buffer, storage: Stora
   const org = await prisma.organization.findUniqueOrThrow({ where: { id: orgId }, select: { logoKey: true } });
   const stored = await replaceImage(storage, data, org.logoKey, async ({ url, key }) => {
     await prisma.organization.update({ where: { id: orgId }, data: { logoUrl: url, logoKey: key } });
-  });
+  }, AVATAR_MAX_SIZE);
   return { logoUrl: stored.url };
 }
 
@@ -96,7 +97,7 @@ export async function setTamadaPhoto(orgId: string, data: Buffer, storage: Stora
   if (!profile) throw new HttpError(400, 'Fill in the tamada profile first');
   const stored = await replaceImage(storage, data, profile.photoKey, async ({ url, key }) => {
     await prisma.tamadaProfile.update({ where: { organizationId: orgId }, data: { photoUrl: url, photoKey: key } });
-  });
+  }, AVATAR_MAX_SIZE);
   return { photoUrl: stored.url };
 }
 

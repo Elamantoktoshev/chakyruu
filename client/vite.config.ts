@@ -4,6 +4,10 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    // dist/.vite/manifest.json: the server preloads the chunks a page needs (template, landing).
+    manifest: true,
+  },
   server: {
     port: 5173,
     proxy: {

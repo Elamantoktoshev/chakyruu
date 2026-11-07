@@ -10,6 +10,8 @@ import type {
   PaymentProviderId,
   RsvpInput,
   TamadaProfileInput,
+  TrackCreateInput,
+  TrackPatchInput,
 } from '@chakyruu/shared';
 import type {
   AddGuestsResult,
@@ -17,6 +19,10 @@ import type {
   AdminOrganization,
   AdminPayment,
   AdminPrice,
+  AdminTrack,
+  GalleryPhoto,
+  MusicView,
+  Track,
   CheckoutOutcome,
   PaymentStatusView,
   ApiEnvelope,
@@ -53,6 +59,21 @@ export class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+/** Music settings of an invitation after an upload or removal. */
+export interface MusicUpdate {
+  musicTrackId: string | null;
+  musicStartSec: number;
+  music: MusicView | null;
+}
+
+function audioForm(field: string, file: File, durationSec: number | null): FormData {
+  const form = new FormData();
+  // The text field goes first so the server sees it together with the file.
+  if (durationSec) form.append('durationSec', String(durationSec));
+  form.append(field, file);
+  return form;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -111,6 +132,20 @@ export const api = {
     form.append('photo', file);
     return request<{ photoUrl: string }>(`/my/invitations/${encode(id)}/photo`, { method: 'POST', body: form });
   },
+  addGalleryPhoto: (id: string, file: File) => {
+    const form = new FormData();
+    form.append('photo', file);
+    return request<GalleryPhoto[]>(`/my/invitations/${encode(id)}/gallery`, { method: 'POST', body: form });
+  },
+  removeGalleryPhoto: (id: string, photoId: string) =>
+    request<GalleryPhoto[]>(`/my/invitations/${encode(id)}/gallery/${encode(photoId)}`, { method: 'DELETE' }),
+  reorderGallery: (id: string, photoIds: string[]) =>
+    request<GalleryPhoto[]>(`/my/invitations/${encode(id)}/gallery/order`, json('PUT', { photoIds })),
+  /** Own mp3 (≤ 10 MB); `durationSec` is measured in the browser. */
+  uploadMusic: (id: string, file: File, durationSec: number | null) =>
+    request<MusicUpdate>(`/my/invitations/${encode(id)}/music`, { method: 'POST', body: audioForm('music', file, durationSec) }),
+  removeMusic: (id: string) => request<MusicUpdate>(`/my/invitations/${encode(id)}/music`, { method: 'DELETE' }),
+  listTracks: () => request<Track[]>('/public/tracks'),
   publishInvitation: (id: string, provider: PaymentProviderId) =>
     request<PublishResult>(`/my/invitations/${encode(id)}/publish`, json('POST', { provider })),
 
@@ -164,6 +199,11 @@ export const api = {
   paymentStatus: (paymentId: string) => request<PaymentStatusView>(`/my/payments/${encode(paymentId)}`),
 
   admin: {
+    tracks: () => request<AdminTrack[]>('/admin/tracks'),
+    createTrack: (input: TrackCreateInput) => request<AdminTrack>('/admin/tracks', json('POST', input)),
+    updateTrack: (id: string, patch: TrackPatchInput) => request<AdminTrack>(`/admin/tracks/${encode(id)}`, json('PATCH', patch)),
+    uploadTrackFile: (id: string, file: File, durationSec: number | null) =>
+      request<AdminTrack>(`/admin/tracks/${encode(id)}/file`, { method: 'POST', body: audioForm('file', file, durationSec) }),
     organizations: (type?: OrgType) => request<AdminOrganization[]>(`/admin/organizations${type ? `?type=${type}` : ''}`),
     setCatalogStatus: (id: string, catalogStatus: 'HIDDEN' | 'PUBLISHED') =>
       request<{ id: string; catalogStatus: string }>(`/admin/organizations/${encode(id)}`, json('PATCH', { catalogStatus })),

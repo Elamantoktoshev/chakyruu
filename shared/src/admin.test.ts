@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { grantCreditsSchema, leadPatchSchema, packageAudience, pricePatchSchema } from './admin.js';
+import { grantCreditsSchema, leadPatchSchema, packageAudience, pricePatchSchema } from './index.js';
 
 describe('admin schemas', () => {
   it('limits manual credit grants to a positive, bounded integer', () => {

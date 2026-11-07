@@ -1,3 +1,4 @@
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type Express } from 'express';
@@ -16,7 +17,12 @@ import { createPartnerCabinetRouter } from './partners/partner.routes.js';
 import type { PaymentGateway } from './payments/gateway.js';
 import { createMyPaymentsRouter, createWebhookRouter } from './payments/payment.routes.js';
 import { listPublicPrices } from './pricing/price.service.js';
+import { defaultAudioCompressor, type AudioCompressor } from './storage/audioUpload.js';
 import type { StorageProvider } from './storage/storage.provider.js';
+import { createPublicTrackRouter } from './music/track.routes.js';
+import { createOgRouter } from './og/og.routes.js';
+import { createPictureRenderer } from './og/og.service.js';
+import { createWebRouter } from './web/spa.js';
 import { templateRouter } from './templates/template.routes.js';
 import { createTilekLikeRouter } from './tilek/tilek.routes.js';
 
@@ -39,17 +45,24 @@ export interface AppConfig {
   trustProxyHops?: number;
   /** Injectable clock (tests use it to expire codes and sessions). */
   now?: () => Date;
+  /** Built React app (client/dist). When set, the API also serves the site and invitation previews. */
+  clientDir?: string;
+  /** mp3 re-encoding (ffmpeg); tests pass a no-op so they do not depend on ffmpeg. */
+  compressAudio?: AudioCompressor;
   /** DEV_LOGIN_WITHOUT_SMS: the login code is returned to the browser. Refused in production by index.ts. */
   exposeOtpInResponse?: boolean;
 }
 
 export function createApp(config: AppConfig): Express {
   const { corsOrigin, otpSecret, isProduction, sms, storage, payments, uploadsDir, trustProxyHops = 1, now } = config;
+  const compressAudio = config.compressAudio ?? defaultAudioCompressor;
   const checkout = { gateway: payments, appUrl: config.appUrl ?? corsOrigin };
   const app = express();
   const auth = createAuthService({ otpSecret, sms, now, exposeOtpInResponse: config.exposeOtpInResponse && !isProduction });
 
   app.disable('x-powered-by');
+  // gzip for HTML, JS, CSS and JSON (images and mp3 are already compressed and skipped).
+  app.use(compression());
   app.set('trust proxy', trustProxyHops);
 
   if (uploadsDir) {
@@ -79,13 +92,17 @@ export function createApp(config: AppConfig): Express {
   app.use('/api/public/invitations', createPublicInvitationRouter({ appUrl: checkout.appUrl }));
   app.use('/api/public/tilekter', createTilekLikeRouter());
   app.use('/api/public/partner-leads', createPartnerLeadRouter());
+  app.use('/api/public/tracks', createPublicTrackRouter());
   app.use('/api/public', createCatalogRouter());
   app.get('/api/public/prices', async (_req, res) => sendOk(res, await listPublicPrices()));
-  app.use('/api/my/invitations', createMyInvitationsRouter({ storage, checkout }));
+  app.use('/api/my/invitations', createMyInvitationsRouter({ storage, checkout, compressAudio }));
   app.use('/api/my/gifts', myGiftRouter);
   app.use('/api/my/payments', createMyPaymentsRouter(payments));
   app.use('/api/partner', createPartnerCabinetRouter({ storage, checkout }));
-  app.use('/api/admin', createAdminRouter());
+  app.use('/api/admin', createAdminRouter({ storage, compress: compressAudio }));
+  app.use('/api/og', createOgRouter({ renderer: createPictureRenderer({ appUrl: checkout.appUrl }), appUrl: checkout.appUrl }));
+
+  if (config.clientDir) app.use(createWebRouter({ clientDir: config.clientDir, appUrl: checkout.appUrl }));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

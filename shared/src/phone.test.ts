@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isValidPhone, phoneSchema, sanitizeLocalPart, toE164 } from './phone.js';
+import { isValidPhone, phoneSchema, sanitizeLocalPart, toE164 } from './index.js';
 
 describe('phoneSchema', () => {
   it('accepts +996 followed by exactly 9 digits and trims surrounding spaces', () => {

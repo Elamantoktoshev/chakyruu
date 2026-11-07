@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { createApp } from '../src/app.js';
+import { createApp, type AppConfig } from '../src/app.js';
 import { MemorySmsProvider } from '../src/auth/sms.js';
 import { FakeGateway } from '../src/payments/fake.gateway.js';
 import type { PaymentGateway } from '../src/payments/gateway.js';
@@ -25,7 +25,7 @@ export function createTestContext(payments: PaymentGateway = new FakeGateway()):
   };
 }
 
-export function buildTestApp(ctx: TestContext) {
+export function buildTestApp(ctx: TestContext, overrides: Partial<AppConfig> = {}) {
   return createApp({
     corsOrigin: TEST_ORIGIN,
     otpSecret: TEST_OTP_SECRET,
@@ -34,6 +34,9 @@ export function buildTestApp(ctx: TestContext) {
     storage: ctx.storage,
     payments: ctx.payments,
     now: () => new Date(Date.now() + ctx.clockOffsetMs),
+    // ffmpeg may or may not be installed where tests run.
+    compressAudio: async (data) => ({ data, isCompressed: false }),
+    ...overrides,
   });
 }
 
@@ -50,3 +53,6 @@ export const TINY_PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
   'base64',
 );
+
+/** "ID3" tag header followed by data — what most mp3 files start with. */
+export const TINY_MP3 = Buffer.concat([Buffer.from('ID3\x04\x00\x00\x00\x00\x00\x00', 'latin1'), Buffer.alloc(64, 0x11)]);

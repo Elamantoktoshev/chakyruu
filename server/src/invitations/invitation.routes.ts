@@ -1,4 +1,4 @@
-import { buildIcs, rsvpSchema } from '@chakyruu/shared';
+import { EVENT_TITLES, buildIcs, rsvpSchema } from '@chakyruu/shared';
 import { Router } from 'express';
 import { answerRsvp } from '../guests/rsvp.service.js';
 import { sendOk } from '../lib/http.js';
@@ -16,14 +16,6 @@ const RSVP_MAX_PER_WINDOW = 20;
 /** Typical toi length for the calendar entry. */
 const CALENDAR_EVENT_MINUTES = 5 * 60;
 
-const EVENT_TITLES: Readonly<Record<string, string>> = {
-  WEDDING: 'Үйлөнүү той',
-  KYZ_UZATUU: 'Кыз узатуу',
-  BESHIK: 'Бешик той',
-  SUNNOT: 'Сүннөт той',
-  MAARAKE: 'Маараке',
-};
-
 export function createPublicInvitationRouter({ appUrl }: { appUrl: string }): Router {
   const router = Router();
 
@@ -38,7 +30,7 @@ export function createPublicInvitationRouter({ appUrl }: { appUrl: string }): Ro
     const url = `${appUrl.replace(/\/+$/, '')}/${slug}`;
     const ics = buildIcs({
       uid: `${invitation.id}@chakyruu.kg`,
-      title: `${invitation.hostNames} — ${EVENT_TITLES[invitation.eventType] ?? 'Той'}`,
+      title: `${invitation.hostNames} — ${EVENT_TITLES.KY[invitation.eventType]}`,
       description: `Сиздерди тойго чакырабыз! ${url}`,
       location: [invitation.venueName, invitation.venueAddress].filter(Boolean).join(', '),
       start: invitation.eventDate,

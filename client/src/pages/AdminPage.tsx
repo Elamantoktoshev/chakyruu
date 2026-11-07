@@ -3,10 +3,11 @@ import { useAuth } from '../auth/AuthContext';
 import { LeadsTab } from '../components/admin/LeadsTab';
 import { OrganizationsTab } from '../components/admin/OrganizationsTab';
 import { PricesTab } from '../components/admin/PricesTab';
+import { TracksTab } from '../components/admin/TracksTab';
 import { AppHeader } from '../components/AppHeader';
 import { useI18n } from '../i18n/LanguageContext';
 
-type Tab = 'leads' | 'orgs' | 'catalog' | 'payments' | 'prices';
+type Tab = 'leads' | 'orgs' | 'catalog' | 'payments' | 'prices' | 'tracks';
 
 type Props = {
   /** Payments tab (manual confirmation) is plugged in by the payments module. */
@@ -26,6 +27,7 @@ export function AdminPage({ paymentsTab }: Props) {
     { value: 'catalog', label: t.adminTabCatalog },
     ...(paymentsTab ? [{ value: 'payments' as const, label: t.adminTabPayments }] : []),
     { value: 'prices', label: t.adminTabPrices },
+    { value: 'tracks', label: t.adminTabTracks },
   ];
 
   return (
@@ -58,6 +60,7 @@ export function AdminPage({ paymentsTab }: Props) {
             {tab === 'catalog' && <OrganizationsTab fixedType="TAMADA" />}
             {tab === 'payments' && paymentsTab}
             {tab === 'prices' && <PricesTab />}
+            {tab === 'tracks' && <TracksTab />}
           </>
         )}
       </main>

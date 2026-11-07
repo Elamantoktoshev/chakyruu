@@ -12,7 +12,7 @@
   /** Card background: white, or a lifted shade on dark templates. */
   --color-surface: #ffffff;
 
-  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-serif: 'Playfair Display', 'Playfair Kyrgyz', Georgia, serif;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -75,4 +75,24 @@
 .is-visible .step-pop { transform-box: fill-box; transform-origin: center; animation: step-pop 2.4s ease-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   .is-visible .step-draw, .is-visible .step-fly, .is-visible .step-pop { animation: none; }
+}
+
+/* Music player: the record spins while the song plays. */
+@keyframes vinyl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.vinyl {
+  transform-origin: center;
+  animation: vinyl-spin 2.4s linear infinite;
+  animation-play-state: paused;
+}
+.vinyl.is-spinning {
+  animation-play-state: running;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vinyl {
+    animation: none;
+  }
 }

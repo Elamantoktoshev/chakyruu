@@ -1,9 +1,10 @@
+import { MAX_IMAGE_BYTES } from '@chakyruu/shared';
 import { useRef, useState, type ChangeEvent } from 'react';
 import { api, ApiError } from '../api/client';
 import { useI18n } from '../i18n/LanguageContext';
 import { safeUrl } from '../lib/format';
 
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
 const ACCEPTED_TYPES = 'image/jpeg,image/png,image/webp';
 
 type Props = {
@@ -23,7 +24,7 @@ export function PhotoField({ invitationId, photoUrl, onUploaded }: Props) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    if (file.size > MAX_PHOTO_BYTES) {
+    if (file.size > MAX_IMAGE_BYTES) {
       setError(t.photoTooLarge);
       return;
     }

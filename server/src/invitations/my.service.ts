@@ -4,10 +4,13 @@ import type { SessionUser } from '../auth/auth.service.js';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
 import { templateSelect } from '../templates/template.routes.js';
+import { removeQuietly } from '../storage/audioUpload.js';
 import { replaceImage } from '../storage/imageUpload.js';
 import type { StorageProvider } from '../storage/storage.provider.js';
 import { attachGift, findRedeemableGift, giftPrefill } from '../gifts/gift.service.js';
 import { findManagedInvitation } from './access.js';
+import { gallerySelect } from './gallery.service.js';
+import { invitationMusicSelect, resolveMusicChoice, withMusicView } from './music.service.js';
 import { assertPartnerLinks } from './partnerLinks.js';
 import { allocateSlug, isUniqueViolation, temporaryDraftSlug } from './slug.service.js';
 
@@ -28,7 +31,8 @@ export const ownerInvitationSelect = {
   venueAddress: true,
   venueMapUrl: true,
   photoUrl: true,
-  musicTrackId: true,
+  ...invitationMusicSelect,
+  ...gallerySelect,
   message: true,
   language: true,
   adultsOnly: true,
@@ -51,7 +55,7 @@ type OwnerInvitationRow = Prisma.InvitationGetPayload<{ select: typeof ownerInvi
 /** Builder DTO: the raw gift relation becomes "is this a gift, and from whom". */
 function toOwnerDto({ giftCode, ...invitation }: OwnerInvitationRow) {
   const isGift = giftCode !== null && giftCode.cancelledAt === null;
-  return { ...invitation, isGift, giftFrom: isGift ? giftCode.organization : null };
+  return { ...withMusicView(invitation), isGift, giftFrom: isGift ? giftCode.organization : null };
 }
 
 async function assertTemplateExists(templateId: string) {
@@ -164,11 +168,12 @@ async function assertGiftInvitation(invitationId: string): Promise<void> {
 }
 
 /** Autosave. While the invitation is a draft its slug follows the host names; publishing freezes it. */
-export async function updateDraft(id: string, user: SessionUser, input: InvitationDraftInput) {
+export async function updateDraft(id: string, user: SessionUser, input: InvitationDraftInput, storage: StorageProvider) {
   const invitation = await findManagedInvitation(id, user);
   const design = await resolveDesign(id, input);
   if (input.hideBranding) await assertGiftInvitation(id);
   const links = await assertPartnerLinks(id, input);
+  const music = await resolveMusicChoice(id, input);
   const followsNames = invitation.status === 'DRAFT' && Boolean(input.hostNames?.trim());
 
   for (let attempt = 1; ; attempt += 1) {
@@ -176,9 +181,10 @@ export async function updateDraft(id: string, user: SessionUser, input: Invitati
     try {
       const updated = await prisma.invitation.update({
         where: { id },
-        data: { ...toUpdateData(input), ...design, ...links, ...(slug ? { slug } : {}) },
+        data: { ...toUpdateData(input), ...design, ...links, ...music.data, ...(slug ? { slug } : {}) },
         select: ownerInvitationSelect,
       });
+      if (music.staleKey) await removeQuietly(storage, music.staleKey);
       return toOwnerDto(updated);
     } catch (error: unknown) {
       // Another invitation grabbed the same slug between our check and the write.

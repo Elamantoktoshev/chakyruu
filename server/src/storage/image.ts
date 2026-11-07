@@ -1,11 +1,5 @@
 export type ImageType = 'jpeg' | 'png' | 'webp';
 
-export const IMAGE_CONTENT_TYPES: Readonly<Record<ImageType, string>> = {
-  jpeg: 'image/jpeg',
-  png: 'image/png',
-  webp: 'image/webp',
-};
-
 const startsWith = (data: Buffer, bytes: readonly number[], offset = 0): boolean =>
   data.length >= offset + bytes.length && bytes.every((byte, i) => data[offset + i] === byte);
 

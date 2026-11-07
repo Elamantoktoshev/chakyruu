@@ -1,0 +1,31 @@
+/*
+ * Playfair Display has no Kyrgyz letters (Ң ң, Ү ү, Ө ө). Playfair 2 — same designer, same
+ * look — does. It is declared for exactly these code points, so the browser downloads it only
+ * when such a letter is on screen, and every heading keeps one consistent serif.
+ */
+@font-face {
+  font-family: 'Playfair Kyrgyz';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('@fontsource/playfair/files/playfair-cyrillic-ext-500-normal.woff2') format('woff2');
+  unicode-range: U+04A2-04A3, U+04AE-04AF, U+04E8-04E9;
+}
+
+@font-face {
+  font-family: 'Playfair Kyrgyz';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('@fontsource/playfair/files/playfair-cyrillic-ext-700-normal.woff2') format('woff2');
+  unicode-range: U+04A2-04A3, U+04AE-04AF, U+04E8-04E9;
+}
+
+@font-face {
+  font-family: 'Playfair Kyrgyz';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('@fontsource/playfair/files/playfair-cyrillic-ext-500-italic.woff2') format('woff2');
+  unicode-range: U+04A2-04A3, U+04AE-04AF, U+04E8-04E9;
+}

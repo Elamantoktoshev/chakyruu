@@ -14,6 +14,9 @@ export function sampleInvitation(template: Template, lang: Language): Invitation
     venueMapUrl: null,
     photoUrl: null,
     musicTrackId: null,
+    musicStartSec: 0,
+    music: null,
+    gallery: [],
     message: null,
     language: lang,
     adultsOnly: false,
@@ -34,20 +37,24 @@ type Props = {
   actionLabel?: string;
   isBusy?: boolean;
   onSelect?: (template: Template) => void;
+  /** false keeps the card's size but skips rendering the template (off-screen carousel cards). */
+  showPreview?: boolean;
 };
 
-export function TemplateCard({ template, actionLabel, isBusy = false, onSelect }: Props) {
+export function TemplateCard({ template, actionLabel, isBusy = false, onSelect, showPreview = true }: Props) {
   const { lang, t } = useI18n();
   return (
     <article className="group overflow-hidden rounded-3xl border border-gold/40 bg-white/70 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
       <div className="relative h-72 overflow-hidden bg-cream-dark/40" aria-hidden="true">
-        <div
-          className="pointer-events-none absolute left-1/2 top-0 w-[28rem] origin-top"
-          style={{ transform: `translateX(-50%) scale(${PREVIEW_SCALE})` }}
-          inert
-        >
-          <InvitationView invitation={sampleInvitation(template, lang)} lang={lang} mode="thumbnail" />
-        </div>
+        {showPreview && (
+          <div
+            className="pointer-events-none absolute left-1/2 top-0 w-[28rem] origin-top"
+            style={{ transform: `translateX(-50%) scale(${PREVIEW_SCALE})` }}
+            inert
+          >
+            <InvitationView invitation={sampleInvitation(template, lang)} lang={lang} mode="thumbnail" />
+          </div>
+        )}
       </div>
       <div className="flex items-center justify-between gap-3 p-4">
         <div className="min-w-0">

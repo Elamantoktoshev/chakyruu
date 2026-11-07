@@ -16,7 +16,7 @@ const Ridge = () => (
 
 /** Үйлөнүү той — Ала-Тоо: mountains at dawn, the couple's photo rising like the sun. */
 export default function AlaToo({ invitation, mode, slots }: TemplateProps) {
-  const photo = usePhoto(invitation.photoUrl);
+  const photo = usePhoto(invitation.photoUrl, mode);
   return (
     <div className="bg-cream text-ink">
       <header className={`relative overflow-hidden ${heroHeight(mode)}`}>
@@ -24,8 +24,7 @@ export default function AlaToo({ invitation, mode, slots }: TemplateProps) {
         <div className="relative flex h-full flex-col items-center justify-start px-6 pt-12 text-center text-white">
           {photo.src && (
             <img
-              src={photo.src}
-              onError={photo.onError}
+              {...photo.props}
               alt={invitation.hostNames}
               className="mb-6 h-32 w-32 rounded-full border-4 border-white/80 object-cover shadow-xl"
             />

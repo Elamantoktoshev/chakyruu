@@ -1,5 +1,7 @@
 /** Toi dates are entered and shown in Bishkek time (UTC+6, no DST). */
-export const EVENT_TIME_ZONE = 'Asia/Bishkek';
+import { EVENT_TIME_ZONE } from '@chakyruu/shared';
+
+export { EVENT_TIME_ZONE };
 const BISHKEK_OFFSET = '+06:00';
 
 export interface LocalDateTime {

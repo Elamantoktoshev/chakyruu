@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createTilekSchema, likeTilekSchema } from './tilek.js';
+import { createTilekSchema, likeTilekSchema } from './index.js';
 
 describe('createTilekSchema', () => {
   it('accepts a wish with a typed name or with a personal-link token', () => {

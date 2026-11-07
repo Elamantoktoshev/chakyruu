@@ -6,7 +6,7 @@ export async function resetDatabase(): Promise<void> {
     throw new Error('Refusing to reset a non-test database');
   }
   await prisma.$executeRawUnsafe(
-    'TRUNCATE "Price", "Session", "OtpCode", "PartnerLead", "TamadaClick", "GiftCode", "CreditTransaction", "TamadaBusyDate", "TamadaProfile", "Hall", "TilekLike", "Tilek", "Guest", "Payment", "Invitation", "Template", "User", "Organization" CASCADE',
+    'TRUNCATE "Price", "Session", "OtpCode", "PartnerLead", "TamadaClick", "GiftCode", "CreditTransaction", "TamadaBusyDate", "TamadaProfile", "Hall", "TilekLike", "Tilek", "Guest", "Payment", "Invitation", "Template", "Track", "User", "Organization" CASCADE',
   );
   await prisma.price.createMany({ data: DEFAULT_PRICES });
 }

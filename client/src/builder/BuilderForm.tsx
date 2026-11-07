@@ -3,7 +3,6 @@ import {
   HOST_NAMES_MAX,
   LANGUAGES,
   MESSAGE_MAX,
-  MUSIC_TRACKS,
   VENUE_ADDRESS_MAX,
   VENUE_NAME_MAX,
   invitationDraftSchema,
@@ -14,6 +13,8 @@ import type { OwnerInvitation, Template } from '../api/types';
 import { useI18n } from '../i18n/LanguageContext';
 import { fromEventIso, toEventIso, type LocalDateTime } from '../lib/datetime';
 import { ChoiceChips, Field, inputClass } from './fields';
+import { GalleryField } from './GalleryField';
+import { MusicPicker } from './MusicPicker';
 import { OpeningPicker } from './OpeningPicker';
 import { PalettePicker } from './PalettePicker';
 import { ProgramEditor } from './ProgramEditor';
@@ -32,11 +33,13 @@ type Props = {
   templates: readonly Template[];
   partners: PartnerOptions;
   onChange: (change: BuilderChange) => void;
+  /** Flushes pending autosave changes before a file upload. */
+  beforeUpload: () => Promise<void>;
 };
 
 const LANGUAGE_LABELS = { KY: 'Кыргызча', RU: 'Русский' } as const;
 
-export function BuilderForm({ invitation, templates, partners, onChange }: Props) {
+export function BuilderForm({ invitation, templates, partners, onChange, beforeUpload }: Props) {
   const { t } = useI18n();
   const [dateTime, setDateTime] = useState<LocalDateTime>(() => fromEventIso(invitation.eventDate));
   const [mapUrlError, setMapUrlError] = useState<string | null>(null);
@@ -170,12 +173,9 @@ export function BuilderForm({ invitation, templates, partners, onChange }: Props
         onUploaded={(photoUrl) => onChange({ view: { photoUrl } })}
       />
 
-      <ChoiceChips
-        label={t.fieldMusic}
-        options={[{ value: '', label: t.musicNone }, ...MUSIC_TRACKS.map((track) => ({ value: track.id, label: track.title }))]}
-        value={invitation.musicTrackId ?? ''}
-        onChange={(id) => onChange({ patch: { musicTrackId: id || null }, view: { musicTrackId: id || null } })}
-      />
+      <GalleryField invitationId={invitation.id} photos={invitation.gallery} onChanged={(gallery) => onChange({ view: { gallery } })} />
+
+      <MusicPicker invitation={invitation} onChange={onChange} beforeUpload={beforeUpload} />
 
       <ProgramEditor value={invitation.program} onChange={(program) => onChange({ patch: { program }, view: { program } })} />
 

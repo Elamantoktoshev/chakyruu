@@ -17,13 +17,13 @@ const StarDivider = () => (
 
 /** Сүннөт той — Баатыр: deep navy, a gold 8-pointed star, strong uppercase typography. */
 export default function Batyr({ invitation, mode, slots }: TemplateProps) {
-  const photo = usePhoto(invitation.photoUrl);
+  const photo = usePhoto(invitation.photoUrl, mode);
   return (
     <div className="bg-cream text-ink">
       <header className={`relative flex flex-col items-center justify-center overflow-hidden bg-burgundy px-6 text-center text-white ${heroHeight(mode, 'short')}`}>
         <KyrgyzStar className="pointer-events-none absolute h-[28rem] w-[28rem] opacity-10" />
         {photo.src ? (
-          <img src={photo.src} onError={photo.onError} alt={invitation.hostNames} className="relative mb-6 h-36 w-36 border-4 border-gold object-cover" />
+          <img {...photo.props} alt={invitation.hostNames} className="relative mb-6 h-36 w-36 border-4 border-gold object-cover" />
         ) : (
           <KyrgyzStar className="relative mb-6 h-20 w-20" />
         )}

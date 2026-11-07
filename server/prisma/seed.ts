@@ -59,7 +59,8 @@ async function seedDemoInvitation(): Promise<void> {
     venueName: '«Ала-Тоо» тойканасы',
     venueAddress: 'Ош шаары',
     venueMapUrl: 'https://2gis.kg/osh/search/' + encodeURIComponent('Ала-Тоо тойкана'),
-    photoUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80',
+    // Unsplash (free licence), stored locally as webp so the demo loads like real invitations.
+    photoUrl: '/demo/aibek-aizada.webp',
     musicTrackId: 'komuz-joy',
     eventType: TemplateType.WEDDING,
     publishedAt: new Date('2026-11-01T12:00:00+06:00'),

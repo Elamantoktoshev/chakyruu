@@ -8,14 +8,13 @@ const Hairline = () => <div className="mx-auto mb-8 h-px w-16 bg-gold" aria-hidd
 
 /** Үйлөнүү той — Минимализм: white space, an arched photo, thin hairlines, no ornament. */
 export default function Minimal({ invitation, mode, slots }: TemplateProps) {
-  const photo = usePhoto(invitation.photoUrl);
+  const photo = usePhoto(invitation.photoUrl, mode);
   return (
     <div className="bg-cream text-ink">
       <header className="px-8 pb-12 pt-16 text-center">
         {photo.src && (
           <img
-            src={photo.src}
-            onError={photo.onError}
+            {...photo.props}
             alt={invitation.hostNames}
             className="mx-auto mb-10 h-72 w-56 rounded-t-full object-cover shadow-sm"
           />

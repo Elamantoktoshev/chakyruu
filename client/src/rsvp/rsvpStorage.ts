@@ -1,4 +1,4 @@
-import { guestTokenSchema } from '@chakyruu/shared';
+import { GUEST_TOKEN_PATTERN } from '@chakyruu/shared';
 
 const KEY_PREFIX = 'chakyruu.rsvp.';
 
@@ -13,7 +13,7 @@ export function loadStoredRsvp(slug: string): StoredRsvp | null {
     const raw = localStorage.getItem(KEY_PREFIX + slug);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<StoredRsvp>;
-    const isValid = typeof parsed.name === 'string' && guestTokenSchema.safeParse(parsed.token).success;
+    const isValid = typeof parsed.name === 'string' && typeof parsed.token === 'string' && GUEST_TOKEN_PATTERN.test(parsed.token);
     return isValid ? { token: parsed.token as string, name: parsed.name as string } : null;
   } catch {
     return null;

@@ -118,7 +118,13 @@ function Builder({ invitation: initial, templates, partners }: BuilderData) {
             </p>
           )}
           <div className="mt-6">
-            <BuilderForm invitation={invitation} templates={templates} partners={partners} onChange={handleChange} />
+            <BuilderForm
+              invitation={invitation}
+              templates={templates}
+              partners={partners}
+              onChange={handleChange}
+              beforeUpload={autosave.flush}
+            />
           </div>
         </section>
         <aside className={`${tab === 'preview' ? '' : 'hidden'} lg:sticky lg:top-20 lg:block lg:self-start`}>{preview}</aside>

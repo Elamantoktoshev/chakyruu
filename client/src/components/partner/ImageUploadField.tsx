@@ -1,9 +1,10 @@
+import { MAX_IMAGE_BYTES } from '@chakyruu/shared';
 import { useRef, useState, type ChangeEvent } from 'react';
 import { ApiError } from '../../api/client';
 import { useI18n } from '../../i18n/LanguageContext';
 import { safeUrl } from '../../lib/format';
 
-const MAX_BYTES = 5 * 1024 * 1024;
+
 
 type Props = {
   label: string;
@@ -24,7 +25,7 @@ export function ImageUploadField({ label, imageUrl, upload, onUploaded }: Props)
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    if (file.size > MAX_BYTES) {
+    if (file.size > MAX_IMAGE_BYTES) {
       setError(t.photoTooLarge);
       return;
     }

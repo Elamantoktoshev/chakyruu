@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { programSchema, readProgram } from './program.js';
+import { programSchema, readProgram } from './index.js';
 
 describe('programSchema', () => {
   it('accepts HH:MM items and rejects bad times, empty titles and long lists', () => {

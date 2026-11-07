@@ -168,7 +168,8 @@ describe('photo upload', () => {
       .set('Origin', TEST_ORIGIN)
       .attach('photo', TINY_PNG, { filename: 'me.png', contentType: 'image/png' })
       .expect(200);
-    expect(ok.body.data.photoUrl).toMatch(/^\/uploads\/[a-f0-9-]+\.png$/);
+    // Every photo is re-encoded to webp (smaller, no EXIF).
+    expect(ok.body.data.photoUrl).toMatch(/^\/uploads\/[a-f0-9-]+\.webp$/);
     expect(ctx.storage.size).toBe(1);
 
     await owner

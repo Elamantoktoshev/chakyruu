@@ -1,4 +1,4 @@
-import { ORG_TYPES, partnerLeadSchema, type OrgType } from '@chakyruu/shared';
+import { LEAD_NAME_MAX, LEAD_NAME_MIN, LEAD_VENUE_MAX, ORG_TYPES, isValidPhone, type OrgType } from '@chakyruu/shared';
 import { useState, type FormEvent } from 'react';
 import { api, ApiError } from '../../api/client';
 import { useI18n } from '../../i18n/LanguageContext';
@@ -8,6 +8,13 @@ const inputClass =
   'w-full min-h-12 rounded-xl border border-gold/50 bg-white/90 px-4 py-3 text-base text-ink outline-none focus:border-gold focus:ring-2 focus:ring-gold/30';
 
 type Status = 'idle' | 'sending' | 'sent';
+
+const hasLength = (value: string, max: number) => value.trim().length >= LEAD_NAME_MIN && value.trim().length <= max;
+
+/** Quick check before sending; the server validates the lead fully. Kept zod-free for the landing page. */
+function isCompleteLead(lead: { name: string; phone: string; venueName: string }): boolean {
+  return hasLength(lead.name, LEAD_NAME_MAX) && hasLength(lead.venueName, LEAD_VENUE_MAX) && isValidPhone(lead.phone);
+}
 
 export function PartnerForm() {
   const { t } = useI18n();
@@ -22,7 +29,7 @@ export function PartnerForm() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const lead = { type, name, phone: toE164(localPhone), venueName, city };
-    if (!partnerLeadSchema.safeParse(lead).success) {
+    if (!isCompleteLead(lead)) {
       setError(t.partnerErrorFields);
       return;
     }

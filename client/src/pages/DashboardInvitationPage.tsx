@@ -13,6 +13,7 @@ import { TilekModeration } from '../components/tilek/TilekModeration';
 import { useI18n } from '../i18n/LanguageContext';
 import { formatEventDate } from '../lib/format';
 import { shareLink } from '../lib/share';
+import { PromoKit } from '../components/dashboard/PromoKit';
 
 interface PageData {
   invitation: OwnerInvitation;
@@ -102,6 +103,8 @@ function Manage({ data }: { data: PageData }) {
         ) : (
           <p className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-900">{t.publishFirst}</p>
         )}
+
+        {isPublished && <PromoKit slug={invitation.slug} version={invitation.updatedAt} />}
 
         <GuestsPanel
           invitationId={invitation.id}

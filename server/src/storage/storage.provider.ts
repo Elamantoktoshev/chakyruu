@@ -3,6 +3,16 @@ import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { ImageType } from './image.js';
 
+/** Everything users may upload: photos and mp3 music. */
+export type StoredFileType = ImageType | 'mp3';
+
+export const CONTENT_TYPES: Readonly<Record<StoredFileType, string>> = {
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  mp3: 'audio/mpeg',
+};
+
 export interface StoredFile {
   /** Provider-specific identifier used to delete the file later. */
   key: string;
@@ -12,14 +22,15 @@ export interface StoredFile {
 
 /** File storage for user uploads. Local disk now; DigitalOcean Spaces later. */
 export interface StorageProvider {
-  saveImage(data: Buffer, type: ImageType): Promise<StoredFile>;
+  /** `data` must already be validated by its magic bytes. */
+  save(data: Buffer, type: StoredFileType): Promise<StoredFile>;
   remove(key: string): Promise<void>;
 }
 
 /** Keys are always `<uuid>.<ext>` — anything else (e.g. "../x") is refused. */
-const KEY_PATTERN = /^[a-f0-9-]{36}\.(jpeg|png|webp)$/;
+const KEY_PATTERN = /^[a-f0-9-]{36}\.(jpeg|png|webp|mp3)$/;
 
-function newKey(type: ImageType): string {
+function newKey(type: StoredFileType): string {
   return `${randomUUID()}.${type}`;
 }
 
@@ -29,7 +40,7 @@ export class LocalStorageProvider implements StorageProvider {
     private readonly publicPath = '/uploads',
   ) {}
 
-  async saveImage(data: Buffer, type: ImageType): Promise<StoredFile> {
+  async save(data: Buffer, type: StoredFileType): Promise<StoredFile> {
     await mkdir(this.dir, { recursive: true });
     const key = newKey(type);
     await writeFile(path.join(this.dir, key), data, { flag: 'wx' });
@@ -50,7 +61,7 @@ export class LocalStorageProvider implements StorageProvider {
 export class MemoryStorageProvider implements StorageProvider {
   private files: ReadonlyMap<string, Buffer> = new Map();
 
-  async saveImage(data: Buffer, type: ImageType): Promise<StoredFile> {
+  async save(data: Buffer, type: StoredFileType): Promise<StoredFile> {
     const key = newKey(type);
     this.files = new Map([...this.files, [key, data]]);
     return { key, url: `/uploads/${key}` };

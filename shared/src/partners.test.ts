@@ -8,7 +8,7 @@ import {
   normalizeGiftCode,
   orgProfileSchema,
   tamadaProfileSchema,
-} from './partners.js';
+} from './index.js';
 
 describe('orgProfileSchema', () => {
   it('normalises Instagram handles and URLs to a bare handle', () => {

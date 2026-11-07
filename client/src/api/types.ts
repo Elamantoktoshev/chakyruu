@@ -1,4 +1,4 @@
-import type { EventType, GuestStatus, GuestSummary, Language, OpeningAnimation } from '@chakyruu/shared';
+import type { EventType, GuestStatus, GuestSummary, Language, OpeningAnimation, TrackCategory } from '@chakyruu/shared';
 
 export type { EventType, GuestStatus, Language } from '@chakyruu/shared';
 export type TemplateType = EventType;
@@ -32,6 +32,11 @@ export interface InvitationContent {
   venueMapUrl: string | null;
   photoUrl: string | null;
   musicTrackId: string | null;
+  musicStartSec: number;
+  /** Resolved by the server: the catalogue track or the owner's own mp3; null = no music. */
+  music: MusicView | null;
+  /** Up to GALLERY_MAX_PHOTOS webp photos, in display order. */
+  gallery: GalleryPhoto[];
   message: string | null;
   language: Language;
   adultsOnly: boolean;
@@ -50,6 +55,41 @@ export interface InvitationContent {
   /** Partner branding blocks (public page and builder preview). */
   venue?: VenueBlock | null;
   tamada?: TamadaBlock | null;
+}
+
+export interface GalleryPhoto {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+}
+
+export interface MusicView {
+  src: string;
+  /** Catalogue title; null for the owner's own file. */
+  title: string | null;
+  durationSec: number | null;
+  startSec: number;
+  isCustom: boolean;
+}
+
+export interface Track {
+  id: string;
+  title: string;
+  category: TrackCategory;
+  file: string;
+  durationSec: number | null;
+}
+
+export interface AdminTrack extends Omit<Track, 'file'> {
+  file: string | null;
+  active: boolean;
+  sortOrder: number;
+  /** File uploaded through the admin (otherwise it ships in client/public/music). */
+  isUploaded: boolean;
+  /** Invitations that use the track. */
+  usedBy: number;
+  updatedAt: string;
 }
 
 /** What the invitation page knows about the guest behind a personal link. */

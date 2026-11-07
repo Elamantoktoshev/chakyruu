@@ -1,7 +1,8 @@
 import { guestGreeting } from '@chakyruu/shared';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { api } from '../api/client';
+import { takeEmbeddedInvitation } from '../api/embeddedInvitation';
 import type { Invitation } from '../api/types';
 import { useAsync } from '../api/useAsync';
 import { InvitationView } from '../components/invitation/InvitationView';
@@ -15,6 +16,13 @@ export function InvitationPage() {
   const { slug = '' } = useParams();
   const [searchParams] = useSearchParams();
   const guestToken = searchParams.get('g');
+  // First load of a published invitation: the data is already in the HTML.
+  const [embedded] = useState(() => takeEmbeddedInvitation(slug));
+  if (embedded) return <LiveInvitation invitation={embedded} guestToken={embedded.guest ? guestToken : null} />;
+  return <FetchedInvitation slug={slug} guestToken={guestToken} />;
+}
+
+function FetchedInvitation({ slug, guestToken }: { slug: string; guestToken: string | null }) {
   const load = useCallback(() => api.getInvitation(slug, guestToken), [slug, guestToken]);
   const state = useAsync(load);
 

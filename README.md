@@ -106,6 +106,11 @@ Integration-тесты сервера работают в отдельной с�
 | POST | `/api/public/tilekter/:id/like` | `{ clientId }` — один лайк на браузер |
 | POST | `/api/public/partner-leads` | Заявка партнёра `{ type: VENUE\|TAMADA\|AGENCY, name, phone, venueName, city? }` |
 | GET  | `/api/public/prices` | Активные цены |
+| GET  | `/api/public/tracks` | Включённые треки музыки (с файлом) |
+| GET  | `/api/public/invitations/:slug/calendar.ics` | «Календарга кошуу» (только опубликованные) |
+| GET  | `/api/og/:slug.png` | Превью ссылки 1200×630 (satori + resvg, кэш в памяти), только PUBLISHED |
+| GET  | `/api/og/:slug/story.png` | Картинка для Stories 1080×1920 с QR-кодом (скачивание) |
+| GET  | `/api/og/:slug/qr.png` | QR-код ссылки для печати |
 | GET  | `/api/public/tamadas?city=&lang=&priceMax=&date=` | Каталог тамад |
 | GET  | `/api/public/venues?city=` | Опубликованные тойканы (для конструктора) |
 | GET  | `/api/public/tamadas/:id/contact?invitation=` | Клик «Тамадага жазуу» → 302 на WhatsApp |
@@ -128,7 +133,12 @@ Integration-тесты сервера работают в отдельной с�
 | POST   | `/api/my/invitations` | `{ templateId }` — новый черновик |
 | GET    | `/api/my/invitations/:id` | Данные для конструктора |
 | PATCH  | `/api/my/invitations/:id` | Автосохранение (частичное). Пока DRAFT, slug следует за именами |
-| POST   | `/api/my/invitations/:id/photo` | multipart `photo`: JPEG/PNG/WebP (по сигнатуре), ≤ 5 МБ |
+| POST   | `/api/my/invitations/:id/photo` | multipart `photo`: JPEG/PNG/WebP (по сигнатуре), ≤ 10 МБ → webp ≤ 1600 px без EXIF |
+| POST   | `/api/my/invitations/:id/gallery` | Фото в галерею (до 6, та же обработка) |
+| PUT    | `/api/my/invitations/:id/gallery/order` | `{ photoIds }` — новый порядок |
+| DELETE | `/api/my/invitations/:id/gallery/:photoId` | Удалить фото вместе с файлом |
+| POST   | `/api/my/invitations/:id/music` | multipart `music` (+ `durationSec`): свой mp3 ≤ 10 МБ (по сигнатуре), сжатие ffmpeg до 128 kbps |
+| DELETE | `/api/my/invitations/:id/music` | Удалить свой mp3 |
 | POST   | `/api/my/invitations/:id/publish` | `{ provider: MBANK | ODENGI | ELSOM }` — оплата 700 сом → PUBLISHED |
 | GET    | `/api/my/invitations/:id/guests?status=` | Гости |
 | POST   | `/api/my/invitations/:id/guests/bulk` | `{ text }` — одно имя на строку (`+996…` в конце строки — телефон) |
@@ -138,6 +148,7 @@ Integration-тесты сервера работают в отдельной с�
 | GET    | `/api/my/gifts` | Подарки партнёров на мой номер |
 | GET    | `/api/my/payments/:id` | Статус платежа (плательщику) |
 
+Автосохранение принимает `musicTrackId` (только включённый трек; выбор трека удаляет свой mp3) и `musicStartSec` (0–600).
 `POST /api/my/invitations` принимает `giftCode`; автосохранение принимает `venueOrgId`, `tamadaOrgId`, `hallId` (только опубликованные партнёры или партнёр из подарка).
 
 ### Партнёр (`/api/partner/*`, роль ORG_ADMIN, иначе 403)
@@ -146,7 +157,7 @@ Integration-тесты сервера работают в отдельной с�
 
 ### Админ (`/api/admin/*`, роль ADMIN, иначе 403)
 
-`GET /organizations?type=`, `PATCH /organizations/:id { catalogStatus }`, `POST /organizations/:id/credits { amount }`, `GET /leads?status=`, `PATCH /leads/:id { status }`, `POST /leads/:id/convert`, `GET /prices`, `PATCH /prices/:code`, `GET /payments?status=`, `POST /payments/:id/confirm`.
+`GET/POST /tracks`, `PATCH /tracks/:id { title, category, active, sortOrder, durationSec }`, `POST /tracks/:id/file` (mp3 ≤ 20 МБ), `GET /organizations?type=`, `PATCH /organizations/:id { catalogStatus }`, `POST /organizations/:id/credits { amount }`, `GET /leads?status=`, `PATCH /leads/:id { status }`, `POST /leads/:id/convert`, `GET /prices`, `PATCH /prices/:code`, `GET /payments?status=`, `POST /payments/:id/confirm`.
 
 ### Безопасность
 
@@ -154,7 +165,8 @@ Integration-тесты сервера работают в отдельной с�
 - SMS-код хранится как HMAC с `OTP_SECRET` (≥ 32 символа), 5 попыток, новый код не чаще раза в 60 с и не больше 10 в сутки на номер, 3 запроса за 10 мин на номер.
 - Изменяющие запросы с чужим `Origin` отклоняются (CSRF).
 - Токен гостя — 128 бит; публичная страница не отдаёт токены и телефоны.
-- Загрузки: тип по сигнатуре файла (SVG/HTML отклоняются), случайное имя, `X-Content-Type-Options: nosniff`.
+- Загрузки: тип по сигнатуре файла (SVG/HTML отклоняются, mp3 — по ID3/кадру MPEG), случайное имя, `X-Content-Type-Options: nosniff`. Фото перекодируются sharp в webp, EXIF (в т.ч. GPS) удаляется, лимит 50 Мп против «бомб распаковки».
+- OG-теги `/:slug` экранируются; токен гостя в HTML не попадает; черновики не раскрываются. Приглашения — `noindex`.
 - Slug не может совпасть с маршрутом приложения (`create`, `dashboard`, `login`, `pay`, `api`, `uploads`…).
 - `TRUST_PROXY` — число reverse-proxy перед API; от него зависит IP в rate limit.
 - С `NODE_ENV=production` сервер не стартует, пока нет реальных SMS- и платёжного провайдеров.
@@ -184,9 +196,16 @@ client/src
   i18n/          словари KY/RU по фичам; тест на совпадение ключей
 ```
 
+## Музыка, галерея, превью ссылок
+
+- **Музыка.** Таблица `Track` (категории ULUTTUK / ZAMANBAP / BALDARGA / KLASSIKA). Файл трека — либо `/music/имя.mp3` из `client/public/music/`, либо загруженный в админке. Трек виден в конструкторе, только когда он включён и у него есть файл; выключенный трек перестаёт играть во всех приглашениях. Плеер — пластинка, громкость нарастает за 2 с (на iPhone Safari громкость из кода не меняется — там сразу полная), старт с `musicStartSec`.
+- **Галерея.** До 6 фото, лента со свайпом на CSS scroll-snap.
+- **OG-превью.** В production API отдаёт и собранный клиент (`client/dist`, или `CLIENT_DIST_DIR`): для опубликованного `/:slug` в HTML подставляются OG-теги, на личной ссылке — «Урматтуу Асан байке, сизди тойго чакырабыз!». В dev Vite отдаёт клиент сам, поэтому OG проверяется так: `npm run build -w client`, затем `curl localhost:4000/<slug>`.
+- **Шрифты.** В Playfair Display нет букв ң ө ү — они берутся из Playfair 2 (`client/src/styles/kyrgyz-serif.css`, грузится только при наличии этих букв); в OG-картинках так же.
+
 ## Модель данных
 
-`Organization` (VENUE | TAMADA | AGENCY, кредиты, `Hall`, `TamadaProfile`, `TamadaBusyDate`, `CreditTransaction`, `GiftCode`, `TamadaClick`) → `User` (OWNER | ORG_ADMIN | ADMIN) → `Invitation` (по `Template`, тип тоя, DRAFT → PUBLISHED, `venueOrgId` / `tamadaOrgId` / `hallId` — только брендинг) → `Guest` (токен, INVITED | ATTENDING | DECLINED), `Tilek` → `TilekLike`, `Payment` (INVITATION | CREDIT_PACKAGE). Отдельно `Price`, `PartnerLead`, `OtpCode`, `Session`.
+`Organization` (VENUE | TAMADA | AGENCY, кредиты, `Hall`, `TamadaProfile`, `TamadaBusyDate`, `CreditTransaction`, `GiftCode`, `TamadaClick`) → `User` (OWNER | ORG_ADMIN | ADMIN) → `Invitation` (по `Template`, тип тоя, DRAFT → PUBLISHED, `venueOrgId` / `tamadaOrgId` / `hallId` — только брендинг) → `Guest` (токен, INVITED | ATTENDING | DECLINED), `Tilek` → `TilekLike`, `InvitationPhoto` (галерея), `Track` (музыка), `Payment` (INVITATION | CREDIT_PACKAGE). Отдельно `Price`, `PartnerLead`, `OtpCode`, `Session`.
 Суммы платежей хранятся в тыйынах (`Int`).
 
 ## TODO
@@ -197,8 +216,10 @@ client/src
 - [ ] Автоматически помечать FAILED брошенные `PENDING`-платежи (manual) старше N дней, чтобы не копились в `/admin`.
 - [ ] Маркетплейс тамад: бронирование даты через Chakyruu, отзывы.
 - [ ] Реальные SMS: Nikita.kg / SMSPro через `SmsProvider` вместо `ConsoleSmsProvider`.
-- [ ] Хранилище фото в DigitalOcean Spaces через `StorageProvider`; ресайз фото перед сохранением.
-- [ ] Музыка: положить 5 лицензионно чистых треков в `client/public/music/` (имена в `shared/src/catalog.ts`); пока файлов нет, плеер скрыт.
+- [ ] Хранилище фото и mp3 в DigitalOcean Spaces через `StorageProvider` (шаг 5).
+- [ ] Музыка: добавить лицензионно чистые файлы — положить в `client/public/music/` или загрузить в `/admin` → «Музыка», затем включить трек. Пять треков из миграции `music_tracks` выключены, пока нет файлов.
+- [ ] Установить ffmpeg на сервере (в Docker-образ), иначе свои mp3 сохраняются без сжатия.
+- [ ] Удаление приглашения: сейчас его нет; при появлении — удалять файлы галереи и музыки из хранилища.
 - [ ] Rate limit в памяти работает только на одном инстансе — перенести в Redis/Postgres при масштабировании.
 - [ ] Периодическая очистка просроченных `OtpCode` и `Session`.
 - [ ] Глобальный лимит SMS в час (защита бюджета при реальном провайдере).

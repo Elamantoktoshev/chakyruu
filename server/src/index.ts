@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createApp } from './app.js';
 import { ConsoleSmsProvider } from './auth/sms.js';
@@ -7,6 +9,14 @@ import { LocalStorageProvider } from './storage/storage.provider.js';
 
 /** server/uploads — next to src/ and dist/. */
 const UPLOADS_DIR = fileURLToPath(new URL('../uploads', import.meta.url));
+/** Built client (npm run build -w client). In development Vite serves it instead. */
+const DEFAULT_CLIENT_DIR = fileURLToPath(new URL('../../client/dist', import.meta.url));
+
+/** The API serves the site only when a client build exists (production, `vite build` locally). */
+function findClientDir(): string | undefined {
+  const dir = process.env.CLIENT_DIST_DIR ?? DEFAULT_CLIENT_DIR;
+  return existsSync(path.join(dir, 'index.html')) ? dir : undefined;
+}
 
 const MIN_OTP_SECRET_LENGTH = 32;
 const PLACEHOLDER_PREFIX = 'change-me';
@@ -54,6 +64,7 @@ function readConfig() {
     payments: createGatewayFromEnv(process.env, isProduction),
     appUrl: process.env.PUBLIC_APP_URL ?? process.env.CORS_ORIGIN ?? 'http://localhost:5173',
     uploadsDir: UPLOADS_DIR,
+    clientDir: findClientDir(),
   };
 }
 

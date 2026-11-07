@@ -8,6 +8,7 @@ import '@fontsource/inter/600.css';
 import '@fontsource/playfair-display/500.css';
 import '@fontsource/playfair-display/700.css';
 import '@fontsource/playfair-display/500-italic.css';
+import './styles/kyrgyz-serif.css';
 import './index.css';
 
 const rootElement = document.getElementById('root');

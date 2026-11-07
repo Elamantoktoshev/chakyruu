@@ -9,12 +9,12 @@ import type { TemplateProps } from '../types';
 
 /** Үйлөнүү той — Классика: photo or ою medallion on bordo, gold ornament bands. */
 export default function Classic({ invitation, mode, slots }: TemplateProps) {
-  const photo = usePhoto(invitation.photoUrl);
+  const photo = usePhoto(invitation.photoUrl, mode);
   return (
     <div className="bg-cream text-ink">
       <header className={`relative overflow-hidden ${heroHeight(mode)}`}>
         {photo.src ? (
-          <img src={photo.src} onError={photo.onError} alt={invitation.hostNames} className="h-full w-full object-cover" />
+          <img {...photo.props} alt={invitation.hostNames} className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full items-start justify-center bg-burgundy pt-8">
             <OyuMedallion className="h-28 w-28 text-gold opacity-80" />

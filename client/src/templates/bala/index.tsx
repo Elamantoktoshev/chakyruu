@@ -13,15 +13,14 @@ const Stars = () => (
 
 /** Бешик той — Бала: a calm night sky over the cradle; blue for a boy, pink for a girl. */
 export default function Bala({ invitation, mode, slots }: TemplateProps) {
-  const photo = usePhoto(invitation.photoUrl);
+  const photo = usePhoto(invitation.photoUrl, mode);
   return (
     <div className="bg-cream text-ink">
       <header className="relative overflow-hidden bg-burgundy px-6 pb-16 pt-10 text-center text-white">
         <MoonStars className="mx-auto h-28 w-48" />
         {photo.src && (
           <img
-            src={photo.src}
-            onError={photo.onError}
+            {...photo.props}
             alt={invitation.hostNames}
             className="mx-auto mt-6 h-40 w-40 rounded-full border-4 border-dashed border-gold object-cover"
           />

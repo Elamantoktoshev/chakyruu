@@ -9,6 +9,7 @@ import { useReveal } from '../../hooks/useReveal';
 import { useI18n } from '../../i18n/LanguageContext';
 import { formatEventDate, formatEventTime, safeUrl } from '../../lib/format';
 import type { InvitationViewMode, TemplateSlots } from '../types';
+import { Gallery } from './Gallery';
 import { QuickActions } from './QuickActions';
 
 type SectionProps = { children: ReactNode; className?: string; id?: string };
@@ -65,6 +66,8 @@ export function InvitationBody({
           <p className="whitespace-pre-line font-serif text-lg leading-relaxed text-ink/85">{invitation.message}</p>
         </Section>
       )}
+
+      <Gallery photos={invitation.gallery} labelClassName={labelClassName} />
 
       <Section className={altSectionClassName}>
         <p className={labelClassName}>{t.dateLabel}</p>

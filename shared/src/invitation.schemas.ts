@@ -1,8 +1,9 @@
 import { z } from 'zod';
-import { EVENT_TYPES, LANGUAGES, MUSIC_TRACK_IDS, PAYMENT_PROVIDERS } from './catalog.js';
+import { EVENT_TYPES, LANGUAGES, PAYMENT_PROVIDERS } from './catalog.js';
+import { musicStartSchema, trackIdSchema } from './music.schemas.js';
 import { OPENING_ANIMATIONS } from './openings.js';
-import { programSchema } from './program.js';
-import { giftCodeSchema } from './partners.js';
+import { programSchema } from './program.schemas.js';
+import { giftCodeSchema } from './partners.schemas.js';
 import { SLUG_MAX_LENGTH, SLUG_PATTERN } from './slug.js';
 import { isTwoGisUrl } from './urls.js';
 
@@ -45,7 +46,10 @@ export const invitationDraftSchema = z
     message: optionalText(MESSAGE_MAX),
     language: z.enum(LANGUAGES),
     adultsOnly: z.boolean(),
-    musicTrackId: z.enum(MUSIC_TRACK_IDS).nullable(),
+    /** An active track from the catalogue (checked on the server); choosing one drops an own mp3. */
+    musicTrackId: trackIdSchema.nullable(),
+    /** Second the music starts from. */
+    musicStartSec: musicStartSchema,
     /** Must be one of the template's palettes (checked on the server). */
     paletteId: z.string().regex(/^[a-z0-9-]{2,40}$/).nullable(),
     /** Age on the "Юбилей" template. */
