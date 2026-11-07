@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { PrismaClient, TemplateType, type Prisma } from '@prisma/client';
-import { seedPartners } from './seed.partners.js';
+import { seedAdmin, seedPartners } from './seed.partners.js';
 
 const prisma = new PrismaClient();
 
@@ -94,11 +94,27 @@ async function seedDemoGuests(invitationId: string): Promise<void> {
   });
 }
 
+/**
+ * Reference data (templates, the ADMIN_PHONE role) is always seeded and safe to re-run.
+ * Prices and music tracks come from migrations. Demo data (invitation, partners) is for
+ * development: on by default, SEED_DEMO=false turns it off, and production never gets it.
+ */
+function shouldSeedDemo(): boolean {
+  if (process.env.NODE_ENV === 'production') return false;
+  return process.env.SEED_DEMO !== 'false';
+}
+
 async function main(): Promise<void> {
   await seedTemplates();
+  const admin = await seedAdmin(prisma);
+  const reference = `${TEMPLATES.length} templates, ADMIN ${admin ?? '(ADMIN_PHONE not set)'}`;
+  if (!shouldSeedDemo()) {
+    console.info(`Seed done (reference data only): ${reference}`);
+    return;
+  }
   await seedDemoInvitation();
   const partners = await seedPartners(prisma);
-  console.info(`Seed done: ${TEMPLATES.length} templates, demo invitation "/${DEMO_SLUG}", ${partners}`);
+  console.info(`Seed done: ${reference}, demo invitation "/${DEMO_SLUG}", ${partners}`);
 }
 
 main()

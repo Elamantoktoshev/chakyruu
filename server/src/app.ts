@@ -9,6 +9,9 @@ import type { SmsProvider } from './auth/sms.js';
 import { createPublicInvitationRouter } from './invitations/invitation.routes.js';
 import { createMyInvitationsRouter } from './invitations/my.routes.js';
 import { errorHandler, notFoundHandler, sendOk } from './lib/http.js';
+import { createHealthHandler } from './lib/health.js';
+import { resolveClientIp } from './lib/clientIp.js';
+import { sanitizeJsonBody, securityHeaders } from './lib/security.js';
 import { createAdminRouter } from './admin/admin.routes.js';
 import { createCatalogRouter } from './catalog/catalog.routes.js';
 import { myGiftRouter } from './gifts/gift.routes.js';
@@ -45,10 +48,20 @@ export interface AppConfig {
   trustProxyHops?: number;
   /** Injectable clock (tests use it to expire codes and sessions). */
   now?: () => Date;
+  /** Origins photos and music are served from besides this site (Spaces CDN), for the CSP. */
+  mediaOrigins?: readonly string[];
+  /** Header with the real client IP set by the hosting edge (DigitalOcean: do-connecting-ip). */
+  clientIpHeader?: string;
+  /** Git commit of the running build (shown by /api/health). */
+  commitSha?: string;
   /** Built React app (client/dist). When set, the API also serves the site and invitation previews. */
   clientDir?: string;
   /** mp3 re-encoding (ffmpeg); tests pass a no-op so they do not depend on ffmpeg. */
   compressAudio?: AudioCompressor;
+  /** Demo numbers with a fixed login code and no SMS (TEST_LOGIN_PHONES). */
+  testLoginPhones?: ReadonlyMap<string, string>;
+  /** Most SMS the site may send per 24 h. */
+  smsDailyLimit?: number;
   /** DEV_LOGIN_WITHOUT_SMS: the login code is returned to the browser. Refused in production by index.ts. */
   exposeOtpInResponse?: boolean;
 }
@@ -58,12 +71,21 @@ export function createApp(config: AppConfig): Express {
   const compressAudio = config.compressAudio ?? defaultAudioCompressor;
   const checkout = { gateway: payments, appUrl: config.appUrl ?? corsOrigin };
   const app = express();
-  const auth = createAuthService({ otpSecret, sms, now, exposeOtpInResponse: config.exposeOtpInResponse && !isProduction });
+  const auth = createAuthService({
+    otpSecret,
+    sms,
+    now,
+    exposeOtpInResponse: config.exposeOtpInResponse && !isProduction,
+    testLoginPhones: config.testLoginPhones,
+    smsDailyLimit: config.smsDailyLimit,
+  });
 
   app.disable('x-powered-by');
   // gzip for HTML, JS, CSS and JSON (images and mp3 are already compressed and skipped).
   app.use(compression());
+  app.use(securityHeaders({ isProduction, mediaOrigins: config.mediaOrigins }));
   app.set('trust proxy', trustProxyHops);
+  app.use(resolveClientIp(config.clientIpHeader));
 
   if (uploadsDir) {
     app.use(
@@ -82,11 +104,12 @@ export function createApp(config: AppConfig): Express {
 
   app.use(cors({ origin: corsOrigin, credentials: true }));
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
+  app.use(sanitizeJsonBody);
   app.use(cookieParser());
   app.use(requireSameOrigin(corsOrigin));
   app.use(loadUser(auth));
 
-  app.get('/api/health', (_req, res) => sendOk(res, { status: 'ok' }));
+  app.get('/api/health', createHealthHandler(config.commitSha));
   app.use('/api/auth', createAuthRouter({ auth, isProduction }));
   app.use('/api/public/templates', templateRouter);
   app.use('/api/public/invitations', createPublicInvitationRouter({ appUrl: checkout.appUrl }));

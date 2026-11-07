@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { TINY_MP3 } from '../../test/app.js';
 import { HttpError } from '../lib/http.js';
-import { compressMp3, detectMp3, spawnFfmpeg, type FfmpegRunner } from './audio.js';
+import { existsSync } from 'node:fs';
+import { FFMPEG_COMMAND, compressMp3, detectMp3, spawnFfmpeg, type FfmpegRunner } from './audio.js';
 
 /** MPEG-1 Layer III frame header without an ID3 tag. */
 const BARE_FRAME = Buffer.from([0xff, 0xfb, 0x90, 0x64, 0x00, 0x00]);
@@ -55,5 +56,26 @@ describe('compressMp3', () => {
 describe('spawnFfmpeg', () => {
   it('reports a missing binary as ENOENT', async () => {
     await expect(spawnFfmpeg(TINY_MP3, ['-version'], 'ffmpeg-binary-that-does-not-exist')).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+});
+
+describe('compressMp3 with the real ffmpeg', () => {
+  const hasFfmpeg = existsSync(FFMPEG_COMMAND);
+
+  it.runIf(hasFfmpeg)('turns a 320 kbps song into a smaller 128 kbps mp3', { timeout: 30_000 }, async () => {
+    // 20 s of a 440 Hz tone at 320 kbps, made by ffmpeg itself.
+    const original = await spawnFfmpeg(Buffer.alloc(0), [
+      '-hide_banner', '-loglevel', 'error', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=20',
+      '-codec:a', 'libmp3lame', '-b:a', '320k', '-f', 'mp3', 'pipe:1',
+    ]);
+    const { data, isCompressed } = await compressMp3(original);
+    expect(isCompressed).toBe(true);
+    expect(detectMp3(data)).toBe(true);
+    expect(data.length).toBeLessThan(original.length / 2);
+  });
+
+  it.runIf(hasFfmpeg)('rejects a file ffmpeg cannot decode', { timeout: 30_000 }, async () => {
+    const garbage = Buffer.concat([Buffer.from('ID3\x04\x00\x00\x00\x00\x00\x00', 'latin1'), Buffer.alloc(4096, 0x5a)]);
+    await expect(compressMp3(garbage)).rejects.toBeInstanceOf(HttpError);
   });
 });

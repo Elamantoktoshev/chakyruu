@@ -1,0 +1,114 @@
+# DigitalOcean App Platform spec — see DEPLOY.md.
+# Create the app: doctl apps create --spec .do/app.yaml   (or paste it in the dashboard: App → Settings → App Spec)
+# Secrets marked "type: SECRET" are entered in the dashboard; never commit real values here.
+name: chakyruu
+region: fra
+
+# One web service: API + the built React site. App Platform routes only by path prefix,
+# so /:slug (Open Graph for WhatsApp/Telegram) cannot be split from the SPA routes.
+services:
+  - name: web
+    github:
+      repo: GITHUB_USER/chakyruu # ← replace with your repository
+      branch: main
+      # Deploys are started by GitHub Actions after CI is green (.github/workflows/ci.yml).
+      deploy_on_push: false
+    source_dir: /
+    dockerfile_path: server/Dockerfile
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+    health_check:
+      http_path: /api/health
+      initial_delay_seconds: 15
+      period_seconds: 10
+      timeout_seconds: 5
+      failure_threshold: 3
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+      # The app's own address; becomes https://chakyruu.kg once the domain is added.
+      - key: CLIENT_URL
+        scope: RUN_TIME
+        value: ${APP_URL}
+      - key: COMMIT_SHA
+        scope: RUN_TIME
+        value: ${_self.COMMIT_HASH}
+      # Real client IP behind DigitalOcean's edge (rate limits).
+      - key: CLIENT_IP_HEADER
+        value: do-connecting-ip
+      - key: OTP_SECRET
+        type: SECRET
+      - key: ADMIN_PHONE
+        type: SECRET
+      - key: TEST_LOGIN_PHONES
+        type: SECRET
+      - key: SMS_PROVIDER
+        value: nikita
+      - key: NIKITA_LOGIN
+        type: SECRET
+      - key: NIKITA_PASSWORD
+        type: SECRET
+      - key: NIKITA_SENDER
+        type: SECRET
+      - key: SMS_DAILY_LIMIT
+        value: "500"
+      - key: STORAGE_PROVIDER
+        value: spaces
+      - key: SPACES_KEY
+        type: SECRET
+      - key: SPACES_SECRET
+        type: SECRET
+      - key: SPACES_BUCKET
+        value: chakyruu
+      - key: SPACES_REGION
+        value: fra1
+      - key: SPACES_CDN_URL
+        value: https://chakyruu.fra1.cdn.digitaloceanspaces.com
+      - key: PAYMENT_PROVIDER
+        value: manual
+      - key: MANUAL_PAYMENT_RECEIVER
+        type: SECRET
+
+ingress:
+  rules:
+    - component:
+        name: web
+      match:
+        path:
+          prefix: /
+
+# Runs once per deploy, before the new version receives traffic. Not on every instance start.
+jobs:
+  - name: migrate
+    kind: PRE_DEPLOY
+    github:
+      repo: GITHUB_USER/chakyruu # ← same repository
+      branch: main
+      deploy_on_push: false
+    source_dir: /
+    dockerfile_path: server/Dockerfile
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    # Migrations, then reference data only (templates, ADMIN_PHONE). No demo data in production.
+    run_command: npm run migrate:deploy && npm run seed:prod
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+      - key: ADMIN_PHONE
+        type: SECRET
+
+# Managed PostgreSQL cluster (daily backups included). Create the cluster first — see DEPLOY.md.
+databases:
+  - name: db
+    engine: PG
+    version: "16"
+    production: true
+    cluster_name: chakyruu-db
+    db_name: chakyruu
+    db_user: chakyruu

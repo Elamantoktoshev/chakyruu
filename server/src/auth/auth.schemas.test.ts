@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { requestCodeSchema, verifyCodeSchema } from './auth.schemas.js';
 
 describe('requestCodeSchema', () => {
-  it('requires a valid phone', () => {
-    expect(requestCodeSchema.parse({ phone: '+996700123456' })).toEqual({ phone: '+996700123456' });
-    expect(requestCodeSchema.safeParse({}).success).toBe(false);
-    expect(requestCodeSchema.safeParse({ phone: '0700123456' }).success).toBe(false);
+  it('requires a valid phone and the form timing', () => {
+    expect(requestCodeSchema.parse({ phone: '+996700123456', elapsedMs: 4200 })).toEqual({ phone: '+996700123456', elapsedMs: 4200 });
+    expect(requestCodeSchema.safeParse({ phone: '+996700123456' }).success).toBe(false);
+    expect(requestCodeSchema.safeParse({ elapsedMs: 4200 }).success).toBe(false);
+    expect(requestCodeSchema.safeParse({ phone: '0700123456', elapsedMs: 4200 }).success).toBe(false);
+    expect(requestCodeSchema.safeParse({ phone: '+996700123456', elapsedMs: -1 }).success).toBe(false);
   });
 });
 

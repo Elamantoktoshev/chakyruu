@@ -2,8 +2,12 @@ import { Router, type CookieOptions, type Request } from 'express';
 import { sendOk } from '../lib/http.js';
 import { rateLimit } from '../lib/rateLimit.js';
 import { currentUser, readSessionToken, requireAuth, SESSION_COOKIE } from './auth.middleware.js';
-import { PHONE_PATTERN, requestCodeSchema, verifyCodeSchema } from './auth.schemas.js';
+import { MIN_FORM_FILL_MS, PHONE_PATTERN, requestCodeSchema, verifyCodeSchema } from './auth.schemas.js';
+import { OTP_TTL_MS } from './auth.service.js';
+import { HttpError } from '../lib/http.js';
+import { maskPhone } from './sms.js';
 import type { AuthService } from './auth.service.js';
+import { clientIp } from '../lib/clientIp.js';
 
 const WINDOW_MS = 10 * 60 * 1000;
 const OTP_REQUESTS_PER_PHONE = 3;
@@ -14,7 +18,7 @@ const OTP_VERIFIES_PER_IP = 10;
 function phoneKey(req: Request): string {
   const phone: unknown = (req.body as { phone?: unknown } | undefined)?.phone;
   const trimmed = typeof phone === 'string' ? phone.trim() : '';
-  return PHONE_PATTERN.test(trimmed) ? `phone:${trimmed}` : `ip:${req.ip ?? 'unknown'}`;
+  return PHONE_PATTERN.test(trimmed) ? `phone:${trimmed}` : `ip:${clientIp(req)}`;
 }
 
 export interface AuthRouterOptions {
@@ -31,7 +35,14 @@ export function createAuthRouter({ auth, isProduction }: AuthRouterOptions): Rou
     rateLimit({ windowMs: WINDOW_MS, max: OTP_REQUESTS_PER_IP }),
     rateLimit({ windowMs: WINDOW_MS, max: OTP_REQUESTS_PER_PHONE, key: phoneKey }),
     async (req, res) => {
-      const { phone } = requestCodeSchema.parse(req.body);
+      const { phone, website, elapsedMs } = requestCodeSchema.parse(req.body);
+      if (website) {
+        // Honeypot filled: answer like a success so the bot learns nothing, but send no SMS.
+        console.warn(`[auth] honeypot triggered for ${maskPhone(phone)} from ${clientIp(req)}`);
+        sendOk(res, { expiresInSeconds: OTP_TTL_MS / 1000 });
+        return;
+      }
+      if (elapsedMs < MIN_FORM_FILL_MS) throw new HttpError(429, 'Please wait a moment and try again');
       sendOk(res, await auth.requestOtp(phone));
     },
   );

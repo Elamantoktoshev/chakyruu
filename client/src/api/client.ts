@@ -116,7 +116,9 @@ export const api = {
     request<{ received: true }>('/public/partner-leads', json('POST', input)),
   listTemplates: (type?: EventType) => request<Template[]>(`/public/templates${type ? `?type=${type}` : ''}`),
 
-  requestOtp: (phone: string) => request<OtpRequestResult>('/auth/request-code', json('POST', { phone })),
+  /** `elapsedMs` and `website` are the login form's anti-bot signals (see server auth.schemas.ts). */
+  requestOtp: (phone: string, form: { elapsedMs: number; website: string }) =>
+    request<OtpRequestResult>('/auth/request-code', json('POST', { phone, ...form, website: form.website || undefined })),
   verifyOtp: (phone: string, code: string) => request<SessionUser>('/auth/verify', json('POST', { phone, code })),
   me: () => request<SessionUser>('/auth/me'),
   logout: () => request<{ loggedOut: true }>('/auth/logout', { method: 'POST' }),

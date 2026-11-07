@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: chakyruu
+          POSTGRES_PASSWORD: chakyruu
+          POSTGRES_DB: chakyruu
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U chakyruu"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      # Integration tests switch to the isolated `test` schema themselves.
+      DATABASE_URL: postgresql://chakyruu:chakyruu@localhost:5432/chakyruu?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate --schema server/prisma/schema.prisma
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  docker:
+    name: Docker image builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: server/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to DigitalOcean
+    needs: [check, docker]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # Needs repository secret DIGITALOCEAN_ACCESS_TOKEN and variable DO_APP_ID (see DEPLOY.md).
+      - name: Check configuration
+        env:
+          TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          APP_ID: ${{ vars.DO_APP_ID }}
+        run: |
+          if [ -z "$TOKEN" ] || [ -z "$APP_ID" ]; then
+            echo "::notice::DIGITALOCEAN_ACCESS_TOKEN or DO_APP_ID is not set yet — skipping deploy (see DEPLOY.md)."
+            echo "SKIP=1" >> "$GITHUB_ENV"
+          fi
+      - uses: digitalocean/action-doctl@v2
+        if: env.SKIP != '1'
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      # Redeploys the app with its current settings (secrets stay as entered in the dashboard).
+      # Spec changes in .do/app.yaml are applied by hand: doctl apps update <id> --spec .do/app.yaml
+      - name: Deploy the new commit
+        if: env.SKIP != '1'
+        run: doctl apps create-deployment "${{ vars.DO_APP_ID }}" --wait

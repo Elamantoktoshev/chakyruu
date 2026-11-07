@@ -20,7 +20,7 @@ export interface StoredFile {
   url: string;
 }
 
-/** File storage for user uploads. Local disk now; DigitalOcean Spaces later. */
+/** File storage for user uploads: local disk in development, DigitalOcean Spaces in production. */
 export interface StorageProvider {
   /** `data` must already be validated by its magic bytes. */
   save(data: Buffer, type: StoredFileType): Promise<StoredFile>;
@@ -28,9 +28,9 @@ export interface StorageProvider {
 }
 
 /** Keys are always `<uuid>.<ext>` — anything else (e.g. "../x") is refused. */
-const KEY_PATTERN = /^[a-f0-9-]{36}\.(jpeg|png|webp|mp3)$/;
+export const KEY_PATTERN = /^[a-f0-9-]{36}\.(jpeg|png|webp|mp3)$/;
 
-function newKey(type: StoredFileType): string {
+export function newKey(type: StoredFileType): string {
   return `${randomUUID()}.${type}`;
 }
 

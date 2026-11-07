@@ -1,0 +1,15 @@
+**/node_modules
+**/dist
+**/dist-seed
+**/coverage
+**/*.log
+**/*.tsbuildinfo
+.git
+.github
+.vscode
+.claude
+.do
+.env
+.env.*
+server/uploads
+docker-compose.yml

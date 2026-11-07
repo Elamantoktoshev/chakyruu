@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { api, ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
@@ -54,6 +54,9 @@ export function LoginPage() {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const resendIn = useSecondsUntil(resendAt);
+  // Anti-bot signals checked by the server: time since the form appeared, and a hidden field people never fill.
+  const shownAt = useRef(Date.now());
+  const [honeypot, setHoneypot] = useState('');
 
   if (state.status === 'authenticated') return <Navigate to={next} replace />;
 
@@ -61,7 +64,7 @@ export function LoginPage() {
     setIsBusy(true);
     setError(null);
     try {
-      const { devCode } = await api.requestOtp(phone);
+      const { devCode } = await api.requestOtp(phone, { elapsedMs: Date.now() - shownAt.current, website: honeypot });
       if (devCode) {
         // Development without SMS: skip the code step entirely.
         signIn(await api.verifyOtp(phone, devCode));
@@ -140,6 +143,17 @@ export function LoginPage() {
                   />
                 </div>
               </label>
+              {/* Honeypot: invisible to people and screen readers, filled by form-spamming bots. */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                className="absolute -left-[9999px] h-px w-px opacity-0"
+              />
               <ErrorMessage message={error} />
               <button type="submit" disabled={isBusy} className={primaryButtonClass}>
                 {isBusy ? t.sending : t.sendCode}

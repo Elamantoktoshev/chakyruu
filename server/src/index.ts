@@ -1,11 +1,15 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createApp } from './app.js';
-import { ConsoleSmsProvider } from './auth/sms.js';
+import { createApp, type AppConfig } from './app.js';
+import { NikitaSmsProvider } from './auth/nikita.provider.js';
+import { ConsoleSmsProvider, type SmsProvider } from './auth/sms.js';
+import { EnvError, parseEnv, type Env } from './config/env.js';
 import { prisma } from './lib/prisma.js';
+import { installGracefulShutdown } from './lib/shutdown.js';
 import { createGatewayFromEnv } from './payments/registry.js';
-import { LocalStorageProvider } from './storage/storage.provider.js';
+import { SpacesStorageProvider, createSpacesClient } from './storage/spaces.provider.js';
+import { LocalStorageProvider, type StorageProvider } from './storage/storage.provider.js';
 
 /** server/uploads — next to src/ and dist/. */
 const UPLOADS_DIR = fileURLToPath(new URL('../uploads', import.meta.url));
@@ -13,71 +17,78 @@ const UPLOADS_DIR = fileURLToPath(new URL('../uploads', import.meta.url));
 const DEFAULT_CLIENT_DIR = fileURLToPath(new URL('../../client/dist', import.meta.url));
 
 /** The API serves the site only when a client build exists (production, `vite build` locally). */
-function findClientDir(): string | undefined {
-  const dir = process.env.CLIENT_DIST_DIR ?? DEFAULT_CLIENT_DIR;
+function findClientDir(env: Env): string | undefined {
+  const dir = env.CLIENT_DIST_DIR ?? DEFAULT_CLIENT_DIR;
   return existsSync(path.join(dir, 'index.html')) ? dir : undefined;
 }
 
-const MIN_OTP_SECRET_LENGTH = 32;
-const PLACEHOLDER_PREFIX = 'change-me';
+function createSms(env: Env): SmsProvider {
+  if (env.SMS_PROVIDER === 'console') return new ConsoleSmsProvider();
+  // parseEnv guarantees the NIKITA_* credentials for SMS_PROVIDER=nikita.
+  return new NikitaSmsProvider({
+    login: env.NIKITA_LOGIN ?? '',
+    password: env.NIKITA_PASSWORD ?? '',
+    sender: env.NIKITA_SENDER ?? '',
+    apiUrl: env.NIKITA_API_URL,
+    isTestMode: env.NIKITA_TEST_MODE,
+  });
+}
 
-function readConfig() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) throw new Error('DATABASE_URL is not set — copy .env.example to .env');
-  const port = Number(process.env.PORT ?? 4000);
-  if (!Number.isInteger(port) || port <= 0) throw new Error(`Invalid PORT: ${process.env.PORT}`);
+function createStorage(env: Env): StorageProvider {
+  if (env.STORAGE_PROVIDER === 'local') return new LocalStorageProvider(UPLOADS_DIR);
+  // parseEnv guarantees every SPACES_* value is present for STORAGE_PROVIDER=spaces.
+  const config = {
+    key: env.SPACES_KEY ?? '',
+    secret: env.SPACES_SECRET ?? '',
+    bucket: env.SPACES_BUCKET ?? '',
+    region: env.SPACES_REGION ?? '',
+    cdnUrl: env.SPACES_CDN_URL ?? '',
+  };
+  return new SpacesStorageProvider(createSpacesClient(config), config.bucket, config.cdnUrl);
+}
 
-  const otpSecret = process.env.OTP_SECRET ?? '';
-  if (otpSecret.length < MIN_OTP_SECRET_LENGTH || otpSecret.startsWith(PLACEHOLDER_PREFIX)) {
-    throw new Error(`OTP_SECRET must be a random string of at least ${MIN_OTP_SECRET_LENGTH} characters — see .env.example`);
-  }
-
-  // Number of reverse proxies in front of the API; client IPs (and rate limits) depend on it.
-  const trustProxyHops = Number(process.env.TRUST_PROXY ?? 1);
-  if (!Number.isInteger(trustProxyHops) || trustProxyHops < 0) {
-    throw new Error(`Invalid TRUST_PROXY: ${process.env.TRUST_PROXY}`);
-  }
-
-  const isProduction = process.env.NODE_ENV === 'production';
-  const exposeOtpInResponse = process.env.DEV_LOGIN_WITHOUT_SMS === 'true';
-  if (exposeOtpInResponse && isProduction) {
-    throw new Error('DEV_LOGIN_WITHOUT_SMS must never be enabled in production');
-  }
-  if (exposeOtpInResponse) {
+function buildConfig(env: Env): AppConfig & { port: number } {
+  if (env.DEV_LOGIN_WITHOUT_SMS) {
     console.warn('[auth] DEV_LOGIN_WITHOUT_SMS is on: anyone can log in with just a phone number');
   }
-  if (isProduction) {
-    // ConsoleSmsProvider would write login codes into production logs.
-    throw new Error('No real SMS provider is configured for production yet');
-  }
-
+  const storage = createStorage(env);
   return {
-    port,
-    corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
-    otpSecret,
-    isProduction,
-    trustProxyHops,
-    exposeOtpInResponse,
-    sms: new ConsoleSmsProvider(),
-    storage: new LocalStorageProvider(UPLOADS_DIR),
+    port: env.PORT,
+    corsOrigin: env.clientUrl,
+    appUrl: env.appUrl,
+    otpSecret: env.OTP_SECRET,
+    isProduction: env.isProduction,
+    trustProxyHops: env.TRUST_PROXY,
+    exposeOtpInResponse: env.DEV_LOGIN_WITHOUT_SMS,
+    sms: createSms(env),
+    storage,
     // Refuses fake/unimplemented gateways in production (see payments/registry.ts).
-    payments: createGatewayFromEnv(process.env, isProduction),
-    appUrl: process.env.PUBLIC_APP_URL ?? process.env.CORS_ORIGIN ?? 'http://localhost:5173',
-    uploadsDir: UPLOADS_DIR,
-    clientDir: findClientDir(),
+    payments: createGatewayFromEnv(process.env, env.isProduction),
+    // Local files are served by the API; Spaces files come from the CDN.
+    uploadsDir: storage instanceof LocalStorageProvider ? UPLOADS_DIR : undefined,
+    clientDir: findClientDir(env),
+    commitSha: env.COMMIT_SHA,
+    clientIpHeader: env.CLIENT_IP_HEADER,
+    testLoginPhones: env.TEST_LOGIN_PHONES,
+    mediaOrigins: env.SPACES_CDN_URL ? [new URL(env.SPACES_CDN_URL).origin] : [],
+    smsDailyLimit: env.SMS_DAILY_LIMIT,
   };
 }
 
-const config = readConfig();
+function loadEnv(): Env {
+  try {
+    return parseEnv(process.env);
+  } catch (error: unknown) {
+    if (error instanceof EnvError) {
+      console.error(error.message);
+      process.exit(1);
+    }
+    throw error;
+  }
+}
+
+const config = buildConfig(loadEnv());
 const server = createApp(config).listen(config.port, () => {
   console.info(`API listening on http://localhost:${config.port}`);
 });
-
-async function shutdown(): Promise<void> {
-  server.close();
-  await prisma.$disconnect();
-  process.exit(0);
-}
-
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+installGracefulShutdown(server, () => prisma.$disconnect());

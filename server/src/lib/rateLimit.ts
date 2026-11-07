@@ -1,16 +1,17 @@
-import type { Request, RequestHandler } from 'express';
+import type { Request, RequestHandler, Response } from 'express';
+import { clientIp } from './clientIp.js';
 import { HttpError } from './http.js';
 
 interface RateLimitOptions {
   windowMs: number;
   max: number;
   /** Bucket key for a request; defaults to the client IP. */
-  key?: (req: Request) => string;
+  key?: (req: Request, res: Response) => string;
 }
 
 const MAX_TRACKED_KEYS = 10_000;
 
-const byIp = (req: Request): string => req.ip ?? 'unknown';
+const byIp = (req: Request): string => clientIp(req);
 
 /**
  * Minimal in-memory fixed-window limiter.
@@ -19,9 +20,9 @@ const byIp = (req: Request): string => req.ip ?? 'unknown';
 export function rateLimit({ windowMs, max, key = byIp }: RateLimitOptions): RequestHandler {
   const hits = new Map<string, { count: number; resetAt: number }>();
 
-  return (req, _res, next) => {
+  return (req, res, next) => {
     const now = Date.now();
-    const bucket = key(req);
+    const bucket = key(req, res);
     const current = hits.get(bucket);
     const entry =
       current && current.resetAt > now

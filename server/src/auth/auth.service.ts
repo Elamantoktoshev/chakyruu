@@ -1,7 +1,7 @@
 import type { UserRole } from '@prisma/client';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
-import { maskPhone, type SmsProvider } from './sms.js';
+import { loginCodeText, maskPhone, type SmsProvider } from './sms.js';
 import { generateOtpCode, generateSessionToken, hashOtp, hashSessionToken, safeEqualHex } from './tokens.js';
 
 export const OTP_TTL_MS = 5 * 60 * 1000;
@@ -11,6 +11,8 @@ export const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
 /** Caps SMS cost and total guesses against one phone (at most 50 guesses per day). */
 export const OTP_DAILY_LIMIT_PER_PHONE = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** Budget guard: SMS sent by the whole site per 24 h (SMS_DAILY_LIMIT overrides). */
+export const DEFAULT_SMS_DAILY_LIMIT = 500;
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface SessionUser {
@@ -46,6 +48,10 @@ export interface AuthServiceDeps {
   now?: () => Date;
   /** Never in production: return the code in the response instead of relying on SMS. */
   exposeOtpInResponse?: boolean;
+  /** Demo numbers → fixed code; no SMS is sent to them (TEST_LOGIN_PHONES). */
+  testLoginPhones?: ReadonlyMap<string, string>;
+  /** Most SMS the site may send in 24 h; protects the Nikita.kg balance from SMS bombing. */
+  smsDailyLimit?: number;
 }
 
 const sessionUserSelect = { id: true, phone: true, name: true, role: true, organizationId: true } as const;
@@ -57,7 +63,21 @@ export function createAuthService({
   sms,
   now = () => new Date(),
   exposeOtpInResponse = false,
+  testLoginPhones = new Map<string, string>(),
+  smsDailyLimit = DEFAULT_SMS_DAILY_LIMIT,
 }: AuthServiceDeps): AuthService {
+  /** Codes issued in the last 24 h to real numbers = SMS actually paid for. */
+  async function assertSmsBudget(issuedAt: Date): Promise<void> {
+    const demoPhones = [...testLoginPhones.keys()];
+    const sentToday = await prisma.otpCode.count({
+      where: { createdAt: { gt: new Date(issuedAt.getTime() - DAY_MS) }, phone: { notIn: demoPhones } },
+    });
+    if (sentToday >= smsDailyLimit) {
+      console.error(`[auth] daily SMS limit of ${smsDailyLimit} reached — login codes are paused`);
+      throw new HttpError(503, 'Login is temporarily unavailable, please try again later');
+    }
+  }
+
   async function assertCanIssueCode(phone: string, issuedAt: Date): Promise<void> {
     const [latest, issuedToday] = await Promise.all([
       prisma.otpCode.findFirst({ where: { phone }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } }),
@@ -74,7 +94,9 @@ export function createAuthService({
   async function requestOtp(phone: string): Promise<OtpRequestResult> {
     const issuedAt = now();
     await assertCanIssueCode(phone, issuedAt);
-    const code = generateOtpCode();
+    const demoCode = testLoginPhones.get(phone);
+    if (!demoCode) await assertSmsBudget(issuedAt);
+    const code = demoCode ?? generateOtpCode();
 
     // A new code invalidates every earlier unused one for this phone.
     await prisma.$transaction([
@@ -89,8 +111,12 @@ export function createAuthService({
       }),
     ]);
 
+    if (demoCode) {
+      console.info(`[auth] demo number ${maskPhone(phone)}: fixed code, no SMS`);
+      return { expiresInSeconds: OTP_TTL_MS / 1000 };
+    }
     try {
-      await sms.send(phone, `Chakyruu.kg: ваш код ${code}. Никому его не сообщайте.`);
+      await sms.send(phone, loginCodeText(code));
     } catch (error: unknown) {
       console.error(`[auth] SMS delivery failed for ${maskPhone(phone)}`, error);
       throw new HttpError(503, 'Could not send SMS, please try again later');

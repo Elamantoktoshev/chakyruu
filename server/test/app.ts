@@ -6,6 +6,8 @@ import type { PaymentGateway } from '../src/payments/gateway.js';
 import { MemoryStorageProvider } from '../src/storage/storage.provider.js';
 
 export const TEST_ORIGIN = 'http://localhost:5173';
+/** The login form's anti-bot fields as a person fills them in (see auth.schemas.ts). */
+export const HUMAN_FORM = { elapsedMs: 5000 } as const;
 export const TEST_OTP_SECRET = 'integration-test-secret-integration-test';
 
 export interface TestContext {
@@ -43,7 +45,7 @@ export function buildTestApp(ctx: TestContext, overrides: Partial<AppConfig> = {
 /** Full OTP login; returns a supertest agent that carries the session cookie. */
 export async function loginAgent(ctx: TestContext, phone: string) {
   const agent = request.agent(buildTestApp(ctx));
-  await agent.post('/api/auth/request-code').send({ phone }).expect(200);
+  await agent.post('/api/auth/request-code').send({ ...HUMAN_FORM, phone }).expect(200);
   await agent.post('/api/auth/verify').send({ phone, code: ctx.sms.lastCodeFor(phone) }).expect(200);
   return agent;
 }

@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { sendOk } from '../lib/http.js';
 import { listTamadas, listVenues, recordTamadaClick, tamadaContact } from './catalog.service.js';
+import { clientIp } from '../lib/clientIp.js';
 
 const CLICK_DEDUPE_MS = 10 * 60 * 1000;
 const MAX_TRACKED_CLICKS = 10_000;
@@ -33,7 +34,7 @@ export function createCatalogRouter(): Router {
     const { id } = orgParams.parse(req.params);
     const { invitation } = contactQuery.parse(req.query);
     const contact = await tamadaContact(id, invitation);
-    if (!isRepeatClick(`${req.ip}:${id}`, Date.now())) await recordTamadaClick(id, contact.invitationId);
+    if (!isRepeatClick(`${clientIp(req)}:${id}`, Date.now())) await recordTamadaClick(id, contact.invitationId);
     res.redirect(302, contact.url);
   });
 

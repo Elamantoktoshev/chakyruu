@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { HttpError } from '../lib/http.js';
 
 /** MPEG-1/2 Layer III frame: 11 sync bits, then version and layer (layer bits 00 are reserved). */
@@ -25,7 +26,20 @@ export type FfmpegRunner = (input: Buffer, args: readonly string[]) => Promise<B
 
 const FFMPEG_TIMEOUT_MS = 60_000;
 
-export function spawnFfmpeg(input: Buffer, args: readonly string[], command = 'ffmpeg'): Promise<Buffer> {
+/** FFMPEG_PATH, else the binary shipped by ffmpeg-static, else whatever `ffmpeg` is on PATH. */
+export const FFMPEG_COMMAND: string = process.env.FFMPEG_PATH || bundledFfmpegPath() || 'ffmpeg';
+
+/** ffmpeg-static exports the path of its binary (CommonJS; its ESM typings are wrong). */
+function bundledFfmpegPath(): string | null {
+  try {
+    const path: unknown = createRequire(import.meta.url)('ffmpeg-static');
+    return typeof path === 'string' ? path : null;
+  } catch {
+    return null;
+  }
+}
+
+export function spawnFfmpeg(input: Buffer, args: readonly string[], command: string = FFMPEG_COMMAND): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, [...args], { stdio: ['pipe', 'pipe', 'pipe'], timeout: FFMPEG_TIMEOUT_MS });
     const output: Buffer[] = [];

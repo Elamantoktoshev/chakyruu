@@ -7,7 +7,12 @@ export function maskPhone(phone: string): string {
   return `${phone.slice(0, COUNTRY_PREFIX_LENGTH)}${'*'.repeat(hidden)}${phone.slice(-VISIBLE_TAIL_DIGITS)}`;
 }
 
-/** Outbound SMS channel. A real provider (Nikita.kg, SMSPRO, …) will implement this later. */
+/** Outbound SMS channel: Nikita.kg in production (nikita.provider.ts), console in development. */
+/** One Unicode SMS holds 70 characters; this text stays within a single part. */
+export function loginCodeText(code: string): string {
+  return `Chakyruu.kg: кирүү коду ${code}. Эч кимге айтпаңыз.`;
+}
+
 export interface SmsProvider {
   send(phone: string, text: string): Promise<void>;
 }
@@ -15,7 +20,7 @@ export interface SmsProvider {
 /** Development only: prints the message to the server log instead of sending it. */
 export class ConsoleSmsProvider implements SmsProvider {
   async send(phone: string, text: string): Promise<void> {
-    console.info(`[sms:dev] → ${phone}: ${text}`);
+    console.info(`[sms:dev] → ${maskPhone(phone)}: ${text}`);
   }
 }
 

@@ -76,7 +76,7 @@ async function seedTamada(prisma: PrismaClient): Promise<void> {
 }
 
 /** Super-admin from ADMIN_PHONE (skipped when unset or malformed). */
-async function seedAdmin(prisma: PrismaClient): Promise<string | null> {
+export async function seedAdmin(prisma: PrismaClient): Promise<string | null> {
   const phone = process.env.ADMIN_PHONE?.trim();
   if (!phone) return null;
   if (!PHONE_PATTERN.test(phone)) throw new Error(`ADMIN_PHONE must be +996XXXXXXXXX, got "${phone}"`);
@@ -88,9 +88,9 @@ async function seedAdmin(prisma: PrismaClient): Promise<string | null> {
   return phone;
 }
 
+/** Demo тойкана and тамада with their admins (development only). */
 export async function seedPartners(prisma: PrismaClient): Promise<string> {
   await seedVenue(prisma);
   await seedTamada(prisma);
-  const admin = await seedAdmin(prisma);
-  return `venue admin ${VENUE_ADMIN_PHONE}, tamada admin ${TAMADA_ADMIN_PHONE}, ADMIN ${admin ?? '(ADMIN_PHONE not set)'}`;
+  return `venue admin ${VENUE_ADMIN_PHONE}, tamada admin ${TAMADA_ADMIN_PHONE}`;
 }
