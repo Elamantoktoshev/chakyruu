@@ -15,7 +15,8 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "typecheck": "npm run build -w shared && npm run typecheck -w server && npm run typecheck -w client",
-    "test": "npm run build -w shared && npm test -w shared && npm test -w server && npm test -w client"
+    "test": "npm run build -w shared && npm test -w shared && npm test -w server && npm test -w client",
+    "sms:test": "npm run sms:test -w server --"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

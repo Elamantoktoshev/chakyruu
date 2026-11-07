@@ -79,7 +79,11 @@ GitHub (push в main) ──▶ GitHub Actions: проверки → депло�
    NIKITA_SENDER=Chakyruu
    NIKITA_TEST_MODE=true
    ```
-   Затем выполните `npm run dev` и попробуйте войти на сайт. Если ключи верны, в логе сервера не будет ошибки «Nikita.kg: …», а Nikita ответит статусом 11 (тестовый режим). После проверки верните `NIKITA_TEST_MODE=false`.
+   Затем проверьте связку скриптом (ключи он не выводит, номер маскирует):
+   ```
+   npm run sms:test -- +996XXXXXXXXX
+   ```
+   В тестовом режиме ответ: «Request accepted by the gateway (status 11)». При ошибке скрипт печатает тип (`auth`, `funds`, `sender`, `stopwords`, `ip`, …) и что делать. Затем верните `NIKITA_TEST_MODE=false` и запустите скрипт ещё раз: придёт настоящее SMS `Chakyruu: кодуңуз 123456` (платно).
 
 ## 5. Подключить GitHub к DigitalOcean
 
@@ -227,7 +231,7 @@ npm run uploads:to-spaces -w server                # загрузит файлы
 |---|---|
 | Сервис не стартует, в логе `Invalid environment` | Не хватает переменных или они в неверном формате: в логе список. Шаг 7 |
 | `/api/health` → `database: unavailable` | Trusted Sources базы (шаг 8.3), или кластер ещё создаётся |
-| Вход: «Could not send SMS» | Ошибка Nikita в логе: `invalid login or password` (2), `server IP address is not allowed` (3, шаг 4.2), `not enough money` (4), `sender name is not approved` (5) |
+| Вход: «Код жөнөтүлгөн жок» | В логе `[sms] delivery failed … <kind> — <подсказка>`: `auth` (2, логин/пароль), `ip` (3, шаг 4.2), `funds` (4, баланс), `sender` (5, имя отправителя), `stopwords` (6). Проверка: `npm run sms:test -- +996…` |
 | Вход: «Login is temporarily unavailable» | Достигнут `SMS_DAILY_LIMIT` (500 SMS в сутки). Проверьте, нет ли атаки, и при необходимости поднимите лимит |
 | Фото не показываются | Верны ли `SPACES_CDN_URL` и `SPACES_BUCKET` (CDN должен быть включён). В консоли браузера не должно быть ошибок CSP |
 | Превью в WhatsApp не обновилось | WhatsApp кэширует превью. После правки приглашения адрес картинки меняется сам, но уже отправленные сообщения сохраняют старое превью |

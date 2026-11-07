@@ -9,11 +9,15 @@ export function maskPhone(phone: string): string {
   return `${phone.slice(0, COUNTRY_PREFIX_LENGTH)}${'*'.repeat(hidden)}${phone.slice(-VISIBLE_TAIL_DIGITS)}`;
 }
 
-/** Outbound SMS channel: Nikita.kg in production (nikita.provider.ts), console in development. */
-/** One Unicode SMS holds 70 characters; this text stays within a single part. */
+/** One Cyrillic (UCS-2) SMS holds 70 characters; longer texts are split and every part is charged. */
+export const SINGLE_SMS_MAX_LENGTH = 70;
+
+/** Login code SMS, kept well within one part. */
 export function loginCodeText(code: string): string {
-  return `Chakyruu.kg: кирүү коду ${code}. Эч кимге айтпаңыз.`;
+  return `Chakyruu: кодуңуз ${code}`;
 }
+
+/** Outbound SMS channel: Nikita.kg in production (nikita.provider.ts), console in development. */
 
 export interface SmsProvider {
   send(phone: string, text: string): Promise<void>;

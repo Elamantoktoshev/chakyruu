@@ -209,7 +209,7 @@ describe('SMS protection and demo numbers', () => {
 
   it('sends the code in Kyrgyz', async () => {
     await request(buildApp()).post('/api/auth/request-code').send({ ...HUMAN_FORM, phone: OWNER_PHONE }).expect(200);
-    expect(sms.sent.at(-1)?.text).toMatch(/^Chakyruu\.kg: кирүү коду \d{6}\. Эч кимге айтпаңыз\.$/);
+    expect(sms.sent.at(-1)?.text).toMatch(/^Chakyruu: кодуңуз \d{6}$/);
   });
 
   it('pretends to accept a bot that filled the hidden field, but sends nothing', async () => {

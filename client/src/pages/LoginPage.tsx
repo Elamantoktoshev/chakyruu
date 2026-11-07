@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
-import { api, ApiError } from '../api/client';
+import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { AppHeader } from '../components/AppHeader';
 import { OrnamentDivider } from '../components/Ornament';
-import type { Dict } from '../i18n/dict';
 import { useI18n } from '../i18n/LanguageContext';
+import { requestErrorMessage, verifyErrorMessage } from './loginErrors';
 import { PHONE_PREFIX, isValidPhone, safeNextPath, sanitizeLocalPart, toE164 } from '../lib/phone';
 
 const RESEND_COOLDOWN_S = 60;
@@ -15,18 +15,6 @@ const inputClass =
   'w-full rounded-xl border border-gold/50 bg-white/80 px-4 py-3 text-base outline-none transition focus:border-burgundy focus:ring-2 focus:ring-burgundy/20';
 const primaryButtonClass =
   'w-full rounded-full bg-burgundy py-4 font-semibold tracking-wide text-cream shadow-lg shadow-burgundy/20 transition hover:bg-burgundy-dark disabled:opacity-60';
-
-function requestErrorMessage(error: unknown, t: Dict): string {
-  if (error instanceof ApiError && error.status === 400) return t.errorPhone;
-  if (error instanceof ApiError && error.status === 429) return t.errorTooMany;
-  return t.errorGeneric;
-}
-
-function verifyErrorMessage(error: unknown, t: Dict): string {
-  if (error instanceof ApiError && error.status === 400) return t.errorCode;
-  if (error instanceof ApiError && error.status === 429) return t.errorTooManyAttempts;
-  return t.errorGeneric;
-}
 
 /** Seconds left until `deadline`, re-rendering once per second while > 0. */
 function useSecondsUntil(deadline: number): number {

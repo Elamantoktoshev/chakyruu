@@ -1,6 +1,7 @@
 import type { UserRole } from '@prisma/client';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
+import { SMS_FAILED_USER_MESSAGE, logSmsFailure } from './sms-failure.js';
 import { loginCodeText, maskPhone, type SmsProvider } from './sms.js';
 import { generateOtpCode, generateSessionToken, hashOtp, hashSessionToken, safeEqualHex } from './tokens.js';
 import { logger } from '../lib/logger.js';
@@ -119,8 +120,8 @@ export function createAuthService({
     try {
       await sms.send(phone, loginCodeText(code));
     } catch (error: unknown) {
-      logger.error({ err: error }, `[auth] SMS delivery failed for ${maskPhone(phone)}`);
-      throw new HttpError(503, 'Could not send SMS, please try again later');
+      logSmsFailure(phone, error);
+      throw new HttpError(503, SMS_FAILED_USER_MESSAGE);
     }
     const expiresInSeconds = OTP_TTL_MS / 1000;
     return exposeOtpInResponse ? { expiresInSeconds, devCode: code } : { expiresInSeconds };
