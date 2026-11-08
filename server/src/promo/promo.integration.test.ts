@@ -33,8 +33,7 @@ async function readyInvitation(agent: Agent): Promise<string> {
   return id as string;
 }
 
-async function createPromo(body: Record<string, unknown>) {
-  const admin = await loginAgent(ctx, ADMIN);
+async function createPromo(admin: Agent, body: Record<string, unknown>) {
   return (await admin.post('/api/admin/promo-codes').send(body).expect(200)).body.data;
 }
 
@@ -74,7 +73,8 @@ describe('paying again after going back', () => {
 
 describe('promo codes', () => {
   it('previews and applies a percent discount; the use counts once the payment is confirmed', async () => {
-    const promo = await createPromo({ code: 'toi2027', discountPercent: 20, maxUses: 5, note: 'Instagram' });
+    const admin = await loginAgent(ctx, ADMIN);
+    const promo = await createPromo(admin, { code: 'toi2027', discountPercent: 20, maxUses: 5, note: 'Instagram' });
     expect(promo).toMatchObject({ code: 'TOI2027', discountPercent: 20, maxUses: 5, usedCount: 0, isActive: true });
 
     const client = await loginAgent(ctx, CLIENT);
@@ -86,13 +86,12 @@ describe('promo codes', () => {
     expect(res.body.data.checkout.instructions.amountSom).toBe(399);
     expect(await prisma.promoCode.findUniqueOrThrow({ where: { code: 'TOI2027' } })).toMatchObject({ usedCount: 0 });
 
-    const admin = await loginAgent(ctx, ADMIN);
     await admin.post(`/api/admin/payments/${res.body.data.paymentId}/confirm`).expect(200);
     expect(await prisma.promoCode.findUniqueOrThrow({ where: { code: 'TOI2027' } })).toMatchObject({ usedCount: 1 });
   });
 
   it('publishes for free with a 100 % code, without any bank', async () => {
-    await createPromo({ code: 'FREE', discountPercent: 100 });
+    await createPromo(await loginAgent(ctx, ADMIN), { code: 'FREE', discountPercent: 100 });
     const client = await loginAgent(ctx, CLIENT);
     const id = await readyInvitation(client);
 
@@ -104,7 +103,7 @@ describe('promo codes', () => {
   });
 
   it('a new code replaces the open payment at the old price', async () => {
-    await createPromo({ code: 'HALF', discountPercent: 50 });
+    await createPromo(await loginAgent(ctx, ADMIN), { code: 'HALF', discountPercent: 50 });
     const client = await loginAgent(ctx, CLIENT);
     const id = await readyInvitation(client);
     await client.post(`/api/my/invitations/${id}/publish`).send({ provider: 'MBANK' }).expect(200);
@@ -129,8 +128,8 @@ describe('promo codes', () => {
   });
 
   it('admin can list, switch off and not duplicate codes; others cannot touch them', async () => {
-    const promo = await createPromo({ code: 'TOI', discountPercent: 10 });
     const admin = await loginAgent(ctx, ADMIN);
+    const promo = await createPromo(admin, { code: 'TOI', discountPercent: 10 });
     await admin.post('/api/admin/promo-codes').send({ code: 'toi', discountPercent: 15 }).expect(409);
     const off = await admin.patch(`/api/admin/promo-codes/${promo.id}`).send({ isActive: false }).expect(200);
     expect(off.body.data.isActive).toBe(false);
