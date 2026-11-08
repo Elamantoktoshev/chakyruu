@@ -55,7 +55,8 @@ describe('admin Telegram notifications', () => {
     expect(texts.find((text) => text.includes('Жаңы колдонуучу'))).toContain('+996*******11');
     const pendingText = texts.find((text) => text.includes('ырастоону күтүүдө'));
     expect(pendingText).toContain(reference);
-    expect(pendingText).toContain(publish.body.data.checkout.instructions.comment);
+    // Telegram HTML mode: the payer's comment arrives escapes included ("&" → "&amp;").
+    expect(pendingText).toContain(String(publish.body.data.checkout.instructions.comment).replace(/&/g, '&amp;'));
     expect(texts.some((text) => text.includes('Төлөм өттү') && text.includes('499 сом'))).toBe(true);
     expect(texts.find((text) => text.includes('Чакыруу жарыяланды'))).toContain('Асан &amp; Айгүл');
     // The admin was already registered by the fixture: no "new user" message for them.
