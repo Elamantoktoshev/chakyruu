@@ -41,6 +41,14 @@ describe('server render of public pages', () => {
     expect(html).toContain('<h1');
   });
 
+  it('produces complete HTML without inline scripts (CSP forbids them) or unfinished Suspense boundaries', async () => {
+    for (const url of ['/ky/', '/ru/templates', '/ky/tamadalar', '/ru/contacts']) {
+      const { html } = await render({ url, data: { templates: TEMPLATES, prices: PRICES }, siteUrl: SITE });
+      expect(html, url).not.toContain('<script');
+      expect(html, url).not.toContain('<!--$?-->');
+    }
+  });
+
   it('keeps every title and description within search-result limits', async () => {
     const { PAGE_TEXTS } = await import('./seo/seoContent');
     for (const byLocale of Object.values(PAGE_TEXTS)) {

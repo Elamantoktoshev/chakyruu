@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { InvitationView } from '../invitation/InvitationView';
 import { PaymentBadges } from '../PaymentBadges';
 import { PhoneFrame } from '../PhoneFrame';
+import { ClientOnly } from '../ui/ClientOnly';
 import { primaryButton, secondaryButton } from '../ui/buttons';
 import { OyuPattern } from '../ui/OyuPattern';
 import { ArrowRightIcon, CheckCircleIcon, NoteIcon, PinIcon, PlayIcon } from '../ui/SiteIcons';
@@ -99,12 +100,15 @@ export function Hero({ createHref, publishPriceSom }: Props) {
           <FloatingChip icon={<NoteIcon className="h-5 w-5" />} text={t.heroChipMusic} tone="bg-lilac-soft text-lilac" className="-right-28 top-[58%]" delay="1.2s" />
           <FloatingChip icon={<PinIcon className="h-5 w-5" />} text={t.heroChipMap} tone="bg-sky-soft text-sky" className="-left-24 bottom-10" delay="2.4s" />
           <PhoneFrame className="rotate-0 lg:rotate-2">
-            <InvitationView
-              invitation={heroInvitation(lang)}
-              lang={lang}
-              mode="preview"
-              opening={{ doorLabel: lang === 'KY' ? 'Урматтуу Асан байке' : 'Уважаемый Асан', isLooping: true }}
-            />
+            {/* The animated demo is decorative and code-split: drawn in the browser only. */}
+            <ClientOnly fallback={<div className="h-full min-h-[38rem] bg-cream" aria-hidden="true" />}>
+              <InvitationView
+                invitation={heroInvitation(lang)}
+                lang={lang}
+                mode="preview"
+                opening={{ doorLabel: lang === 'KY' ? 'Урматтуу Асан байке' : 'Уважаемый Асан', isLooping: true }}
+              />
+            </ClientOnly>
           </PhoneFrame>
         </div>
       </div>
