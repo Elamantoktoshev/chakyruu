@@ -105,6 +105,27 @@ describe('illustrated template', () => {
     expect(container.querySelector('[data-placeholder="Ак боз үй"]')).not.toBeNull();
   }, RENDER_TIMEOUT_MS);
 
+  it("shows the couple's photo when the owner uploaded one", async () => {
+    const { default: Illustrated } = await TEMPLATE_LOADERS.illustrated();
+    const withPhoto = { ...invitation('illustrated', null, MANIFEST), photoUrl: 'https://cdn.example.com/uploads/couple.webp' };
+    render(
+      <LanguageProvider>
+        <Illustrated invitation={withPhoto} palette={resolvePalette('illustrated', null, MANIFEST)} mode="preview" slots={{}} />
+      </LanguageProvider>,
+    );
+    expect(screen.getByAltText('Айбек & Айзада').getAttribute('src')).toBe('https://cdn.example.com/uploads/couple.webp');
+  }, RENDER_TIMEOUT_MS);
+
+  it('shows no photo frame without a photo', async () => {
+    const { default: Illustrated } = await TEMPLATE_LOADERS.illustrated();
+    render(
+      <LanguageProvider>
+        <Illustrated invitation={invitation('illustrated', null, MANIFEST)} palette={resolvePalette('illustrated', null, MANIFEST)} mode="preview" slots={{}} />
+      </LanguageProvider>,
+    );
+    expect(screen.queryByAltText('Айбек & Айзада')).toBeNull();
+  }, RENDER_TIMEOUT_MS);
+
   it('falls back to Classic when the manifest is broken', async () => {
     const { default: Illustrated } = await TEMPLATE_LOADERS.illustrated();
     const broken = { ...MANIFEST, version: 2 };

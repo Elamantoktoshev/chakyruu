@@ -4,8 +4,9 @@ import { HeroText } from '../parts/HeroText';
 import { heroHeight } from '../parts/heroSize';
 import { InvitationBody } from '../parts/InvitationBody';
 import { TemplateFooter } from '../parts/TemplateFooter';
+import { usePhoto } from '../parts/usePhoto';
 import Classic from '../classic';
-import type { TemplateProps } from '../types';
+import type { InvitationViewMode, TemplateProps } from '../types';
 
 /**
  * Every illustrated template: the artwork and colours come from the manifest in Template.config,
@@ -45,9 +46,30 @@ export default function Illustrated(props: TemplateProps) {
       <div className="relative" style={{ backgroundImage: `url(${background})`, backgroundSize: 'cover', backgroundPosition: 'center top' }}>
         <div className="absolute inset-0 bg-cream/85" aria-hidden="true" />
         <div className="relative">
+          <CouplePhoto photoUrl={invitation.photoUrl} alt={invitation.hostNames} mode={mode} frameColor={palette.accent} />
           <InvitationBody invitation={invitation} mode={mode} slots={slots} />
           <TemplateFooter invitation={invitation} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+type CouplePhotoProps = {
+  photoUrl: string | null;
+  alt: string;
+  mode: InvitationViewMode;
+  frameColor: string;
+};
+
+/** The owner's photo in an arch frame of the design's accent colour; nothing when there is no photo. */
+function CouplePhoto({ photoUrl, alt, mode, frameColor }: CouplePhotoProps) {
+  const photo = usePhoto(photoUrl, mode);
+  if (!photo.src) return null;
+  return (
+    <div className="px-10 pt-10">
+      <div className="mx-auto w-full max-w-64 rounded-t-full border-2 p-1.5" style={{ borderColor: frameColor }}>
+        <img {...photo.props} alt={alt} className="aspect-[3/4] w-full rounded-t-full object-cover" />
       </div>
     </div>
   );
