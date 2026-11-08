@@ -60,6 +60,8 @@ export interface AuthServiceDeps {
   testLoginPhones?: ReadonlyMap<string, string>;
   /** Most SMS the site may send in 24 h; protects the Nikita.kg balance from SMS bombing. */
   smsDailyLimit?: number;
+  /** Google-verified e-mails that get the ADMIN role on sign-in (ADMIN_EMAILS). */
+  adminEmails?: ReadonlySet<string>;
 }
 
 const sessionUserSelect = { id: true, phone: true, email: true, name: true, role: true, organizationId: true } as const;
@@ -73,6 +75,7 @@ export function createAuthService({
   exposeOtpInResponse = false,
   testLoginPhones = new Map<string, string>(),
   smsDailyLimit = DEFAULT_SMS_DAILY_LIMIT,
+  adminEmails = new Set<string>(),
 }: AuthServiceDeps): AuthService {
   /** Codes issued in the last 24 h to real numbers = SMS actually paid for. */
   async function assertSmsBudget(issuedAt: Date): Promise<void> {
@@ -183,11 +186,13 @@ export function createAuthService({
   async function signInWithGoogle({ sub, email, name }: GoogleProfile): Promise<CreatedSession> {
     const signedInAt = now();
     const isNewUser = (await prisma.user.count({ where: { googleId: sub } })) === 0;
+    // Only an address Google verified (google.ts passes null otherwise) can be on the admin list.
+    const adminRole = email && adminEmails.has(email) ? ({ role: 'ADMIN', organizationId: null } as const) : {};
     // Keep the e-mail current; never overwrite a name the user may have set.
     const user = await prisma.user.upsert({
       where: { googleId: sub },
-      update: { email },
-      create: { googleId: sub, email, name },
+      update: { email, ...adminRole },
+      create: { googleId: sub, email, name, ...adminRole },
       select: sessionUserSelect,
     });
     if (isNewUser) notifyAdmin({ type: 'user_registered', phone: null, email });

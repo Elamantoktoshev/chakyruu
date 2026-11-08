@@ -77,6 +77,12 @@ describe('parseEnv', () => {
     expect(problemsOf({ ...DEV, ADMIN_PHONE: '+996555000001', TEST_LOGIN_PHONES: '+996555000001:123456' })[0]).toMatch(/ADMIN_PHONE/);
   });
 
+  it('reads admin e-mails case-insensitively and rejects anything that is not an e-mail', () => {
+    expect([...parseEnv({ ...DEV, ADMIN_EMAILS: ' NYC.Elaman@gmail.com , b@x.kg' }).ADMIN_EMAILS]).toEqual(['nyc.elaman@gmail.com', 'b@x.kg']);
+    expect(parseEnv(DEV).ADMIN_EMAILS.size).toBe(0);
+    expect(problemsOf({ ...DEV, ADMIN_EMAILS: 'not-an-email' })[0]).toMatch(/ADMIN_EMAILS/);
+  });
+
   it('accepts Telegram notifications only with both a valid bot token and chat id', () => {
     const token = '123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw';
     expect(parseEnv({ ...DEV, TELEGRAM_BOT_TOKEN: token, TELEGRAM_CHAT_ID: '-1001234567890' })).toMatchObject({ TELEGRAM_CHAT_ID: '-1001234567890' });

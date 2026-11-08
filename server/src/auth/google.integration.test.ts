@@ -33,8 +33,9 @@ class FakeGoogle implements GoogleOAuth {
 
 const PROFILE: GoogleProfile = { sub: 'google-sub-1', email: 'aizada@gmail.com', name: 'Айзада' };
 
-function buildApp(google?: GoogleOAuth) {
+function buildApp(google?: GoogleOAuth, adminEmails: ReadonlySet<string> = new Set()) {
   return createApp({
+    adminEmails,
     corsOrigin: TEST_ORIGIN,
     otpSecret: TEST_OTP_SECRET,
     isProduction: false,
@@ -122,6 +123,20 @@ describe('Google sign-in', () => {
     const cancelled = await agent.get('/api/auth/google/callback').query({ error: 'access_denied' }).expect(303);
     expect(cancelled.headers.location).toBe(`${TEST_ORIGIN}/login?error=google`);
     expect(await prisma.user.count()).toBe(0);
+  });
+
+  it('makes a listed, Google-verified e-mail an admin; everyone else stays an owner', async () => {
+    const admins = new Set(['nyc.elaman@gmail.com']);
+    const signIn = async (profile: GoogleProfile) => {
+      const agent = request.agent(buildApp(new FakeGoogle(profile), admins));
+      const state = await startSignIn(agent);
+      await agent.get('/api/auth/google/callback').query({ code: VALID_CODE, state }).expect(303);
+      return (await agent.get('/api/auth/me').expect(200)).body.data.role;
+    };
+    expect(await signIn({ sub: 'owner-sub', email: 'nyc.elaman@gmail.com', name: null })).toBe('ADMIN');
+    expect(await signIn({ sub: 'other-sub', email: 'someone@gmail.com', name: null })).toBe('OWNER');
+    // google.ts passes null when Google has not verified the address.
+    expect(await signIn({ sub: 'unverified-sub', email: null, name: null })).toBe('OWNER');
   });
 
   it('never redirects off-site after sign-in', async () => {

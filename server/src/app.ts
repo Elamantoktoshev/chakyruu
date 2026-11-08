@@ -71,6 +71,8 @@ export interface AppConfig {
   compressAudio?: AudioCompressor;
   /** Demo numbers with a fixed login code and no SMS (TEST_LOGIN_PHONES). */
   testLoginPhones?: ReadonlyMap<string, string>;
+  /** Google-verified e-mails that sign in as ADMIN. */
+  adminEmails?: ReadonlySet<string>;
   /** Most SMS the site may send per 24 h. */
   smsDailyLimit?: number;
   /** DEV_LOGIN_WITHOUT_SMS: the login code is returned to the browser. Refused in production by index.ts. */
@@ -88,6 +90,7 @@ export function createApp(config: AppConfig): Express {
     now,
     exposeOtpInResponse: config.exposeOtpInResponse && !isProduction,
     testLoginPhones: config.testLoginPhones,
+    adminEmails: config.adminEmails,
     smsDailyLimit: config.smsDailyLimit,
   });
 

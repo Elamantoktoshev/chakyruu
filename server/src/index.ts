@@ -106,6 +106,7 @@ function buildConfig(env: Env): AppConfig & { port: number } {
       umamiScriptUrl: env.UMAMI_SCRIPT_URL,
     },
     testLoginPhones: env.TEST_LOGIN_PHONES,
+    adminEmails: env.ADMIN_EMAILS,
     mediaOrigins: env.SPACES_CDN_URL ? [new URL(env.SPACES_CDN_URL).origin] : [],
     smsDailyLimit: env.SMS_DAILY_LIMIT,
   };

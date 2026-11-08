@@ -79,6 +79,9 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         scope: RUN_TIME
         type: SECRET
+      # Google accounts that sign in as ADMIN, comma-separated.
+      - key: ADMIN_EMAILS
+        scope: RUN_TIME
       - key: SENTRY_DSN
         type: SECRET
       - key: UMAMI_WEBSITE_ID

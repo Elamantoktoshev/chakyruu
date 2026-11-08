@@ -56,6 +56,13 @@ const baseSchema = z.object({
   DEV_LOGIN_WITHOUT_SMS: flag,
   TEST_LOGIN_PHONES: testLoginPhones,
   ADMIN_PHONE: unsetIfEmpty(z.string().regex(PHONE_PATTERN)),
+  /** "a@gmail.com, b@gmail.com": these Google accounts sign in as ADMIN. Empty → nobody by e-mail. */
+  ADMIN_EMAILS: z
+    .string()
+    .optional()
+    .transform((value) => (value ?? '').split(',').map((item) => item.trim().toLowerCase()).filter(Boolean))
+    .pipe(z.array(z.email('ADMIN_EMAILS must be comma-separated e-mail addresses')))
+    .transform((emails) => new Set(emails) as ReadonlySet<string>),
 
   SMS_PROVIDER: z.enum(['console', 'nikita']).default('console'),
   NIKITA_LOGIN: optionalText,
