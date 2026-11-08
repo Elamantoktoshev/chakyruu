@@ -3,6 +3,7 @@ import type { SessionUser } from '../auth/auth.service.js';
 import { publishWithGift } from '../gifts/gift.service.js';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
+import { transferComment } from '../payments/transferComment.js';
 import { createPendingPayment, runCheckout, type CheckoutView } from '../payments/checkout.service.js';
 import type { PaymentGateway } from '../payments/gateway.js';
 import { announcePublished } from '../notify/announce.js';
@@ -78,7 +79,10 @@ export async function publishInvitation(
     return { status: 'PUBLISHED', slug: invitation.slug, paymentId: null };
   }
 
-  const { template } = await prisma.invitation.findUniqueOrThrow({ where: { id }, select: { template: { select: { priceSom: true } } } });
+  const { template, hostNames, eventDate } = await prisma.invitation.findUniqueOrThrow({
+    where: { id },
+    select: { hostNames: true, eventDate: true, template: { select: { priceSom: true } } },
+  });
   const price = await getTemplatePublishPrice(template.priceSom);
   const payment = await startInvitationPayment(id, provider, price.amountTyiyn, gateway);
   const outcome = await runCheckout(gateway, {
@@ -86,6 +90,8 @@ export async function publishInvitation(
     amountTyiyn: price.amountTyiyn,
     method: provider,
     description: `Chakyruu.kg: ${invitation.slug}`,
+    // A ready invitation always has a date; today is only a safety net.
+    comment: transferComment(hostNames, eventDate ?? new Date()),
     appUrl,
   });
   if (outcome.status === 'SUCCEEDED' || !outcome.checkout) {

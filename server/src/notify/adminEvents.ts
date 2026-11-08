@@ -4,7 +4,7 @@ import { maskPhone } from '../auth/sms.js';
 /** Things the site owner wants to hear about right away (sent to Telegram). */
 export type AdminEvent =
   | { type: 'user_registered'; phone: string | null; email?: string | null }
-  | { type: 'payment_pending'; amountSom: number; reference: string; method: string; description: string }
+  | { type: 'payment_pending'; amountSom: number; reference: string; comment: string; method: string; description: string }
   | { type: 'payment_succeeded'; amountSom: number; method: string; description: string }
   | { type: 'invitation_published'; hostNames: string; slug: string; isGift: boolean }
   | { type: 'partner_lead'; orgType: OrgType; name: string; venueName: string; city: string | null; phone: string }
@@ -35,6 +35,7 @@ export function formatAdminMessage(event: AdminEvent, appUrl: string): string {
       return [
         '💰 <b>Төлөм ырастоону күтүүдө</b>',
         `${som(event.amountSom)} · ${html(event.method)} · код <code>${html(event.reference)}</code>`,
+        `Комментарий: <b>${html(event.comment)}</b>`,
         html(event.description),
         `MBank'та текшерип, ырастаңыз: ${base}/admin`,
       ].join('\n');

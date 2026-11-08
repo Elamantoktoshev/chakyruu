@@ -152,6 +152,8 @@ export interface OwnerInvitation extends InvitationContent {
 
 export interface ManualInstructions {
   receiver: string;
+  /** Names + toy day for the transfer comment; absent on payments started before it existed. */
+  comment?: string;
   reference: string;
   amountSom: number;
 }

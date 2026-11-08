@@ -53,7 +53,9 @@ describe('admin Telegram notifications', () => {
 
     const texts = await messages();
     expect(texts.find((text) => text.includes('Жаңы колдонуучу'))).toContain('+996*******11');
-    expect(texts.find((text) => text.includes('ырастоону күтүүдө'))).toContain(reference);
+    const pendingText = texts.find((text) => text.includes('ырастоону күтүүдө'));
+    expect(pendingText).toContain(reference);
+    expect(pendingText).toContain(publish.body.data.checkout.instructions.comment);
     expect(texts.some((text) => text.includes('Төлөм өттү') && text.includes('499 сом'))).toBe(true);
     expect(texts.find((text) => text.includes('Чакыруу жарыяланды'))).toContain('Асан &amp; Айгүл');
     // The admin was already registered by the fixture: no "new user" message for them.

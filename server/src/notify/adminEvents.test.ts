@@ -4,12 +4,20 @@ import { formatAdminMessage } from './adminEvents.js';
 const APP_URL = 'https://chakyruu.kg';
 
 describe('formatAdminMessage', () => {
-  it('announces a pending MBank transfer with amount, reference and a link to confirm it', () => {
+  it('announces a pending MBank transfer with amount, the payer comment, reference and a link to confirm it', () => {
     const text = formatAdminMessage(
-      { type: 'payment_pending', amountSom: 499, reference: 'CH-7K3MX', method: 'MBANK', description: 'Chakyruu.kg: aibek-aizada' },
+      {
+        type: 'payment_pending',
+        amountSom: 499,
+        reference: 'CH-7K3MX',
+        comment: 'Айбек & Айзада 15.06.2027',
+        method: 'MBANK',
+        description: 'Chakyruu.kg: aibek-aizada',
+      },
       APP_URL,
     );
     expect(text).toContain('499 сом');
+    expect(text).toContain('Айбек &amp; Айзада 15.06.2027');
     expect(text).toContain('CH-7K3MX');
     expect(text).toContain('MBANK');
     expect(text).toContain('https://chakyruu.kg/admin');

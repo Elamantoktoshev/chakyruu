@@ -1,6 +1,7 @@
 import { packageAudience, type PaymentProviderId } from '@chakyruu/shared';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
+import { transferComment } from './transferComment.js';
 import { getActivePrice } from '../pricing/price.service.js';
 import { createPendingPayment, runCheckout, type CheckoutOutcome } from './checkout.service.js';
 import type { PaymentGateway } from './gateway.js';
@@ -32,6 +33,7 @@ export async function purchaseCredits(
     amountTyiyn: price.amountTyiyn,
     method,
     description: `Chakyruu.kg: ${price.credits} × ${org.name}`,
+    comment: transferComment(org.name, new Date()),
     appUrl,
   });
 }

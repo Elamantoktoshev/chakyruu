@@ -9,14 +9,18 @@ export interface CheckoutRequest {
   /** Method the payer picked in the UI. */
   method: PaymentProviderId;
   description: string;
-  /** Human code for the transfer comment / provider order id. */
+  /** Short unique code: provider order id, and how the admin finds the payment. */
   reference: string;
+  /** What a person writes in a manual transfer comment: names and the toy day. */
+  comment: string;
   /** Where the provider sends the payer back to (our /pay/result page). */
   returnUrl: string;
 }
 
 export interface ManualInstructions {
   receiver: string;
+  /** Names + day for the transfer comment (shown to the payer). */
+  comment: string;
   reference: string;
   amountSom: number;
 }

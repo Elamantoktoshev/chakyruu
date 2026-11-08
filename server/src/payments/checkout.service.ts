@@ -55,6 +55,8 @@ interface RunCheckoutInput {
   amountTyiyn: number;
   method: Prisma.PaymentUncheckedCreateInput['provider'];
   description: string;
+  /** Names + day the payer writes in a manual transfer comment (see transferComment). */
+  comment: string;
   appUrl: string;
 }
 
@@ -69,6 +71,7 @@ export async function runCheckout(gateway: PaymentGateway, input: RunCheckoutInp
       method: input.method,
       description: input.description,
       reference: payment.reference,
+      comment: input.comment,
       returnUrl: `${input.appUrl.replace(/\/+$/, '')}/pay/result/${payment.id}`,
     });
   } catch (error: unknown) {
@@ -91,6 +94,7 @@ export async function runCheckout(gateway: PaymentGateway, input: RunCheckoutInp
       type: 'payment_pending',
       amountSom: input.amountTyiyn / 100,
       reference: payment.reference,
+      comment: input.comment,
       method: input.method,
       description: input.description,
     });

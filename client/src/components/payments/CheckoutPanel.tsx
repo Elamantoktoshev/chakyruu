@@ -54,6 +54,7 @@ export function CheckoutPanel({ checkout, paymentId }: Props) {
 function ManualTransfer({ instructions, resultHref }: { instructions: Extract<CheckoutView, { kind: 'manual' }>['instructions']; resultHref: string }) {
   const { t } = useI18n();
   const [isCopied, setIsCopied] = useState(false);
+  const comment = instructions.comment ?? instructions.reference;
   return (
     <div className="space-y-4 rounded-3xl border-2 border-emerald-300 bg-emerald-50 p-5">
       <h2 className="font-display font-extrabold text-2xl text-emerald-900">{t.payManualTitle}</h2>
@@ -69,11 +70,11 @@ function ManualTransfer({ instructions, resultHref }: { instructions: Extract<Ch
           {t.payManualStep2}
           <button
             type="button"
-            onClick={() => void copyText(instructions.reference).then(setIsCopied)}
-            className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-emerald-400 bg-white font-mono text-2xl font-bold tracking-widest text-emerald-900"
+            onClick={() => void copyText(comment).then(setIsCopied)}
+            className="mt-2 flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-dashed border-emerald-400 bg-white px-3 py-2 text-center"
           >
-            {instructions.reference}
-            <span className="font-sans text-xs font-normal text-night/60">{isCopied ? t.copied : t.copyCode}</span>
+            <span className="break-words font-display text-xl font-bold text-emerald-900">{comment}</span>
+            <span className="text-xs text-night/60">{isCopied ? t.copied : t.copyCode}</span>
           </button>
         </li>
         <li>{t.payManualStep3}</li>
