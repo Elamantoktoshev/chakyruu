@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { AppHeader } from '../components/AppHeader';
+import { GoogleSignInButton } from '../components/auth/GoogleSignInButton';
 import { BrandMark } from '../components/ui/BrandLogo';
 import { useI18n } from '../i18n/LanguageContext';
 import { requestErrorMessage, verifyErrorMessage } from './loginErrors';
@@ -28,6 +29,25 @@ function useSecondsUntil(deadline: number): number {
   return remaining;
 }
 
+/** Whether the server has Google sign-in configured; the button stays hidden until it says yes. */
+function useGoogleSignIn(): boolean {
+  const [isEnabled, setIsEnabled] = useState(false);
+  useEffect(() => {
+    let isCurrent = true;
+    api
+      .authOptions()
+      .then((options) => {
+        if (isCurrent) setIsEnabled(options.google);
+      })
+      // Without the answer the page still offers phone login, so a failure only hides the button.
+      .catch(() => undefined);
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
+  return isEnabled;
+}
+
 export function LoginPage() {
   const { t } = useI18n();
   const { state, signIn } = useAuth();
@@ -40,7 +60,9 @@ export function LoginPage() {
   const [code, setCode] = useState('');
   const [resendAt, setResendAt] = useState(0);
   const [isBusy, setIsBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // The server sends people back here with ?error=google when Google sign-in did not work.
+  const [error, setError] = useState<string | null>(() => (searchParams.get('error') === 'google' ? t.errorGoogle : null));
+  const hasGoogle = useGoogleSignIn();
   const resendIn = useSecondsUntil(resendAt);
   // Anti-bot signals checked by the server: time since the form appeared, and a hidden field people never fill.
   const shownAt = useRef(Date.now());
@@ -112,6 +134,16 @@ export function LoginPage() {
         <p className="mt-4 text-center text-night/70">{t.loginSubtitle}</p>
 
         <div className="mt-8 rounded-3xl border border-line bg-white/70 p-6 shadow-sm">
+          {codeSentTo === null && hasGoogle && (
+            <>
+              <GoogleSignInButton href={api.googleSignInUrl(next)} label={t.loginWithGoogle} />
+              <div className="my-5 flex items-center gap-3 text-sm text-night/50" aria-hidden="true">
+                <span className="h-px flex-1 bg-line" />
+                {t.loginOr}
+                <span className="h-px flex-1 bg-line" />
+              </div>
+            </>
+          )}
           {codeSentTo === null ? (
             <form onSubmit={handlePhoneSubmit} noValidate className="space-y-5">
               <label className="block">

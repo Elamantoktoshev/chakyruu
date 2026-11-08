@@ -15,6 +15,7 @@ import type {
 } from '@chakyruu/shared';
 import type {
   AddGuestsResult,
+  AuthOptions,
   AdminLead,
   AdminOrganization,
   AdminPayment,
@@ -125,6 +126,9 @@ export const api = {
   verifyOtp: (phone: string, code: string) => request<SessionUser>('/auth/verify', json('POST', { phone, code })),
   me: () => request<SessionUser>('/auth/me'),
   logout: () => request<{ loggedOut: true }>('/auth/logout', { method: 'POST' }),
+  authOptions: () => request<AuthOptions>('/auth/options'),
+  /** Full-page navigation target: the server redirects on to Google and back. */
+  googleSignInUrl: (next: string) => `/api/auth/google/start?next=${encodeURIComponent(next)}`,
 
   listMyInvitations: () => request<DashboardInvitation[]>('/my/invitations'),
   createInvitation: (templateId: string, giftCode?: string) =>

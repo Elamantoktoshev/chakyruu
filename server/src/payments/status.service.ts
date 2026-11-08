@@ -77,7 +77,7 @@ export async function listPaymentsForAdmin(status: 'PENDING' | 'SUCCEEDED' | 'FA
       credits: true,
       createdAt: true,
       paidAt: true,
-      invitation: { select: { slug: true, hostNames: true, owner: { select: { phone: true } } } },
+      invitation: { select: { slug: true, hostNames: true, owner: { select: { phone: true, email: true } } } },
       organization: { select: { name: true, phone: true } },
     },
   });

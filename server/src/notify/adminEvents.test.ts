@@ -37,6 +37,12 @@ describe('formatAdminMessage', () => {
     expect(lead).not.toContain('555000111');
   });
 
+  it('shows a masked e-mail for people who signed up with Google', () => {
+    const message = formatAdminMessage({ type: 'user_registered', phone: null, email: 'aizada@gmail.com' }, APP_URL);
+    expect(message).toContain('Google: a***@gmail.com');
+    expect(message).not.toContain('aizada@');
+  });
+
   it('escapes HTML in user-provided text so Telegram renders it literally', () => {
     const lead = formatAdminMessage(
       { type: 'partner_lead', orgType: 'TAMADA', name: '<b>x</b>', venueName: 'A & B', city: '<i>', phone: '+996555000111' },

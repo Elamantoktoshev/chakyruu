@@ -231,7 +231,11 @@ model TamadaClick {
 
 model User {
   id             String        @id @default(cuid())
-  phone          String        @unique
+  /** Null for people who signed in with Google only. */
+  phone          String?       @unique
+  /** Google account id ("sub"); set on the first Google sign-in. */
+  googleId       String?       @unique
+  email          String?
   name           String?
   role           UserRole      @default(OWNER)
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)

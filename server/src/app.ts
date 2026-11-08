@@ -5,6 +5,7 @@ import express, { type Express } from 'express';
 import { loadUser, requireSameOrigin } from './auth/auth.middleware.js';
 import { createAuthRouter } from './auth/auth.routes.js';
 import { createAuthService } from './auth/auth.service.js';
+import type { GoogleOAuth } from './auth/google.js';
 import type { SmsProvider } from './auth/sms.js';
 import { createPublicInvitationRouter } from './invitations/invitation.routes.js';
 import { createMyInvitationsRouter } from './invitations/my.routes.js';
@@ -39,6 +40,8 @@ const JSON_BODY_LIMIT = '64kb';
 
 export interface AppConfig {
   corsOrigin: string;
+  /** "Sign in with Google"; absent → only phone login. */
+  google?: GoogleOAuth;
   otpSecret: string;
   isProduction: boolean;
   sms: SmsProvider;
@@ -120,7 +123,7 @@ export function createApp(config: AppConfig): Express {
   app.use(loadUser(auth));
 
   app.get('/api/health', createHealthHandler(config.commitSha));
-  app.use('/api/auth', createAuthRouter({ auth, isProduction }));
+  app.use('/api/auth', createAuthRouter({ auth, isProduction, google: config.google, siteUrl: corsOrigin.replace(/\/+$/, '') }));
   app.use('/api/public/templates', templateRouter);
   app.use('/api/public/invitations', createPublicInvitationRouter({ appUrl: checkout.appUrl }));
   app.use('/api/public/tilekter', createTilekLikeRouter());

@@ -12,6 +12,7 @@ import { createGatewayFromEnv } from './payments/registry.js';
 import { SpacesStorageProvider, createSpacesClient } from './storage/spaces.provider.js';
 import { LocalStorageProvider, type StorageProvider } from './storage/storage.provider.js';
 import { logger } from './lib/logger.js';
+import { createGoogleOAuth, type GoogleOAuth } from './auth/google.js';
 import { configureAdminNotifier, flushAdminNotifications } from './notify/notifier.js';
 import { createTelegramSender } from './notify/telegram.js';
 
@@ -61,6 +62,19 @@ function setUpAdminNotifications(env: Env): void {
   logger.info('[notify] Telegram notifications are on');
 }
 
+/** Google sign-in is on only when both Google Cloud credentials are set. */
+function createGoogle(env: Env): GoogleOAuth | undefined {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+    logger.info('[auth] Google sign-in is off (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET not set)');
+    return undefined;
+  }
+  return createGoogleOAuth({
+    clientId: env.GOOGLE_CLIENT_ID,
+    clientSecret: env.GOOGLE_CLIENT_SECRET,
+    redirectUri: `${env.clientUrl}/api/auth/google/callback`,
+  });
+}
+
 function buildConfig(env: Env): AppConfig & { port: number } {
   if (env.DEV_LOGIN_WITHOUT_SMS) {
     logger.warn('[auth] DEV_LOGIN_WITHOUT_SMS is on: anyone can log in with just a phone number');
@@ -70,6 +84,7 @@ function buildConfig(env: Env): AppConfig & { port: number } {
     port: env.PORT,
     corsOrigin: env.clientUrl,
     appUrl: env.appUrl,
+    google: createGoogle(env),
     otpSecret: env.OTP_SECRET,
     isProduction: env.isProduction,
     trustProxyHops: env.TRUST_PROXY,

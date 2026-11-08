@@ -258,3 +258,20 @@ npm run uploads:to-spaces -w server                # загрузит файлы
 | Превью в WhatsApp не обновилось | WhatsApp кэширует превью. После правки приглашения адрес картинки меняется сам, но уже отправленные сообщения сохраняют старое превью |
 
 **Масштабирование.** Сервис рассчитан на **один** экземпляр: лимиты запросов хранятся в памяти. Перед увеличением `instance_count` нужно вынести их в Redis.
+
+## 16. Вход через Google
+
+Кнопка «Google менен кирүү» появляется на странице входа, когда заданы оба ключа. Вход по телефону работает как раньше.
+
+1. Откройте **console.cloud.google.com** → создайте проект `Chakyruu` (или выберите существующий).
+2. **APIs & Services → OAuth consent screen**: тип **External**, название `Chakyruu`, ваш e-mail, логотип по желанию. Scopes добавлять не нужно (email и profile — базовые). Нажмите **Publish app**, иначе войти смогут только тестовые пользователи.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID**, тип **Web application**.
+   - **Authorized JavaScript origins:** `https://chakyruu.kg` (и `https://chakyruu-umdne.ondigitalocean.app`, пока домен не подключён).
+   - **Authorized redirect URIs:** `https://chakyruu.kg/api/auth/google/callback` (и `https://chakyruu-umdne.ondigitalocean.app/api/auth/google/callback`). Адрес должен совпадать с `CLIENT_URL` сайта до символа.
+4. Google покажет **Client ID** и **Client secret**. В **Apps → chakyruu → Settings → web → Environment Variables** добавьте `GOOGLE_CLIENT_ID` и `GOOGLE_CLIENT_SECRET` (secret — с **Encrypt**) → **Save**.
+5. После перезапуска откройте `/login`: должна появиться кнопка Google.
+
+Как это устроено: сервер отправляет человека на страницу Google и принимает ответ на `/api/auth/google/callback` (код + PKCE, проверка `state`), скриптов Google на страницах нет. Аккаунт определяется по Google ID; у такого пользователя может не быть телефона. Подарочные коды партнёров привязаны к номеру, поэтому их видят только те, кто вошёл по телефону.
+
+Встроенные браузеры (Instagram, Telegram, WhatsApp) Google не пускает (ошибка `disallowed_useragent`) — в них остаётся вход по телефону, а Google работает в Safari/Chrome.
+

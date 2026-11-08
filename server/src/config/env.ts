@@ -81,6 +81,9 @@ const baseSchema = z.object({
   TELEGRAM_BOT_TOKEN: unsetIfEmpty(z.string().trim().regex(/^\d{5,}:[A-Za-z0-9_-]{30,}$/, 'must be the bot token from @BotFather')),
   TELEGRAM_CHAT_ID: unsetIfEmpty(z.string().trim().regex(/^-?\d{1,20}$/, 'must be a numeric chat id (see npm run telegram:test)')),
   /** Error tracking (sentry.io); empty → off. The browser uses SENTRY_DSN_CLIENT, or the same DSN. */
+  /** Google Cloud → APIs & Services → Credentials → OAuth client (Web). Both empty → Google sign-in off. */
+  GOOGLE_CLIENT_ID: unsetIfEmpty(z.string().trim().regex(/^[\w-]+\.apps\.googleusercontent\.com$/, 'must end with .apps.googleusercontent.com')),
+  GOOGLE_CLIENT_SECRET: optionalText,
   SENTRY_DSN: unsetIfEmpty(z.url()),
   SENTRY_DSN_CLIENT: unsetIfEmpty(z.url()),
   /** Cookieless analytics (Umami Cloud); empty → off. */
@@ -111,6 +114,10 @@ function checkCombinations(env: BaseEnv, ctx: z.RefinementCtx): void {
   if (env.ADMIN_PHONE && env.TEST_LOGIN_PHONES.has(env.ADMIN_PHONE)) issue('TEST_LOGIN_PHONES', 'must not contain ADMIN_PHONE');
   if (Boolean(env.TELEGRAM_BOT_TOKEN) !== Boolean(env.TELEGRAM_CHAT_ID)) {
     issue(env.TELEGRAM_BOT_TOKEN ? 'TELEGRAM_CHAT_ID' : 'TELEGRAM_BOT_TOKEN', 'Telegram notifications need both TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID');
+  }
+
+  if (Boolean(env.GOOGLE_CLIENT_ID) !== Boolean(env.GOOGLE_CLIENT_SECRET)) {
+    issue(env.GOOGLE_CLIENT_ID ? 'GOOGLE_CLIENT_SECRET' : 'GOOGLE_CLIENT_ID', 'Google sign-in needs both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET');
   }
 
   if (!isProduction) return;

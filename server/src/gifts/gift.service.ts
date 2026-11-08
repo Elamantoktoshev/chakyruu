@@ -144,6 +144,8 @@ export async function listOrgGifts(organizationId: string) {
 
 /** Unused gifts addressed to the logged-in client's phone. */
 export async function listMyGifts(user: SessionUser) {
+  // Gifts are addressed to a phone; a Google-only account has none yet.
+  if (!user.phone) return [];
   return prisma.giftCode.findMany({
     where: { clientPhone: user.phone, usedAt: null, cancelledAt: null, invitationId: null, expiresAt: { gt: new Date() } },
     orderBy: { eventDate: 'asc' },
@@ -175,6 +177,7 @@ export function giftPrefill(
  * already attached to an invitation → 409.
  */
 export async function findRedeemableGift(tx: Prisma.TransactionClient, code: string, user: SessionUser) {
+  if (!user.phone) throw new HttpError(404, 'Gift code not found');
   const gift = await tx.giftCode.findFirst({
     where: { code, clientPhone: user.phone, usedAt: null, cancelledAt: null, expiresAt: { gt: new Date() } },
     select: {

@@ -51,7 +51,7 @@ export function PaymentsTab() {
                 <p className="font-mono text-xl font-bold tracking-wider text-brand">{payment.reference ?? '—'}</p>
                 <p className="text-sm text-night/70">
                   {payment.purpose === 'INVITATION'
-                    ? `${t.adminPaymentInvitation}: ${payment.invitation?.hostNames ?? ''} · ${payment.invitation?.owner.phone ?? ''}`
+                    ? `${t.adminPaymentInvitation}: ${payment.invitation?.hostNames ?? ''} · ${payment.invitation?.owner.phone ?? payment.invitation?.owner.email ?? ''}`
                     : `${t.adminPaymentPackage} ${payment.credits ?? ''}: ${payment.organization?.name ?? ''}`}
                 </p>
                 <p className="text-xs text-night/50">

@@ -3,7 +3,7 @@ import { maskPhone } from '../auth/sms.js';
 
 /** Things the site owner wants to hear about right away (sent to Telegram). */
 export type AdminEvent =
-  | { type: 'user_registered'; phone: string }
+  | { type: 'user_registered'; phone: string | null; email?: string | null }
   | { type: 'payment_pending'; amountSom: number; reference: string; method: string; description: string }
   | { type: 'payment_succeeded'; amountSom: number; method: string; description: string }
   | { type: 'invitation_published'; hostNames: string; slug: string; isGift: boolean }
@@ -11,6 +11,13 @@ export type AdminEvent =
   | { type: 'sms_problem'; kind: string; hint: string };
 
 export type AdminEventType = AdminEvent['type'];
+
+/** a***@gmail.com — enough to recognise, not enough to spam. */
+function maskEmail(email: string | null): string {
+  if (!email) return 'e-mail жок';
+  const [local = '', domain = ''] = email.split('@');
+  return html(`${local.slice(0, 1)}***@${domain}`);
+}
 
 const ORG_LABELS: Readonly<Record<OrgType, string>> = { VENUE: 'Тойкана', TAMADA: 'Тамада', AGENCY: 'Агенттик' };
 
@@ -40,7 +47,7 @@ export function formatAdminMessage(event: AdminEvent, appUrl: string): string {
         `${base}/${encodeURIComponent(event.slug)}`,
       ].join('\n');
     case 'user_registered':
-      return `👤 <b>Жаңы колдонуучу</b>\n${maskPhone(event.phone)}`;
+      return `👤 <b>Жаңы колдонуучу</b>\n${event.phone ? maskPhone(event.phone) : `Google: ${maskEmail(event.email ?? null)}`}`;
     case 'partner_lead':
       return [
         `🤝 <b>Жаңы өтүнмө: ${ORG_LABELS[event.orgType]}</b>`,

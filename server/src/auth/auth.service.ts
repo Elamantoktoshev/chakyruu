@@ -6,6 +6,7 @@ import { loginCodeText, maskPhone, type SmsProvider } from './sms.js';
 import { generateOtpCode, generateSessionToken, hashOtp, hashSessionToken, safeEqualHex } from './tokens.js';
 import { logger } from '../lib/logger.js';
 import { notifyAdmin } from '../notify/notifier.js';
+import type { GoogleProfile } from './google.js';
 
 export const OTP_TTL_MS = 5 * 60 * 1000;
 export const OTP_MAX_ATTEMPTS = 5;
@@ -20,7 +21,9 @@ export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface SessionUser {
   id: string;
-  phone: string;
+  /** Null when the person signed in with Google only. */
+  phone: string | null;
+  email: string | null;
   name: string | null;
   role: UserRole;
   organizationId: string | null;
@@ -41,6 +44,8 @@ export interface OtpRequestResult {
 export interface AuthService {
   requestOtp(phone: string): Promise<OtpRequestResult>;
   verifyOtp(phone: string, code: string): Promise<CreatedSession>;
+  /** Finds the user by Google account id (creating one on first sign-in) and opens a session. */
+  signInWithGoogle(profile: GoogleProfile): Promise<CreatedSession>;
   getSessionUser(token: string): Promise<SessionUser | null>;
   revokeSession(token: string): Promise<void>;
 }
@@ -57,7 +62,7 @@ export interface AuthServiceDeps {
   smsDailyLimit?: number;
 }
 
-const sessionUserSelect = { id: true, phone: true, name: true, role: true, organizationId: true } as const;
+const sessionUserSelect = { id: true, phone: true, email: true, name: true, role: true, organizationId: true } as const;
 
 const invalidCode = (): HttpError => new HttpError(400, 'Invalid or expired code');
 
@@ -165,11 +170,28 @@ export function createAuthService({
     });
 
     if (isNewUser) notifyAdmin({ type: 'user_registered', phone });
+    return openSession(user, checkedAt);
+  }
 
+  async function openSession(user: SessionUser, openedAt: Date): Promise<CreatedSession> {
     const token = generateSessionToken();
-    const expiresAt = new Date(checkedAt.getTime() + SESSION_TTL_MS);
+    const expiresAt = new Date(openedAt.getTime() + SESSION_TTL_MS);
     await prisma.session.create({ data: { tokenHash: hashSessionToken(token), userId: user.id, expiresAt } });
     return { token, expiresAt, user };
+  }
+
+  async function signInWithGoogle({ sub, email, name }: GoogleProfile): Promise<CreatedSession> {
+    const signedInAt = now();
+    const isNewUser = (await prisma.user.count({ where: { googleId: sub } })) === 0;
+    // Keep the e-mail current; never overwrite a name the user may have set.
+    const user = await prisma.user.upsert({
+      where: { googleId: sub },
+      update: { email },
+      create: { googleId: sub, email, name },
+      select: sessionUserSelect,
+    });
+    if (isNewUser) notifyAdmin({ type: 'user_registered', phone: null, email });
+    return openSession(user, signedInAt);
   }
 
   async function getSessionUser(token: string): Promise<SessionUser | null> {
@@ -190,5 +212,5 @@ export function createAuthService({
     await prisma.session.deleteMany({ where: { tokenHash: hashSessionToken(token) } });
   }
 
-  return { requestOtp, verifyOtp, getSessionUser, revokeSession };
+  return { requestOtp, verifyOtp, signInWithGoogle, getSessionUser, revokeSession };
 }

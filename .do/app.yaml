@@ -73,6 +73,12 @@ services:
         type: SECRET
       - key: TELEGRAM_CHAT_ID
         type: SECRET
+      # Sign in with Google (DEPLOY.md §16); leave both empty to hide the button.
+      - key: GOOGLE_CLIENT_ID
+        scope: RUN_TIME
+      - key: GOOGLE_CLIENT_SECRET
+        scope: RUN_TIME
+        type: SECRET
       - key: SENTRY_DSN
         type: SECRET
       - key: UMAMI_WEBSITE_ID

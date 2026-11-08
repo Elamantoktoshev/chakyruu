@@ -194,7 +194,7 @@ export interface AdminPayment {
   credits: number | null;
   createdAt: string;
   paidAt: string | null;
-  invitation: { slug: string; hostNames: string; owner: { phone: string } } | null;
+  invitation: { slug: string; hostNames: string; owner: { phone: string | null; email: string | null } } | null;
   organization: { name: string; phone: string | null } | null;
 }
 
@@ -202,10 +202,16 @@ export type UserRole = 'OWNER' | 'ORG_ADMIN' | 'ADMIN';
 
 export interface SessionUser {
   id: string;
-  phone: string;
+  /** Null for people who signed in with Google only. */
+  phone: string | null;
+  email: string | null;
   name: string | null;
   role: UserRole;
   organizationId: string | null;
+}
+
+export interface AuthOptions {
+  google: boolean;
 }
 
 export interface OtpRequestResult {
