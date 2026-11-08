@@ -6,7 +6,7 @@ import { PHONE_PREFIX, sanitizeLocalPart, toE164 } from '../../lib/phone';
 import { track } from '../../lib/analytics';
 
 const inputClass =
-  'w-full min-h-12 rounded-xl border border-gold/50 bg-white/90 px-4 py-3 text-base text-ink outline-none focus:border-gold focus:ring-2 focus:ring-gold/30';
+  'w-full min-h-12 rounded-xl border border-white/0 bg-white px-4 py-3 text-base text-night outline-none placeholder:text-muted focus:ring-4 focus:ring-white/40';
 
 type Status = 'idle' | 'sending' | 'sent';
 
@@ -47,7 +47,7 @@ export function PartnerForm() {
   }
 
   if (status === 'sent') {
-    return <p className="rounded-2xl bg-white/10 p-6 text-center font-serif text-xl text-cream">{t.partnerThanks}</p>;
+    return <p className="rounded-2xl bg-white/15 p-6 text-center font-display text-xl font-bold text-white">{t.partnerThanks}</p>;
   }
 
   return (
@@ -59,8 +59,8 @@ export function PartnerForm() {
             type="button"
             aria-pressed={type === value}
             onClick={() => setType(value)}
-            className={`min-h-11 rounded-full border px-4 text-sm font-medium transition ${
-              type === value ? 'border-gold bg-gold text-burgundy-dark' : 'border-cream/40 text-cream hover:border-gold'
+            className={`min-h-11 rounded-xl border px-4 text-sm font-bold transition ${
+              type === value ? 'border-white bg-white text-brand' : 'border-white/40 text-white hover:border-white'
             }`}
           >
             {t.leadType[value]}
@@ -69,7 +69,7 @@ export function PartnerForm() {
       </fieldset>
       <input aria-label={t.partnerName} placeholder={t.partnerName} value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
       <div className="flex gap-2">
-        <span className="flex items-center rounded-xl border border-gold/50 bg-cream px-3 font-medium text-burgundy">{PHONE_PREFIX}</span>
+        <span className="flex items-center rounded-xl bg-white/90 px-3 font-bold text-brand">{PHONE_PREFIX}</span>
         <input
           type="tel"
           inputMode="numeric"
@@ -83,14 +83,14 @@ export function PartnerForm() {
       <input aria-label={t.partnerVenueByType[type]} placeholder={t.partnerVenueByType[type]} value={venueName} onChange={(e) => setVenueName(e.target.value)} className={inputClass} />
       <input aria-label={t.partnerCity} placeholder={t.partnerCity} value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
       {error && (
-        <p role="alert" className="text-sm font-medium text-gold-light sm:col-span-2">
+        <p role="alert" className="rounded-xl bg-night/30 px-3 py-2 text-sm font-medium text-white sm:col-span-2">
           {error}
         </p>
       )}
       <button
         type="submit"
         disabled={status === 'sending'}
-        className="min-h-12 rounded-full bg-gold font-semibold text-burgundy-dark transition hover:bg-gold-light disabled:opacity-60 sm:col-span-2"
+        className="min-h-13 rounded-xl bg-night font-display font-bold text-white transition hover:bg-night/85 disabled:opacity-60 sm:col-span-2"
       >
         {status === 'sending' ? t.partnerSending : t.partnerSubmit}
       </button>

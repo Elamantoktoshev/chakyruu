@@ -54,21 +54,21 @@ function Manage({ data }: { data: PageData }) {
     setShareNotice(outcome === 'copied' ? t.copied : null);
   }
 
-  const actionClass = 'flex min-h-12 flex-1 items-center justify-center rounded-full border-2 border-burgundy px-3 text-sm font-semibold text-burgundy';
+  const actionClass = 'flex min-h-12 flex-1 items-center justify-center rounded-full border-2 border-brand px-3 text-sm font-semibold text-brand';
 
   return (
     <div className="min-h-dvh pb-16">
       <AppHeader />
       <main className="mx-auto max-w-3xl space-y-8 px-4 pt-6">
         <div>
-          <Link to="/dashboard" className="text-sm text-burgundy hover:underline">
+          <Link to="/dashboard" className="text-sm text-brand hover:underline">
             {t.backToDashboard}
           </Link>
           <div className="mt-3 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs uppercase tracking-wider text-gold">{t.eventTypes[invitation.eventType]}</p>
-              <h1 className="break-words font-serif text-3xl text-burgundy">{invitation.hostNames || t.untitledInvitation}</h1>
-              <p className="text-sm text-ink/60">{date}</p>
+              <p className="text-xs uppercase tracking-wider text-brand">{t.eventTypes[invitation.eventType]}</p>
+              <h1 className="break-words font-display text-3xl text-brand">{invitation.hostNames || t.untitledInvitation}</h1>
+              <p className="text-sm text-night/60">{date}</p>
             </div>
             <StatusBadge status={invitation.status} />
           </div>
@@ -84,21 +84,21 @@ function Manage({ data }: { data: PageData }) {
             {t.open}
           </Link>
           {isPublished ? (
-            <button type="button" onClick={() => void handleShare()} className={`${actionClass} bg-burgundy text-cream`}>
+            <button type="button" onClick={() => void handleShare()} className={`${actionClass} bg-brand text-white`}>
               {shareNotice ?? t.share}
             </button>
           ) : (
-            <Link to={`/pay/${invitation.id}`} className={`${actionClass} bg-burgundy text-cream`}>
+            <Link to={`/pay/${invitation.id}`} className={`${actionClass} bg-brand text-white`}>
               {t.publish}
             </Link>
           )}
         </div>
 
         {isPublished ? (
-          <div className="rounded-2xl border border-gold/40 bg-white/70 p-4">
-            <p className="text-sm font-semibold text-ink">{t.sharedLinkTitle}</p>
-            <p className="mt-1 break-all text-burgundy">{sharedUrl}</p>
-            <p className="mt-1 text-xs text-ink/55">{t.sharedLinkHint}</p>
+          <div className="rounded-2xl border border-line bg-white/70 p-4">
+            <p className="text-sm font-semibold text-night">{t.sharedLinkTitle}</p>
+            <p className="mt-1 break-all text-brand">{sharedUrl}</p>
+            <p className="mt-1 text-xs text-night/55">{t.sharedLinkHint}</p>
           </div>
         ) : (
           <p className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-900">{t.publishFirst}</p>

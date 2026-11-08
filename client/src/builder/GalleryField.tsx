@@ -59,17 +59,17 @@ export function GalleryField({ invitationId, photos, onChanged }: Props) {
 
   return (
     <div>
-      <span className="mb-1.5 block text-sm font-medium text-ink/80">{t.fieldGallery}</span>
+      <span className="mb-1.5 block text-sm font-medium text-night/80">{t.fieldGallery}</span>
       <ul className="grid grid-cols-3 gap-2">
         {photos.map((photo, index) => (
-          <li key={photo.id} className="relative aspect-square overflow-hidden rounded-xl border border-gold/40 bg-cream-dark">
+          <li key={photo.id} className="relative aspect-square overflow-hidden rounded-xl border border-line bg-brand-soft">
             <img src={safeUrl(photo.url)} alt="" loading="lazy" className="h-full w-full object-cover" />
             <button
               type="button"
               disabled={isBusy}
               aria-label={t.galleryRemove}
               onClick={() => void run(() => api.removeGalleryPhoto(invitationId, photo.id))}
-              className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-graphite/70 text-cream"
+              className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-night/70 text-white"
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -85,7 +85,7 @@ export function GalleryField({ invitationId, photos, onChanged }: Props) {
               type="button"
               disabled={isBusy}
               onClick={() => inputRef.current?.click()}
-              className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-burgundy/40 text-burgundy transition hover:bg-burgundy/5 disabled:opacity-60"
+              className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-brand/40 text-brand transition hover:bg-brand/5 disabled:opacity-60"
             >
               <span aria-hidden="true" className="text-2xl leading-none">+</span>
               <span className="text-xs font-medium">{isBusy ? t.photoUploading : t.galleryAdd}</span>
@@ -97,7 +97,7 @@ export function GalleryField({ invitationId, photos, onChanged }: Props) {
       {error ? (
         <p role="alert" className="mt-1 text-xs font-medium text-red-700">{error}</p>
       ) : (
-        <p className="mt-1 text-xs text-ink/55">{freeSlots > 0 ? t.galleryHint.replace('{n}', String(GALLERY_MAX_PHOTOS)) : t.galleryFull}</p>
+        <p className="mt-1 text-xs text-night/55">{freeSlots > 0 ? t.galleryHint.replace('{n}', String(GALLERY_MAX_PHOTOS)) : t.galleryFull}</p>
       )}
     </div>
   );
@@ -110,7 +110,7 @@ function MoveButton({ label, glyph, disabled, onClick }: { label: string; glyph:
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="flex h-8 w-8 items-center justify-center rounded-full bg-cream/90 text-burgundy shadow"
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-page/90 text-brand shadow"
     >
       <span aria-hidden="true">{glyph}</span>
     </button>

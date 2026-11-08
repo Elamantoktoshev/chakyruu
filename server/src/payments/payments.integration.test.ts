@@ -146,7 +146,7 @@ describe('manual MBank transfers confirmed by the admin', () => {
     const res = await client.post(`/api/my/invitations/${id}/publish`).send({ provider: 'MBANK' }).expect(200);
     expect(res.body.data.checkout).toEqual({
       kind: 'manual',
-      instructions: { receiver: MBANK_RECEIVER, amountSom: 700, reference: expect.stringMatching(/^CH-[A-Z2-9]{5}$/) },
+      instructions: { receiver: MBANK_RECEIVER, amountSom: 499, reference: expect.stringMatching(/^CH-[A-Z2-9]{5}$/) },
     });
     const { paymentId } = res.body.data;
     expect((await client.get(`/api/my/payments/${paymentId}`).expect(200)).body.data.checkout.kind).toBe('manual');

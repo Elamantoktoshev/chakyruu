@@ -42,16 +42,16 @@ export function ImageUploadField({ label, imageUrl, upload, onUploaded }: Props)
 
   return (
     <div>
-      <span className="mb-1.5 block text-sm font-medium text-ink/80">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-night/80">{label}</span>
       <div className="flex items-center gap-4">
-        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-gold/50 bg-cream-dark">
+        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-line bg-brand-soft">
           {preview && <img src={preview} alt="" className="h-full w-full object-cover" />}
         </div>
         <button
           type="button"
           disabled={isUploading}
           onClick={() => inputRef.current?.click()}
-          className="min-h-11 rounded-full border-2 border-burgundy px-5 text-sm font-medium text-burgundy disabled:opacity-60"
+          className="min-h-11 rounded-xl border-2 border-brand px-5 text-sm font-medium text-brand disabled:opacity-60"
         >
           {isUploading ? t.photoUploading : preview ? t.photoReplace : t.photoUpload}
         </button>

@@ -29,7 +29,7 @@ export function PaymentBadges() {
   return (
     <ul className="flex flex-wrap items-center gap-3" aria-label="MBank, O!Деньги, Элсом">
       {PAYMENT_PROVIDERS.map((provider) => (
-        <li key={provider} className="flex items-center gap-2 text-sm font-medium text-ink/80">
+        <li key={provider} className="flex items-center gap-2 text-sm font-medium text-night/80">
           <PaymentBadge provider={provider} />
           {PAYMENT_LABELS[provider]}
         </li>

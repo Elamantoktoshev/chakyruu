@@ -2,14 +2,18 @@ import { useEffect } from 'react';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { useI18n } from '../i18n/LanguageContext';
-import { OrnamentDivider } from './Ornament';
+
+/** Neutral loading ring in the site colour (also shown before an invitation loads). */
+function Spinner({ className = '' }: { className?: string }) {
+  return <span className={`inline-block h-10 w-10 animate-spin rounded-full border-4 border-brand/20 border-t-brand ${className}`} aria-hidden="true" />;
+}
 
 export function LoadingView() {
   const { t } = useI18n();
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 text-burgundy">
-      <OrnamentDivider className="w-40 animate-pulse" />
-      <p className="font-serif text-lg">{t.loading}</p>
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 text-brand">
+      <Spinner />
+      <p className="font-display text-lg font-bold">{t.loading}</p>
     </div>
   );
 }
@@ -36,15 +40,15 @@ export function ErrorView({ error, onRetry, notFoundMessage }: ErrorViewProps) {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-5 px-6 text-center">
-      <OrnamentDivider className="w-48" />
-      <p className="font-serif text-2xl text-burgundy">
+      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft font-display text-2xl font-extrabold text-brand" aria-hidden="true">!</span>
+      <p className="font-display font-extrabold text-2xl text-night">
         {isNotFound ? (notFoundMessage ?? t.notFound) : t.errorGeneric}
       </p>
       {!isNotFound && (
         <button
           type="button"
           onClick={onRetry}
-          className="rounded-full bg-burgundy px-6 py-2.5 text-sm font-medium text-cream"
+          className="rounded-full bg-brand px-6 py-2.5 text-sm font-medium text-white"
         >
           {t.retry}
         </button>

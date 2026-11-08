@@ -3,7 +3,6 @@ import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { api, ApiError } from '../api/client';
 import type { CheckoutView, OwnerInvitation } from '../api/types';
-import { usePrices } from '../api/usePrices';
 import { useAsync } from '../api/useAsync';
 import { AppHeader } from '../components/AppHeader';
 import { PAYMENT_LABELS, PaymentBadge } from '../components/PaymentBadges';
@@ -48,8 +47,7 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
   const [missing, setMissing] = useState<string[] | null>(null);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const [pending, setPending] = useState<{ paymentId: string; checkout: CheckoutView } | null>(null);
-  const { publishPriceSom } = usePrices();
-  const priceLabel = invitation.isGift ? '0' : publishPriceSom === null ? '…' : publishPriceSom.toLocaleString('ru-RU');
+  const priceLabel = invitation.isGift ? '0' : invitation.priceSom === null ? '…' : invitation.priceSom.toLocaleString('ru-RU');
 
   async function handlePay() {
     setIsPaying(true);
@@ -76,15 +74,15 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-serif text-3xl text-burgundy">{t.payTitle}</h1>
-      <div className="rounded-3xl border border-gold/40 bg-white/70 p-6 text-center">
-        <p className="text-sm text-ink/60">{t.payPrice}</p>
-        <p className="mt-1 font-serif text-5xl font-bold text-burgundy">{priceLabel} сом</p>
-        <p className="mt-2 text-sm text-ink/70">{invitation.hostNames}</p>
+      <h1 className="font-display font-extrabold text-3xl text-night">{t.payTitle}</h1>
+      <div className="rounded-3xl border border-line bg-white/70 p-6 text-center">
+        <p className="text-sm text-night/60">{t.payPrice}</p>
+        <p className="mt-1 font-display text-5xl font-bold text-night">{priceLabel} сом</p>
+        <p className="mt-2 text-sm text-night/70">{invitation.hostNames}</p>
       </div>
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-ink/80">{t.payChoose}</legend>
+        <legend className="mb-2 text-sm font-medium text-night/80">{t.payChoose}</legend>
         <div className="grid gap-3">
           {PAYMENT_PROVIDERS.map((value) => (
             <button
@@ -93,7 +91,7 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
               aria-pressed={provider === value}
               onClick={() => setProvider(value)}
               className={`flex min-h-14 items-center gap-3 rounded-2xl border-2 px-4 text-left font-medium transition ${
-                provider === value ? 'border-burgundy bg-white' : 'border-gold/40 bg-white/60'
+                provider === value ? 'border-brand bg-white' : 'border-line bg-white/60'
               }`}
             >
               <PaymentBadge provider={value} />
@@ -123,12 +121,12 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
         type="button"
         disabled={isPaying}
         onClick={() => void handlePay()}
-        className="min-h-14 w-full rounded-full bg-burgundy font-semibold text-cream shadow-lg shadow-burgundy/20 transition hover:bg-burgundy-dark disabled:opacity-60"
+        className="min-h-14 w-full rounded-xl bg-brand font-semibold text-white shadow-lg shadow-brand/20 transition hover:bg-brand-dark disabled:opacity-60"
       >
         {isPaying ? t.paying : invitation.isGift ? t.publishFree : `${t.payButton} · ${priceLabel} сом`}
       </button>
-      <p className="text-center text-xs text-ink/50">{t.payFakeNote}</p>
-      <Link to={`/create/${invitation.id}`} className="block text-center text-sm text-burgundy underline underline-offset-4">
+      <p className="text-center text-xs text-night/50">{t.payFakeNote}</p>
+      <Link to={`/create/${invitation.id}`} className="block text-center text-sm text-brand underline underline-offset-4">
         {t.backToBuilder}
       </Link>
     </div>
@@ -146,17 +144,17 @@ function Published({ slug }: { slug: string }) {
 
   return (
     <div className="space-y-5 text-center">
-      <h1 className="font-serif text-3xl text-burgundy">{t.publishedTitle}</h1>
-      <p className="text-ink/70">{t.publishedText}</p>
-      <p className="break-all rounded-2xl border border-gold/40 bg-white/70 p-4 font-medium text-burgundy">{url}</p>
-      <button type="button" onClick={() => void handleCopy()} className="min-h-12 w-full rounded-full bg-burgundy font-semibold text-cream">
+      <h1 className="font-display font-extrabold text-3xl text-night">{t.publishedTitle}</h1>
+      <p className="text-night/70">{t.publishedText}</p>
+      <p className="break-all rounded-2xl border border-line bg-white/70 p-4 font-medium text-brand">{url}</p>
+      <button type="button" onClick={() => void handleCopy()} className="min-h-12 w-full rounded-xl bg-brand font-semibold text-white">
         {isCopied ? t.copied : t.copyLink}
       </button>
       <div className="flex justify-center gap-4 text-sm">
-        <Link to={`/${slug}`} className="text-burgundy underline underline-offset-4">
+        <Link to={`/${slug}`} className="text-brand underline underline-offset-4">
           {t.openInvitation}
         </Link>
-        <Link to="/dashboard" className="text-burgundy underline underline-offset-4">
+        <Link to="/dashboard" className="text-brand underline underline-offset-4">
           {t.goToDashboard}
         </Link>
       </div>

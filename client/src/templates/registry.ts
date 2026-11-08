@@ -14,6 +14,7 @@ export const TEMPLATE_LOADERS: Readonly<Record<TemplateKey, Loader>> = {
   batyr: () => import('./batyr'),
   yubiley: () => import('./yubiley'),
   shyrdak: () => import('./shyrdak'),
+  illustrated: () => import('./illustrated'),
 };
 
 const lazyTemplates = Object.fromEntries(TEMPLATE_KEYS.map((key) => [key, lazy(TEMPLATE_LOADERS[key])])) as Record<

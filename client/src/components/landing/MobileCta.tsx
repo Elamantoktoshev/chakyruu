@@ -12,7 +12,7 @@ export function MobileCta({ href, isVisible }: { href: string; isVisible: boolea
       <Link
         to={href}
         tabIndex={isVisible ? 0 : -1}
-        className="flex min-h-14 items-center justify-center rounded-full bg-burgundy font-semibold text-cream shadow-2xl shadow-burgundy/40"
+        className="flex min-h-14 items-center justify-center rounded-2xl bg-brand font-display font-bold text-white shadow-2xl shadow-brand/40"
       >
         {t.mobileCta}
       </Link>

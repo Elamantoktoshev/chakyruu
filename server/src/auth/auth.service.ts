@@ -5,6 +5,7 @@ import { SMS_FAILED_USER_MESSAGE, logSmsFailure } from './sms-failure.js';
 import { loginCodeText, maskPhone, type SmsProvider } from './sms.js';
 import { generateOtpCode, generateSessionToken, hashOtp, hashSessionToken, safeEqualHex } from './tokens.js';
 import { logger } from '../lib/logger.js';
+import { notifyAdmin } from '../notify/notifier.js';
 
 export const OTP_TTL_MS = 5 * 60 * 1000;
 export const OTP_MAX_ATTEMPTS = 5;
@@ -155,12 +156,15 @@ export function createAuthService({
     if (consumed.count === 0) throw invalidCode();
 
     // First successful login registers the user.
+    const isNewUser = (await prisma.user.count({ where: { phone } })) === 0;
     const user = await prisma.user.upsert({
       where: { phone },
       update: {},
       create: { phone },
       select: sessionUserSelect,
     });
+
+    if (isNewUser) notifyAdmin({ type: 'user_registered', phone });
 
     const token = generateSessionToken();
     const expiresAt = new Date(checkedAt.getTime() + SESSION_TTL_MS);

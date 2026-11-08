@@ -14,7 +14,7 @@ export function SaveButton({ state, label }: { state: SaveState; label?: string 
       <button
         type="submit"
         disabled={state.status === 'saving'}
-        className="min-h-12 w-full rounded-full bg-burgundy font-semibold text-cream disabled:opacity-60"
+        className="min-h-12 w-full rounded-xl bg-brand font-semibold text-white disabled:opacity-60"
       >
         {caption}
       </button>

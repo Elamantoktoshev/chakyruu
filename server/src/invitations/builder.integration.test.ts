@@ -205,7 +205,7 @@ describe('publishing', () => {
     expect(res.body.data).toMatchObject({ status: 'PUBLISHED', slug: 'aibek-aizada' });
 
     const payment = await prisma.payment.findFirstOrThrow({ where: { invitationId: id } });
-    expect(payment).toMatchObject({ amount: 70_000, provider: 'ODENGI', status: 'SUCCEEDED' } /* 700 som default price, in tyiyn */);
+    expect(payment).toMatchObject({ amount: 49_900, provider: 'ODENGI', status: 'SUCCEEDED' } /* 499 som default price, in tyiyn */);
 
     const pub = await request(buildTestApp(ctx)).get('/api/public/invitations/aibek-aizada').expect(200);
     expect(pub.body.data.isDraft).toBe(false);

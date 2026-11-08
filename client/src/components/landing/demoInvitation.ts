@@ -23,6 +23,6 @@ export function heroInvitation(lang: Language): InvitationContent {
     openingAnimation: 'BOZ_UY',
     program: [],
     hideBranding: true,
-    template: { id: 'tpl-classic', name: 'Классика', type: 'WEDDING', componentKey: 'classic', isUniversal: false, config: {} },
+    template: { id: 'tpl-classic', name: 'Классика', type: 'WEDDING', componentKey: 'classic', isUniversal: false, config: {}, priceSom: null, badge: null, description: {} },
   };
 }

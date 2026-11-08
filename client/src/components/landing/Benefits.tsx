@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { useI18n } from '../../i18n/LanguageContext';
 import { Reveal } from '../Reveal';
+import { eyebrow, sectionTitle } from '../ui/buttons';
 import { HeartIcon, LanguageIcon, LinkIcon, MapIcon, MusicIcon, TapIcon } from './LandingIcons';
 
 const ICONS: Readonly<Record<string, () => ReactElement>> = {
@@ -12,39 +13,45 @@ const ICONS: Readonly<Record<string, () => ReactElement>> = {
   lang: () => <LanguageIcon />,
 };
 
-/** "Эмне үчүн биз": six benefits; the first card is larger (bento) so the page has a focal point. */
+/** Card background, icon tile and corner glow per benefit; each card gets its own colour. */
+const TONES: readonly { card: string; icon: string; glow: string }[] = [
+  { card: 'bg-brand-soft', icon: 'bg-brand text-white shadow-brand/30', glow: 'bg-brand/15' },
+  { card: 'bg-rose-soft', icon: 'bg-rose text-white shadow-rose/30', glow: 'bg-rose/15' },
+  { card: 'bg-lilac-soft', icon: 'bg-lilac text-white shadow-lilac/30', glow: 'bg-lilac/15' },
+  { card: 'bg-sky-soft', icon: 'bg-sky text-white shadow-sky/30', glow: 'bg-sky/15' },
+  { card: 'bg-peach-soft', icon: 'bg-peach text-white shadow-peach/30', glow: 'bg-peach/15' },
+  { card: 'bg-lemon-soft', icon: 'bg-lemon text-white shadow-lemon/30', glow: 'bg-lemon/20' },
+];
+
+/** "Эмне үчүн биз": six colour-coded benefit cards. */
 export function Benefits() {
   const { t } = useI18n();
   const entries = Object.entries(t.benefits);
 
   return (
-    <section className="mx-auto max-w-6xl px-5 py-20">
-      <Reveal className="max-w-2xl">
-        <h2 className="font-serif text-4xl text-graphite sm:text-5xl">{t.benefitsTitle}</h2>
-        <p className="mt-3 text-lg text-ink/65">{t.benefitsSubtitle}</p>
+    <section className="mx-auto max-w-6xl px-5 py-20 lg:py-24">
+      <Reveal className="mx-auto max-w-2xl text-center">
+        <p className={eyebrow}>Chakyruu.kg</p>
+        <h2 className={`mt-4 ${sectionTitle}`}>{t.benefitsTitle}</h2>
+        <p className="mt-3 text-lg text-muted">{t.benefitsSubtitle}</p>
       </Reveal>
-      <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {entries.map(([key, [title = '', text = '']], index) => (
-          <Reveal
-            key={key}
-            as="li"
-            delayMs={index * 60}
-            className={`group rounded-3xl border p-6 transition hover:-translate-y-1 hover:shadow-xl ${
-              index === 0
-                ? 'border-burgundy bg-burgundy text-cream shadow-lg shadow-burgundy/20 sm:row-span-2 lg:p-8'
-                : 'border-gold/40 bg-white/70 text-ink'
-            }`}
-          >
-            <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${index === 0 ? 'bg-gold text-burgundy-dark' : 'bg-burgundy/10 text-burgundy'}`}>
-              {ICONS[key]?.()}
-            </span>
-            <h3 className={`mt-5 font-serif ${index === 0 ? 'text-3xl' : 'text-xl'}`}>{title}</h3>
-            <p className={`mt-2 leading-relaxed ${index === 0 ? 'text-cream/80' : 'text-ink/65'}`}>{text}</p>
-            {index === 0 && (
-              <p className="mt-8 rounded-2xl bg-white/10 p-4 font-serif text-lg italic text-gold-light">«Урматтуу Асан байке, сизди тойго чакырабыз!»</p>
-            )}
-          </Reveal>
-        ))}
+      <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {entries.map(([key, [title = '', text = '']], index) => {
+          const tone = TONES[index % TONES.length] ?? TONES[0];
+          return (
+            <Reveal
+              key={key}
+              as="li"
+              delayMs={index * 60}
+              className={`group relative overflow-hidden rounded-3xl border border-white p-7 transition duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-night/5 ${tone?.card}`}
+            >
+              <span className={`absolute -right-10 -top-10 h-32 w-32 rounded-full transition duration-500 group-hover:scale-125 ${tone?.glow}`} aria-hidden="true" />
+              <span className={`relative flex h-13 w-13 items-center justify-center rounded-2xl shadow-lg ${tone?.icon}`}>{ICONS[key]?.()}</span>
+              <h3 className="relative mt-6 font-display text-xl font-bold text-night">{title}</h3>
+              <p className="relative mt-2 leading-relaxed text-muted">{text}</p>
+            </Reveal>
+          );
+        })}
       </ul>
     </section>
   );

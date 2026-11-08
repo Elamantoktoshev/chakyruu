@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { PrismaClient, TemplateType, type Prisma } from '@prisma/client';
+import { ILLUSTRATED_TEMPLATES, seedIllustratedTemplates } from './seed.illustrated.js';
 import { seedAdmin, seedPartners } from './seed.partners.js';
 
 const prisma = new PrismaClient();
@@ -31,8 +32,14 @@ const TEMPLATES: readonly TemplateSeed[] = [
 async function seedTemplates(): Promise<void> {
   for (const { id, ...template } of TEMPLATES) {
     const data = { ...template, isUniversal: template.isUniversal ?? false, config: {} as Prisma.InputJsonObject };
-    await prisma.template.upsert({ where: { id }, update: data, create: { id, ...data } });
+    // Name, type and order belong to /admin after the first deploy; code only owns the component.
+    await prisma.template.upsert({
+      where: { id },
+      update: { componentKey: data.componentKey, isUniversal: data.isUniversal },
+      create: { id, ...data },
+    });
   }
+  await seedIllustratedTemplates(prisma);
 }
 
 async function seedDemoInvitation(): Promise<void> {
@@ -107,7 +114,7 @@ function shouldSeedDemo(): boolean {
 async function main(): Promise<void> {
   await seedTemplates();
   const admin = await seedAdmin(prisma);
-  const reference = `${TEMPLATES.length} templates, ADMIN ${admin ?? '(ADMIN_PHONE not set)'}`;
+  const reference = `${TEMPLATES.length + ILLUSTRATED_TEMPLATES.length} templates, ADMIN ${admin ?? '(ADMIN_PHONE not set)'}`;
   if (!shouldSeedDemo()) {
     console.info(`Seed done (reference data only): ${reference}`);
     return;

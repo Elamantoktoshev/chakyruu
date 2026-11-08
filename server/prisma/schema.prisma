@@ -21,6 +21,8 @@ enum OpeningAnimation {
   ENVELOPE
   CURTAINS
   TUNDUK
+  /// The illustrated template's own layered opening (manifest.opening).
+  TEMPLATE
   NONE
 }
 
@@ -61,6 +63,16 @@ enum TemplateType {
   BESHIK
   SUNNOT
   MAARAKE
+  /// Кече: birthdays, corporate parties, premieres.
+  KECHE
+  /// Башка: any other toi.
+  OTHER
+}
+
+/// Catalog ribbon on a template card.
+enum TemplateBadge {
+  HIT
+  NEW
 }
 
 enum Language {
@@ -267,7 +279,15 @@ model Template {
   isUniversal  Boolean      @default(false)
   sortOrder    Int          @default(0)
   previewUrl   String?
+  /// Component templates: free-form settings. Illustrated templates: the manifest (shared/src/manifest.ts).
   config       Json         @default("{}")
+  /// Publish price of this design in som; null → the INVITATION_PUBLISH price from the Price table.
+  priceSom     Int?
+  badge        TemplateBadge?
+  /// Hidden from the catalog and cannot be picked for new invitations (existing ones keep working).
+  isActive     Boolean      @default(true)
+  /// Catalog card text: { "ky": "...", "ru": "..." }.
+  description  Json         @default("{}")
   invitations  Invitation[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt

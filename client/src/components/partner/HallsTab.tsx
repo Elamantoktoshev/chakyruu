@@ -40,13 +40,13 @@ export function HallsTab({ halls, onChange }: Props) {
   return (
     <div className="space-y-4">
       {halls.length === 0 ? (
-        <p className="text-center text-ink/60">{t.noHalls}</p>
+        <p className="text-center text-night/60">{t.noHalls}</p>
       ) : (
         <ul className="space-y-2">
           {halls.map((hall) => (
-            <li key={hall.id} className="flex items-center justify-between rounded-2xl border border-gold/30 bg-white/70 p-4">
+            <li key={hall.id} className="flex items-center justify-between rounded-2xl border border-line bg-white/70 p-4">
               <span className="font-medium">
-                {hall.name} <span className="text-sm text-ink/60">· {hall.capacity}</span>
+                {hall.name} <span className="text-sm text-night/60">· {hall.capacity}</span>
               </span>
               <button
                 type="button"
@@ -71,7 +71,7 @@ export function HallsTab({ halls, onChange }: Props) {
           onChange={(e) => setCapacity(Number(e.target.value))}
           className={inputClass}
         />
-        <button type="submit" className="col-span-2 min-h-12 rounded-full bg-burgundy font-semibold text-cream">
+        <button type="submit" className="col-span-2 min-h-12 rounded-xl bg-brand font-semibold text-white">
           + {t.addHall}
         </button>
       </form>

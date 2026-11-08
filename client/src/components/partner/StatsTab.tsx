@@ -27,9 +27,9 @@ export function StatsTab({ type }: { type: OrgType }) {
     <div className="space-y-6">
       <dl className="grid grid-cols-2 gap-3">
         {cards.map((card) => (
-          <div key={card.label} className="rounded-2xl border border-gold/40 bg-white/70 p-4 text-center">
-            <dd className="font-serif text-3xl font-bold tabular-nums text-burgundy">{card.value}</dd>
-            <dt className="mt-1 text-xs text-ink/60">{card.label}</dt>
+          <div key={card.label} className="rounded-2xl border border-line bg-white/70 p-4 text-center">
+            <dd className="font-display text-3xl font-bold tabular-nums text-brand">{card.value}</dd>
+            <dt className="mt-1 text-xs text-night/60">{card.label}</dt>
           </div>
         ))}
       </dl>
@@ -49,17 +49,17 @@ function Calendar({ stats, groupByHall }: { stats: PartnerStats; groupByHall: bo
 
   return (
     <section className="space-y-3">
-      <h3 className="font-serif text-xl text-burgundy">{t.calendarTitle}</h3>
-      {stats.calendar.length === 0 && <p className="text-ink/60">{t.calendarEmpty}</p>}
+      <h3 className="font-display font-extrabold text-xl text-night">{t.calendarTitle}</h3>
+      {stats.calendar.length === 0 && <p className="text-night/60">{t.calendarEmpty}</p>}
       {groups.map((group) => (
         <div key={group.name ?? 'all'} className="space-y-2">
-          {group.name && <h4 className="text-sm font-semibold text-ink/70">{group.name}</h4>}
+          {group.name && <h4 className="text-sm font-semibold text-night/70">{group.name}</h4>}
           <ul className="space-y-2">
             {group.entries.map((entry) => (
               <li key={entry.slug}>
-                <Link to={`/${entry.slug}`} className="flex items-center justify-between rounded-2xl border border-gold/30 bg-white/70 px-4 py-3">
+                <Link to={`/${entry.slug}`} className="flex items-center justify-between rounded-2xl border border-line bg-white/70 px-4 py-3">
                   <span className="font-medium">{entry.hostNames}</span>
-                  <span className="text-sm text-ink/60">{formatEventDate(entry.eventDate, lang).date}</span>
+                  <span className="text-sm text-night/60">{formatEventDate(entry.eventDate, lang).date}</span>
                 </Link>
               </li>
             ))}

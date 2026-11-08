@@ -54,8 +54,8 @@ export function OrganizationsTab({ fixedType }: Props) {
               type="button"
               aria-pressed={type === value}
               onClick={() => setType(value)}
-              className={`min-h-11 rounded-full border px-4 text-sm font-medium ${
-                type === value ? 'border-burgundy bg-burgundy text-cream' : 'border-gold/50 bg-white/70 text-burgundy'
+              className={`min-h-11 rounded-xl border px-4 text-sm font-medium ${
+                type === value ? 'border-brand bg-brand text-white' : 'border-line bg-white/70 text-brand'
               }`}
             >
               {value ? t.orgType[value] : t.adminFilterAll}
@@ -63,28 +63,28 @@ export function OrganizationsTab({ fixedType }: Props) {
           ))}
         </div>
       )}
-      {orgs.length === 0 && <p className="text-center text-ink/60">{t.adminOrgsEmpty}</p>}
+      {orgs.length === 0 && <p className="text-center text-night/60">{t.adminOrgsEmpty}</p>}
       <ul className="space-y-3">
         {orgs.map((org) => (
-          <li key={org.id} className="rounded-2xl border border-gold/30 bg-white/70 p-4">
+          <li key={org.id} className="rounded-2xl border border-line bg-white/70 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-xs uppercase tracking-wider text-gold">
+                <p className="text-xs uppercase tracking-wider text-brand">
                   {t.orgType[org.type]}
                   {org.city ? ` · ${org.city}` : ''}
                 </p>
-                <p className="truncate font-serif text-xl text-burgundy">{org.name}</p>
-                <p className="text-xs text-ink/60">
+                <p className="truncate font-display font-extrabold text-xl text-night">{org.name}</p>
+                <p className="text-xs text-night/60">
                   {org.adminPhones.join(', ') || t.adminNoAdmin} · {org.giftsIssued} {t.adminGifts} · {org.invitations} {t.adminInvitations}
                 </p>
               </div>
-              <span className="shrink-0 rounded-xl bg-burgundy px-2 py-1 text-center text-cream">
+              <span className="shrink-0 rounded-xl bg-brand px-2 py-1 text-center text-white">
                 <span className="block font-bold tabular-nums">{org.invitationCredits}</span>
                 <span className="block text-[10px]">{t.adminCredits}</span>
               </span>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" onClick={() => void grant(org)} className="min-h-11 rounded-full border border-burgundy/40 px-4 text-sm font-medium text-burgundy">
+              <button type="button" onClick={() => void grant(org)} className="min-h-11 rounded-xl border border-brand/40 px-4 text-sm font-medium text-brand">
                 + {t.adminGrant}
               </button>
               {org.type !== 'AGENCY' && (

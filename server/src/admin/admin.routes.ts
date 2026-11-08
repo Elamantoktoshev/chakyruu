@@ -16,6 +16,7 @@ import { currentUser, requireAuth } from '../auth/auth.middleware.js';
 import { requireAdmin } from '../auth/requireRole.js';
 import { sendOk } from '../lib/http.js';
 import { createAdminTrackRouter, type AdminTrackDeps } from '../music/track.routes.js';
+import { createAdminTemplateRouter } from '../templates/template.admin.routes.js';
 import { confirmPaymentByAdmin, listPaymentsForAdmin } from '../payments/status.service.js';
 import { listAllPrices, updatePrice } from '../pricing/price.service.js';
 import { getAdminStats } from './stats.service.js';
@@ -26,6 +27,7 @@ export function createAdminRouter(tracks: AdminTrackDeps): Router {
   const router = Router();
   router.use(requireAuth, requireAdmin);
   router.use('/tracks', createAdminTrackRouter(tracks));
+  router.use('/templates', createAdminTemplateRouter({ storage: tracks.storage }));
 
   router.get('/stats', async (req, res) => sendOk(res, await getAdminStats(adminStatsQuerySchema.parse(req.query).period)));
 

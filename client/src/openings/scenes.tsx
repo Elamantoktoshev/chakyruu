@@ -1,4 +1,4 @@
-import type { OpeningAnimation } from '@chakyruu/shared';
+import type { SceneOpening } from '@chakyruu/shared';
 import type { ReactElement } from 'react';
 import { BozUy } from '../components/art/BozUy';
 import { Tunduk } from '../components/art/Tunduk';
@@ -74,7 +74,7 @@ function TundukScene() {
   );
 }
 
-export const SCENES: Readonly<Record<Exclude<OpeningAnimation, 'NONE'>, (props: SceneProps) => ReactElement>> = {
+export const SCENES: Readonly<Record<SceneOpening, (props: SceneProps) => ReactElement>> = {
   BOZ_UY: BozUyScene,
   ENVELOPE: EnvelopeScene,
   CURTAINS: CurtainsScene,
@@ -82,7 +82,7 @@ export const SCENES: Readonly<Record<Exclude<OpeningAnimation, 'NONE'>, (props: 
 };
 
 /** Total length per scene until the invitation is shown (1.5–2.5 s as agreed). */
-export const SCENE_DURATION_MS: Readonly<Record<Exclude<OpeningAnimation, 'NONE'>, number>> = {
+export const SCENE_DURATION_MS: Readonly<Record<SceneOpening, number>> = {
   BOZ_UY: 2200,
   ENVELOPE: 2100,
   CURTAINS: 1700,

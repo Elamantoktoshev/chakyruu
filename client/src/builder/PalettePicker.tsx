@@ -1,4 +1,4 @@
-import { TEMPLATE_CATALOG, isTemplateKey, resolvePalette } from '@chakyruu/shared';
+import { TEMPLATE_CATALOG, isDrawnTemplateKey, resolvePalette } from '@chakyruu/shared';
 import { useI18n } from '../i18n/LanguageContext';
 
 type Props = {
@@ -10,12 +10,13 @@ type Props = {
 /** Colour swatches of the current template (3–5 per template). */
 export function PalettePicker({ componentKey, paletteId, onChange }: Props) {
   const { t, lang } = useI18n();
-  if (!isTemplateKey(componentKey)) return null;
+  // Illustrated designs come with fixed colours (their manifest): nothing to choose.
+  if (!isDrawnTemplateKey(componentKey)) return null;
   const current = resolvePalette(componentKey, paletteId);
 
   return (
     <fieldset>
-      <legend className="mb-1.5 text-sm font-medium text-ink/80">{t.fieldPalette}</legend>
+      <legend className="mb-1.5 text-sm font-medium text-night/80">{t.fieldPalette}</legend>
       <div className="flex flex-wrap gap-3">
         {TEMPLATE_CATALOG[componentKey].palettes.map((palette) => {
           const isSelected = palette.id === current.id;
@@ -29,7 +30,7 @@ export function PalettePicker({ componentKey, paletteId, onChange }: Props) {
               title={label}
               onClick={() => onChange(palette.id)}
               className={`flex min-h-12 items-center gap-2 rounded-full border-2 py-1.5 pl-1.5 pr-3 text-sm transition ${
-                isSelected ? 'border-burgundy bg-white' : 'border-gold/40 bg-white/60'
+                isSelected ? 'border-brand bg-white' : 'border-line bg-white/60'
               }`}
             >
               <span

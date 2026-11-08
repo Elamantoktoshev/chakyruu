@@ -26,6 +26,8 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   'settings',
   'static',
   'tamadalar',
+  // Template catalog page and its artwork (client/public/templates/<slug>/…).
+  'templates',
   'terms',
   'uploads',
 ]);

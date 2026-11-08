@@ -19,7 +19,14 @@ export interface Template {
   /** Shown under every toi type filter. */
   isUniversal: boolean;
   config: unknown;
+  /** Final publish price in som (the design's own price, or the shop-wide one); null = not on sale. */
+  priceSom: number | null;
+  badge: TemplateBadge | null;
+  /** Catalog card text per language. */
+  description: Partial<Record<'ky' | 'ru', string>>;
 }
+
+export type TemplateBadge = 'HIT' | 'NEW';
 
 /** Fields the invitation page renders — shared by the public page, the builder preview and template cards. */
 export interface InvitationContent {
@@ -138,6 +145,8 @@ export interface OwnerInvitation extends InvitationContent {
   hallId: string | null;
   /** Created from a partner's gift: publishing is free. */
   isGift: boolean;
+  /** What publishing costs: the template's own price or the shop-wide one; null = not on sale. */
+  priceSom: number | null;
   giftFrom: { name: string; type: OrgType } | null;
 }
 
@@ -341,6 +350,41 @@ export interface PublicPrice {
   audience: PriceAudience;
   amountSom: number;
   credits: number | null;
+}
+
+/** One artwork slot of an illustrated design in /admin. */
+export interface AdminTemplateAsset {
+  file: string;
+  label: string;
+  /** Uploaded file, else the one shipped in client/public/templates/<slug>/ (may not exist yet). */
+  url: string;
+  isUploaded: boolean;
+}
+
+export interface AdminTemplate {
+  id: string;
+  name: string;
+  type: EventType;
+  componentKey: string;
+  isUniversal: boolean;
+  sortOrder: number;
+  /** Own price in som; null = the shop-wide publish price. */
+  priceSom: number | null;
+  badge: TemplateBadge | null;
+  isActive: boolean;
+  description: Partial<Record<'ky' | 'ru', string>>;
+  /** Empty for code-drawn templates. */
+  assets: AdminTemplateAsset[];
+}
+
+export interface AdminTemplatePatch {
+  name?: string;
+  priceSom?: number | null;
+  badge?: TemplateBadge | null;
+  type?: EventType;
+  sortOrder?: number;
+  isActive?: boolean;
+  description?: Partial<Record<'ky' | 'ru', string>>;
 }
 
 export interface AdminPrice extends PublicPrice {

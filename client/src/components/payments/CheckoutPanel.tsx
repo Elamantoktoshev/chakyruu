@@ -28,20 +28,20 @@ export function CheckoutPanel({ checkout, paymentId }: Props) {
     if (url) window.location.assign(url);
   }, [checkout]);
 
-  if (checkout.kind === 'redirect') return <p className="text-center text-ink/70">{t.payRedirecting}</p>;
+  if (checkout.kind === 'redirect') return <p className="text-center text-night/70">{t.payRedirecting}</p>;
 
   if (checkout.kind === 'qr') {
     const appUrl = checkout.url ? safePaymentUrl(checkout.url) : undefined;
     return (
-      <div className="space-y-4 rounded-3xl border border-gold/40 bg-white/70 p-5 text-center">
+      <div className="space-y-4 rounded-3xl border border-line bg-white/70 p-5 text-center">
         <p className="font-medium">{t.payQrTitle}</p>
-        <p className="break-all rounded-xl bg-cream p-3 font-mono text-xs">{checkout.qrPayload}</p>
+        <p className="break-all rounded-xl bg-page p-3 font-mono text-xs">{checkout.qrPayload}</p>
         {appUrl && (
-          <a href={appUrl} className="flex min-h-12 items-center justify-center rounded-full bg-burgundy font-semibold text-cream">
+          <a href={appUrl} className="flex min-h-12 items-center justify-center rounded-xl bg-brand font-semibold text-white">
             {t.payOpenApp}
           </a>
         )}
-        <Link to={resultHref} className="block text-sm text-burgundy underline">
+        <Link to={resultHref} className="block text-sm text-brand underline">
           {t.payIDidPay}
         </Link>
       </div>
@@ -56,11 +56,11 @@ function ManualTransfer({ instructions, resultHref }: { instructions: Extract<Ch
   const [isCopied, setIsCopied] = useState(false);
   return (
     <div className="space-y-4 rounded-3xl border-2 border-emerald-300 bg-emerald-50 p-5">
-      <h2 className="font-serif text-2xl text-emerald-900">{t.payManualTitle}</h2>
-      <ol className="list-inside list-decimal space-y-3 text-sm text-ink/80">
+      <h2 className="font-display font-extrabold text-2xl text-emerald-900">{t.payManualTitle}</h2>
+      <ol className="list-inside list-decimal space-y-3 text-sm text-night/80">
         <li>
           {t.payManualStep1}{' '}
-          <span className="font-mono text-lg font-semibold text-ink">{instructions.receiver}</span>
+          <span className="font-mono text-lg font-semibold text-night">{instructions.receiver}</span>
           <span className="block">
             {t.payManualAmount} <b>{instructions.amountSom.toLocaleString('ru-RU')} сом</b>
           </span>
@@ -73,12 +73,12 @@ function ManualTransfer({ instructions, resultHref }: { instructions: Extract<Ch
             className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-emerald-400 bg-white font-mono text-2xl font-bold tracking-widest text-emerald-900"
           >
             {instructions.reference}
-            <span className="font-sans text-xs font-normal text-ink/60">{isCopied ? t.copied : t.copyCode}</span>
+            <span className="font-sans text-xs font-normal text-night/60">{isCopied ? t.copied : t.copyCode}</span>
           </button>
         </li>
         <li>{t.payManualStep3}</li>
       </ol>
-      <Link to={resultHref} className="flex min-h-12 items-center justify-center rounded-full bg-emerald-600 font-semibold text-white">
+      <Link to={resultHref} className="flex min-h-12 items-center justify-center rounded-xl bg-emerald-600 font-semibold text-white">
         {t.payIDidPay}
       </Link>
     </div>

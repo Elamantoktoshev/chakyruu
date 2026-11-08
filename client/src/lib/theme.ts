@@ -22,7 +22,7 @@ export function mixHex(a: string, b: string, amount: number): string {
 /**
  * Template palette → the theme CSS variables. Tailwind v4 utilities read `var(--color-*)`,
  * so setting them on the invitation root re-themes every `bg-burgundy`, `text-gold`, `bg-surface`, …
- * Palettes come from the shared catalogue (strict hex, tested), never from user input.
+ * Palettes come from the shared catalogue or a manifest checked by the server and manifestOf (strict hex).
  */
 export function paletteStyle(palette: Palette): CSSProperties {
   return {

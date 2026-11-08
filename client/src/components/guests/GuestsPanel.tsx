@@ -38,7 +38,7 @@ export function GuestsPanel({ invitationId, share, guests, onGuestsChange }: Pro
     <section className="space-y-4">
       <AddGuestsForm invitationId={invitationId} onAdded={(result) => onGuestsChange([...guests, ...result.created])} />
 
-      <h2 className="font-serif text-2xl text-burgundy">{t.guestsHeading}</h2>
+      <h2 className="font-display font-extrabold text-2xl text-night">{t.guestsHeading}</h2>
       <div role="tablist" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
         {(['ALL', ...GUEST_STATUSES] as const).map((value) => (
           <button
@@ -48,7 +48,7 @@ export function GuestsPanel({ invitationId, share, guests, onGuestsChange }: Pro
             aria-selected={filter === value}
             onClick={() => setFilter(value)}
             className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-medium ${
-              filter === value ? 'border-burgundy bg-burgundy text-cream' : 'border-gold/50 bg-white/70 text-burgundy'
+              filter === value ? 'border-brand bg-brand text-white' : 'border-line bg-white/70 text-brand'
             }`}
           >
             {value === 'ALL' ? t.guestFilterAll : t.guestStatus[value]} · {countOf(value)}
@@ -62,7 +62,7 @@ export function GuestsPanel({ invitationId, share, guests, onGuestsChange }: Pro
         </p>
       )}
       {visible.length === 0 ? (
-        <p className="py-6 text-center text-ink/60">{t.noGuests}</p>
+        <p className="py-6 text-center text-night/60">{t.noGuests}</p>
       ) : (
         <ul className="space-y-3">
           {visible.map((guest) => (

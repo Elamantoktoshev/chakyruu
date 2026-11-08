@@ -1,3 +1,4 @@
+import { INVITATION_PRICE_CODE } from '@chakyruu/shared';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
 
@@ -11,6 +12,26 @@ export interface ActivePrice {
   /** Payments store tyiyn to avoid floating point. */
   amountTyiyn: number;
   credits: number | null;
+}
+
+/**
+ * Publish price of one design: its own price, or the shop-wide INVITATION_PUBLISH price.
+ * Switching INVITATION_PUBLISH off in /admin still stops all sales, whatever the template price.
+ */
+export async function getTemplatePublishPrice(templatePriceSom: number | null): Promise<ActivePrice> {
+  const shopPrice = await getActivePrice(INVITATION_PRICE_CODE);
+  if (templatePriceSom === null) return shopPrice;
+  return { ...shopPrice, amountSom: templatePriceSom, amountTyiyn: templatePriceSom * TYIYN_PER_SOM };
+}
+
+/** For display only (builder, catalog): null when publishing is not on sale. */
+export async function findTemplatePublishPriceSom(templatePriceSom: number | null): Promise<number | null> {
+  try {
+    return (await getTemplatePublishPrice(templatePriceSom)).amountSom;
+  } catch (error: unknown) {
+    if (error instanceof HttpError) return null;
+    throw error;
+  }
 }
 
 /** An active price by code, or 503 if the admin switched it off. */

@@ -7,6 +7,9 @@ import { initMonitoring, reportError } from './lib/monitoring';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+// Site headings (landing, cabinet). Covers Kyrgyz ң ө ү via the cyrillic-ext subset.
+import '@fontsource-variable/montserrat';
 import '@fontsource/playfair-display/500.css';
 import '@fontsource/playfair-display/700.css';
 import '@fontsource/playfair-display/500-italic.css';

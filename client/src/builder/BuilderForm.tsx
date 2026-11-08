@@ -1,6 +1,7 @@
 import {
   EVENT_TYPES,
   HOST_NAMES_MAX,
+  ILLUSTRATED_TEMPLATE_KEY,
   LANGUAGES,
   MESSAGE_MAX,
   VENUE_ADDRESS_MAX,
@@ -95,6 +96,7 @@ export function BuilderForm({ invitation, templates, partners, onChange, beforeU
       <OpeningPicker
         value={invitation.openingAnimation}
         onChange={(openingAnimation) => onChange({ patch: { openingAnimation }, view: { openingAnimation } })}
+        hasTemplateOpening={invitation.template.componentKey === ILLUSTRATED_TEMPLATE_KEY}
       />
 
       {invitation.template.componentKey === 'yubiley' && (
@@ -121,7 +123,7 @@ export function BuilderForm({ invitation, templates, partners, onChange, beforeU
           maxLength={HOST_NAMES_MAX}
           placeholder={t.fieldHostNamesPlaceholder}
           onChange={(e) => setText('hostNames', e.target.value)}
-          className={`${inputClass} font-serif text-lg`}
+          className={`${inputClass} font-display text-lg`}
         />
       </Field>
 
@@ -198,27 +200,27 @@ export function BuilderForm({ invitation, templates, partners, onChange, beforeU
       />
 
       {invitation.isGift && (
-        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl border border-gold/40 bg-white/60 p-4">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-white/60 p-4">
           <input
             type="checkbox"
             checked={invitation.hideBranding}
             onChange={(e) => onChange({ patch: { hideBranding: e.target.checked }, view: { hideBranding: e.target.checked } })}
-            className="h-5 w-5 accent-burgundy"
+            className="h-5 w-5 accent-brand"
           />
-          <span className="font-medium text-ink">{t.fieldHideBranding}</span>
+          <span className="font-medium text-night">{t.fieldHideBranding}</span>
         </label>
       )}
 
-      <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl border border-gold/40 bg-white/60 p-4">
+      <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl border border-line bg-white/60 p-4">
         <input
           type="checkbox"
           checked={invitation.adultsOnly}
           onChange={(e) => onChange({ patch: { adultsOnly: e.target.checked }, view: { adultsOnly: e.target.checked } })}
-          className="mt-0.5 h-5 w-5 accent-burgundy"
+          className="mt-0.5 h-5 w-5 accent-brand"
         />
         <span>
-          <span className="block font-medium text-ink">{t.fieldAdultsOnly}</span>
-          <span className="block text-xs text-ink/60">{t.fieldAdultsOnlyHint}</span>
+          <span className="block font-medium text-night">{t.fieldAdultsOnly}</span>
+          <span className="block text-xs text-night/60">{t.fieldAdultsOnlyHint}</span>
         </span>
       </label>
     </div>

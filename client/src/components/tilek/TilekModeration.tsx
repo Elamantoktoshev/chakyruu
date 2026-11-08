@@ -30,29 +30,29 @@ export function TilekModeration({ invitationId, tilekter, onChange }: Props) {
 
   return (
     <section className="space-y-3">
-      <h2 className="font-serif text-2xl text-burgundy">{t.tilekTitle}</h2>
+      <h2 className="font-display font-extrabold text-2xl text-night">{t.tilekTitle}</h2>
       {error && (
         <p role="alert" className="text-sm font-medium text-red-700">
           {error}
         </p>
       )}
       {tilekter.length === 0 ? (
-        <p className="py-4 text-center text-ink/60">{t.tilekModerationEmpty}</p>
+        <p className="py-4 text-center text-night/60">{t.tilekModerationEmpty}</p>
       ) : (
         <ul className="space-y-3">
           {tilekter.map((tilek) => (
-            <li key={tilek.id} className={`rounded-2xl border border-gold/30 p-4 ${tilek.hidden ? 'bg-stone-100 opacity-70' : 'bg-white/70'}`}>
-              <p className="whitespace-pre-line break-words text-ink/85">{tilek.text}</p>
+            <li key={tilek.id} className={`rounded-2xl border border-line p-4 ${tilek.hidden ? 'bg-stone-100 opacity-70' : 'bg-white/70'}`}>
+              <p className="whitespace-pre-line break-words text-night/85">{tilek.text}</p>
               <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-                <span className="truncate font-medium text-burgundy">
+                <span className="truncate font-medium text-brand">
                   — {tilek.authorName} · ♥ {tilek.likesCount}
-                  {tilek.hidden && <span className="ml-2 text-xs text-ink/55">({t.tilekHidden})</span>}
+                  {tilek.hidden && <span className="ml-2 text-xs text-night/55">({t.tilekHidden})</span>}
                 </span>
                 <button
                   type="button"
                   disabled={busyId === tilek.id}
                   onClick={() => void toggle(tilek)}
-                  className="min-h-11 shrink-0 rounded-full border border-burgundy/40 px-4 font-medium text-burgundy disabled:opacity-50"
+                  className="min-h-11 shrink-0 rounded-xl border border-brand/40 px-4 font-medium text-brand disabled:opacity-50"
                 >
                   {tilek.hidden ? t.tilekShow : t.tilekHide}
                 </button>

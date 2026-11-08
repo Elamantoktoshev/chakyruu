@@ -18,11 +18,11 @@ export function SummaryStats({ summary, isCompact = false }: Props) {
         <div
           key={stat.label}
           className={`rounded-2xl border text-center ${isCompact ? 'p-2' : 'p-4'} ${
-            stat.isHighlight ? 'border-burgundy bg-burgundy text-cream' : 'border-gold/50 bg-white/70 text-burgundy'
+            stat.isHighlight ? 'border-brand bg-brand text-white' : 'border-line bg-white/70 text-brand'
           }`}
         >
-          <dd className={`font-serif font-bold tabular-nums ${isCompact ? 'text-xl' : 'text-3xl'}`}>{stat.value}</dd>
-          <dt className={`mt-0.5 text-[11px] leading-tight ${stat.isHighlight ? 'text-cream/80' : 'text-ink/60'}`}>{stat.label}</dt>
+          <dd className={`font-display font-bold tabular-nums ${isCompact ? 'text-xl' : 'text-3xl'}`}>{stat.value}</dd>
+          <dt className={`mt-0.5 text-[11px] leading-tight ${stat.isHighlight ? 'text-white/80' : 'text-night/60'}`}>{stat.label}</dt>
         </div>
       ))}
     </dl>

@@ -2,7 +2,7 @@
 
 Электрондук той чакыруулары — платформа электронных приглашений на тои (үйлөнүү той, кыз узатуу, бешик той, сүннөт той, маараке) для Кыргызстана.
 
-Пользователь сам собирает приглашение в конструкторе (бесплатно), публикует его за 700 сом, рассылает гостям личные ссылки через WhatsApp и видит ответы и тилектер в кабинете.
+Пользователь сам собирает приглашение в конструкторе (бесплатно), публикует его за 499 сом, рассылает гостям личные ссылки через WhatsApp и видит ответы и тилектер в кабинете.
 
 ## Стек
 
@@ -139,7 +139,7 @@ Integration-тесты сервера работают в отдельной с�
 | DELETE | `/api/my/invitations/:id/gallery/:photoId` | Удалить фото вместе с файлом |
 | POST   | `/api/my/invitations/:id/music` | multipart `music` (+ `durationSec`): свой mp3 ≤ 10 МБ (по сигнатуре), сжатие ffmpeg до 128 kbps |
 | DELETE | `/api/my/invitations/:id/music` | Удалить свой mp3 |
-| POST   | `/api/my/invitations/:id/publish` | `{ provider: MBANK | ODENGI | ELSOM }` — оплата 700 сом → PUBLISHED |
+| POST   | `/api/my/invitations/:id/publish` | `{ provider: MBANK | ODENGI | ELSOM }` — оплата 499 сом (цена из таблицы Price) → PUBLISHED |
 | GET    | `/api/my/invitations/:id/guests?status=` | Гости |
 | POST   | `/api/my/invitations/:id/guests/bulk` | `{ text }` — одно имя на строку (`+996…` в конце строки — телефон) |
 | DELETE | `/api/my/invitations/:id/guests/:guestId` | Удалить гостя |
@@ -158,6 +158,8 @@ Integration-тесты сервера работают в отдельной с�
 ### Админ (`/api/admin/*`, роль ADMIN, иначе 403)
 
 `GET/POST /tracks`, `PATCH /tracks/:id { title, category, active, sortOrder, durationSec }`, `POST /tracks/:id/file` (mp3 ≤ 20 МБ), `GET /organizations?type=`, `PATCH /organizations/:id { catalogStatus }`, `POST /organizations/:id/credits { amount }`, `GET /leads?status=`, `PATCH /leads/:id { status }`, `POST /leads/:id/convert`, `GET /prices`, `PATCH /prices/:code`, `GET /payments?status=`, `POST /payments/:id/confirm`.
+
+Шаблоны: `GET /api/admin/templates` (все, с картинками иллюстрированных), `PATCH /api/admin/templates/:id` (название, вид тоя, цена `priceSom` или `null` = общая, бейдж `HIT`/`NEW`/`null`, порядок, `isActive`, описание KY/RU), `POST /api/admin/templates/:id/assets?file=layers/hand-left.webp` (multipart `image`), `DELETE …/assets?file=…` (вернуть файл из репозитория). Страница — `/admin/templates`.
 
 ### Безопасность
 
@@ -206,6 +208,69 @@ client/src
 - **OG-превью.** В production API отдаёт и собранный клиент (`client/dist`, или `CLIENT_DIST_DIR`): для опубликованного `/:slug` в HTML подставляются OG-теги, на личной ссылке — «Урматтуу Асан байке, сизди тойго чакырабыз!». В dev Vite отдаёт клиент сам, поэтому OG проверяется так: `npm run build -w client`, затем `curl localhost:4000/<slug>`.
 - **Шрифты.** В Playfair Display нет букв ң ө ү — они берутся из Playfair 2 (`client/src/styles/kyrgyz-serif.css`, грузится только при наличии этих букв); в OG-картинках так же.
 
+## Иллюстрированные шаблоны
+
+Каталог `/templates` показывает два вида шаблонов:
+
+- **нарисованные в коде** (`client/src/templates/<key>/`): Классика, Ала-Тоо, Шырдак и т. д.; картинки не нужны;
+- **иллюстрированные**: один общий компонент `illustrated`, внешний вид задаёт манифест в `Template.config` (схема — `shared/src/manifest.ts`), а картинки лежат в `client/public/templates/<slug>/` или загружаются в `/admin/templates`. Загруженное в админке важнее файлов из репозитория. Пока файла нет нигде, на его месте показывается плейсхолдер в цветах шаблона с подписью слоя — всё работает до появления арта.
+
+Заготовки 12 шаблонов — `server/prisma/seed.illustrated.ts`. Код задаёт палитру, тип анимации и теги; название, вид тоя, порядок, цену, бейдж, вкл/выкл, описание и загруженные картинки меняет админка — деплой их не затирает.
+
+### Какие файлы нарисовать
+
+Все файлы — **WebP** (PNG/JPEG тоже можно загрузить в админке: они перекодируются в WebP), до 10 МБ. «Прозрачный» = вырезанный объект на прозрачном фоне (PNG/WebP с альфа-каналом); админка не примет такой слой без прозрачности. Обложка проверяется на пропорции 9:16.
+
+**У каждого шаблона:**
+
+| Файл | Размер | Прозрачность | Что это |
+|---|---|---|---|
+| `cover.webp` | 1080×1920 (9:16) | нет | обложка: телефон в каталоге, верх приглашения, закрытая сцена с именем гостя |
+| `bg.webp` | 1080×1920 или больше | нет | фон страницы под текстом (показывается сквозь светлую вуаль) |
+
+**Плюс слои анимации открытия** (тип — `opening.kind` в манифесте):
+
+| Анимация | Файлы | Размер (ширина) | Прозрачность |
+|---|---|---|---|
+| `hands` — руки подают конверт, печать ломается, карточка выезжает | `layers/backdrop.webp` | 1080×1920 | нет |
+| | `envelope.webp` | ~1300 px | да |
+| | `layers/hand-left.webp`, `layers/hand-right.webp` | ~900 px | да |
+| | `seal.webp` (сургучная печать) | ~400×400 | да |
+| `branches` — ветки расходятся, открывая сад; летит бабочка | `layers/branch-left.webp`, `layers/branch-right.webp` | ~1200 px | да |
+| | `layers/butterfly.webp` | ~300 px | да |
+| `cloche` — серебряная крышка поднимается с подноса | `layers/backdrop.webp` | 1080×1920 | нет |
+| | `layers/tray.webp` (поднос) | ~1500 px | да |
+| | `layers/cloche.webp` (крышка) | ~1300 px | да |
+| `carpet` — ковёр / шырдак разворачивается | `layers/carpet.webp` | 1080×1920 | да (бахрома по краям) |
+| | `layers/roll.webp` (скатка) | ~1150 px | да |
+| | `layers/medallion.webp` (ою в центре) | ~800 px | да |
+| `portrait` — портрет проявляется, вокруг вырастает рамка-орнамент | `layers/frame.webp` | 1080×1920 | да (пустая середина) |
+| | `layers/sparkles.webp` (блёстки) | 1080×1920 | да |
+| `boz-uy`, `envelope`, `curtains`, `tunduk` | — | — | сцены нарисованы в коде, нужны только `cover.webp` и `bg.webp` |
+
+Во всех сценах, кроме `cloche`/`carpet`/`hands`, роль основной картинки играет `cover.webp` (сад в `branches`, портрет в `portrait`); в `hands` и `cloche` он же — выезжающая карточка-приглашение.
+
+**12 заготовок:**
+
+| Шаблон | Папка (`client/public/templates/…`) | Анимация |
+|---|---|---|
+| Арча бакчасы | `archa-bakchasy/` | branches |
+| Ак калпак | `ak-kalpak/` | hands |
+| Дасторкон | `dastorkon/` | cloche |
+| Эки жүрөк | `eki-zhurok/` | portrait |
+| Ысык-Көл түнү | `ysyk-kol-tunu/` | tunduk |
+| Анар бакчасы | `anar-bakchasy/` | branches |
+| Кызыл кийиз | `kyzyl-kiyiz/` | carpet |
+| Тушкийиз | `tushkiyiz/` | carpet |
+| Элечек | `elechek/` | portrait |
+| Жайлоодогу боз үй | `zhailoo-boz-uy/` | boz-uy |
+| Жибек жол | `zhibek-zhol/` | envelope |
+| Алтын той | `altyn-toy/` | envelope |
+
+Положили файлы в репозиторий — они появятся после деплоя. Загрузили в `/admin/templates` — сразу, с размытым превью на время загрузки.
+
+**Права на арт.** Используйте только свои или купленные с лицензией иллюстрации (сток, ИИ-генерация с коммерческой лицензией, иллюстратор). Картинки с сайтов других сервисов приглашений брать нельзя.
+
 ## Модель данных
 
 `Organization` (VENUE | TAMADA | AGENCY, кредиты, `Hall`, `TamadaProfile`, `TamadaBusyDate`, `CreditTransaction`, `GiftCode`, `TamadaClick`) → `User` (OWNER | ORG_ADMIN | ADMIN) → `Invitation` (по `Template`, тип тоя, DRAFT → PUBLISHED, `venueOrgId` / `tamadaOrgId` / `hallId` — только брендинг) → `Guest` (токен, INVITED | ATTENDING | DECLINED), `Tilek` → `TilekLike`, `InvitationPhoto` (галерея), `Track` (музыка), `Payment` (INVITATION | CREDIT_PACKAGE). Отдельно `Price`, `PartnerLead`, `OtpCode`, `Session`.
@@ -224,6 +289,7 @@ client/src
 | `npm run migrate:deploy` | Только применить миграции |
 | `npm run seed:prod` | Справочники без демо-данных |
 | `npm run sms:test -- +996…` | Отправить тестовый код через Nikita.kg (из корня) |
+| `npm run telegram:test` | Узнать chat id и проверить Telegram-уведомления (из корня) |
 | `npm run uploads:to-spaces -- --dry-run` | Перенести `server/uploads` в Spaces |
 | `npm run db:dump` | Ручной дамп базы в Spaces (`backups/`) |
 | `npm run brand:render` | Пересоздать иконки PWA и OG-картинку главной |

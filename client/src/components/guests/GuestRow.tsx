@@ -42,11 +42,11 @@ export function GuestRow({ guest, share, onDelete }: Props) {
   }
 
   return (
-    <li className="rounded-2xl border border-gold/30 bg-white/70 p-4">
+    <li className="rounded-2xl border border-line bg-white/70 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-medium text-ink">{guest.name}</p>
-          <p className="mt-0.5 text-xs text-ink/55">
+          <p className="truncate font-medium text-night">{guest.name}</p>
+          <p className="mt-0.5 text-xs text-night/55">
             {guest.phone ?? (guest.source === 'SELF' ? t.selfRegistered : '')}
           </p>
         </div>
@@ -60,14 +60,14 @@ export function GuestRow({ guest, share, onDelete }: Props) {
           href={whatsappUrl(guest.phone, message)}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-[#25D366] px-3 text-sm font-semibold text-white"
+          className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-[#25D366] px-3 text-sm font-semibold text-white"
         >
           {t.sendWhatsApp}
         </a>
         <button
           type="button"
           onClick={() => void handleCopy()}
-          className="min-h-11 flex-1 rounded-full border border-burgundy/40 px-3 text-sm font-medium text-burgundy"
+          className="min-h-11 flex-1 rounded-xl border border-brand/40 px-3 text-sm font-medium text-brand"
         >
           {isCopied ? t.copied : t.copyGuestLink}
         </button>

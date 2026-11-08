@@ -57,8 +57,8 @@ export function CreatePage() {
     <div className="min-h-dvh">
       <AppHeader />
       <main className="mx-auto max-w-6xl px-4 pb-16 pt-8">
-        <h1 className="font-serif text-4xl text-burgundy">{t.createTitle}</h1>
-        <p className="mt-2 text-ink/70">{t.createSubtitle}</p>
+        <h1 className="font-display font-extrabold text-4xl text-night">{t.createTitle}</h1>
+        <p className="mt-2 text-night/70">{t.createSubtitle}</p>
 
         <div role="tablist" className="-mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
           {(['ALL', ...EVENT_TYPES] as const).map((value) => (
@@ -70,8 +70,8 @@ export function CreatePage() {
               onClick={() => setFilter(value)}
               className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-medium transition ${
                 filter === value
-                  ? 'border-burgundy bg-burgundy text-cream'
-                  : 'border-gold/50 bg-white/70 text-burgundy hover:border-burgundy/60'
+                  ? 'border-brand bg-brand text-white'
+                  : 'border-line bg-white/70 text-brand hover:border-brand/60'
               }`}
             >
               {value === 'ALL' ? t.filterAll : t.eventTypes[value]}

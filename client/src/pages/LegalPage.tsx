@@ -33,13 +33,13 @@ export function LegalPage({ kind }: { kind: LegalKind }) {
     <div className="flex min-h-dvh flex-col">
       <AppHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-12">
-        <h1 className="font-serif text-4xl text-graphite">{doc.title}</h1>
-        {doc.updated && <p className="mt-2 text-sm text-ink/55">{withPlaceholders(doc.updated)}</p>}
+        <h1 className="font-display font-extrabold text-4xl text-night">{doc.title}</h1>
+        {doc.updated && <p className="mt-2 text-sm text-night/55">{withPlaceholders(doc.updated)}</p>}
         <div className="mt-8 space-y-8">
           {doc.sections.map((section) => (
             <section key={section.heading}>
-              <h2 className="font-serif text-2xl text-burgundy">{section.heading}</h2>
-              <div className="mt-3 space-y-2 leading-relaxed text-ink/80">
+              <h2 className="font-display font-extrabold text-2xl text-night">{section.heading}</h2>
+              <div className="mt-3 space-y-2 leading-relaxed text-night/80">
                 {section.paragraphs.map((paragraph) => (
                   <p key={paragraph}>{withPlaceholders(paragraph)}</p>
                 ))}

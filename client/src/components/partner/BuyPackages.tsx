@@ -37,7 +37,7 @@ export function BuyPackages({ type }: { type: OrgType }) {
 
   return (
     <section className="space-y-3">
-      <h3 className="font-serif text-xl text-burgundy">{t.buyPackageTitle}</h3>
+      <h3 className="font-display font-extrabold text-xl text-night">{t.buyPackageTitle}</h3>
       <div className="flex flex-wrap gap-2">
         {PAYMENT_PROVIDERS.map((value) => (
           <button
@@ -45,7 +45,7 @@ export function BuyPackages({ type }: { type: OrgType }) {
             type="button"
             aria-pressed={method === value}
             onClick={() => setMethod(value)}
-            className={`min-h-11 rounded-full border px-4 text-sm font-medium ${method === value ? 'border-burgundy bg-burgundy text-cream' : 'border-gold/50 bg-white/70 text-burgundy'}`}
+            className={`min-h-11 rounded-xl border px-4 text-sm font-medium ${method === value ? 'border-brand bg-brand text-white' : 'border-line bg-white/70 text-brand'}`}
           >
             {PAYMENT_LABELS[value]}
           </button>
@@ -53,14 +53,14 @@ export function BuyPackages({ type }: { type: OrgType }) {
       </div>
       <ul className="grid gap-3 sm:grid-cols-3">
         {packages.map((price) => (
-          <li key={price.code} className="rounded-2xl border border-gold/40 bg-white/70 p-4 text-center">
-            <p className="font-serif text-2xl text-burgundy">{t.buyPackageItem.replace('{n}', String(price.credits))}</p>
+          <li key={price.code} className="rounded-2xl border border-line bg-white/70 p-4 text-center">
+            <p className="font-display font-extrabold text-2xl text-night">{t.buyPackageItem.replace('{n}', String(price.credits))}</p>
             <p className="mt-1 text-lg font-semibold">{price.amountSom.toLocaleString('ru-RU')} сом</p>
             <button
               type="button"
               disabled={busyCode !== null}
               onClick={() => void buy(price.code)}
-              className="mt-3 min-h-11 w-full rounded-full bg-burgundy font-semibold text-cream disabled:opacity-60"
+              className="mt-3 min-h-11 w-full rounded-xl bg-brand font-semibold text-white disabled:opacity-60"
             >
               {busyCode === price.code ? t.paying : t.buyPackageButton}
             </button>

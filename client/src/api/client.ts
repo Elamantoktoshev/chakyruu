@@ -19,6 +19,8 @@ import type {
   AdminOrganization,
   AdminPayment,
   AdminPrice,
+  AdminTemplate,
+  AdminTemplatePatch,
   AdminStats,
   AdminTrack,
   GalleryPhoto,
@@ -224,5 +226,14 @@ export const api = {
     payments: (status?: 'PENDING' | 'SUCCEEDED' | 'FAILED') =>
       request<AdminPayment[]>(`/admin/payments${status ? `?status=${status}` : ''}`),
     confirmPayment: (id: string) => request<{ confirmed: true }>(`/admin/payments/${encode(id)}/confirm`, { method: 'POST' }),
+    templates: () => request<AdminTemplate[]>('/admin/templates'),
+    updateTemplate: (id: string, patch: AdminTemplatePatch) => request<AdminTemplate>(`/admin/templates/${encode(id)}`, json('PATCH', patch)),
+    uploadTemplateAsset: (id: string, file: string, image: File) => {
+      const form = new FormData();
+      form.append('image', image);
+      return request<{ file: string; url: string }>(`/admin/templates/${encode(id)}/assets?file=${encodeURIComponent(file)}`, { method: 'POST', body: form });
+    },
+    removeTemplateAsset: (id: string, file: string) =>
+      request<{ file: string; url: string }>(`/admin/templates/${encode(id)}/assets?file=${encodeURIComponent(file)}`, { method: 'DELETE' }),
   },
 };

@@ -77,6 +77,9 @@ const baseSchema = z.object({
   /** https://<bucket>.<region>.cdn.digitaloceanspaces.com (or a custom CDN domain). */
   SPACES_CDN_URL: unsetIfEmpty(z.url()),
 
+  /** Admin notifications in Telegram (payments, new users, leads, SMS problems); both empty → off. */
+  TELEGRAM_BOT_TOKEN: unsetIfEmpty(z.string().trim().regex(/^\d{5,}:[A-Za-z0-9_-]{30,}$/, 'must be the bot token from @BotFather')),
+  TELEGRAM_CHAT_ID: unsetIfEmpty(z.string().trim().regex(/^-?\d{1,20}$/, 'must be a numeric chat id (see npm run telegram:test)')),
   /** Error tracking (sentry.io); empty → off. The browser uses SENTRY_DSN_CLIENT, or the same DSN. */
   SENTRY_DSN: unsetIfEmpty(z.url()),
   SENTRY_DSN_CLIENT: unsetIfEmpty(z.url()),
@@ -106,6 +109,9 @@ function checkCombinations(env: BaseEnv, ctx: z.RefinementCtx): void {
     }
   }
   if (env.ADMIN_PHONE && env.TEST_LOGIN_PHONES.has(env.ADMIN_PHONE)) issue('TEST_LOGIN_PHONES', 'must not contain ADMIN_PHONE');
+  if (Boolean(env.TELEGRAM_BOT_TOKEN) !== Boolean(env.TELEGRAM_CHAT_ID)) {
+    issue(env.TELEGRAM_BOT_TOKEN ? 'TELEGRAM_CHAT_ID' : 'TELEGRAM_BOT_TOKEN', 'Telegram notifications need both TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID');
+  }
 
   if (!isProduction) return;
   if (!clientUrl?.startsWith('https://')) issue('CLIENT_URL', 'must be the https:// address of the site in production');

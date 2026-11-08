@@ -24,8 +24,14 @@ describe('collectPreloads', () => {
 
 describe('invitationModules', () => {
   it('picks the template chunk and the opening scenes when there is an animation', () => {
-    expect(invitationModules('nazik', true)).toEqual(['src/templates/nazik/index.tsx', 'src/openings/scenes.tsx']);
-    expect(invitationModules('../../etc', false)).toEqual(['src/templates/classic/index.tsx']);
+    expect(invitationModules('nazik', 'ENVELOPE')).toEqual(['src/templates/nazik/index.tsx', 'src/openings/scenes.tsx']);
+    expect(invitationModules('../../etc', 'NONE')).toEqual(['src/templates/classic/index.tsx']);
+    // The template's own opening may be layered or a built-in scene: both chunks are warmed up.
+    expect(invitationModules('illustrated', 'TEMPLATE')).toEqual([
+      'src/templates/illustrated/index.tsx',
+      'src/openings/layered/LayeredScene.tsx',
+      'src/openings/scenes.tsx',
+    ]);
   });
 });
 

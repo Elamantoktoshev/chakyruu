@@ -1,4 +1,5 @@
-import { resolvePalette } from '@chakyruu/shared';
+import { ILLUSTRATED_TEMPLATE_KEY, manifestOf, resolvePalette } from '@chakyruu/shared';
+import type { CSSProperties } from 'react';
 import { Suspense, useState, type ReactNode } from 'react';
 import type { InvitationContent, Language } from '../../api/types';
 import { FixedLanguage } from '../../i18n/LanguageContext';
@@ -41,7 +42,11 @@ function TemplateLoading() {
  * Music and the language switch float above any template.
  */
 export function InvitationView({ invitation, lang, mode, topBar, greeting, rsvp, children, opening }: Props) {
-  const palette = resolvePalette(invitation.template.componentKey, invitation.paletteId);
+  const { componentKey, config } = invitation.template;
+  const palette = resolvePalette(componentKey, invitation.paletteId, config);
+  const manifest = componentKey === ILLUSTRATED_TEMPLATE_KEY ? manifestOf(config) : null;
+  // "sans" designs set their headings in the site's Montserrat instead of Playfair.
+  const fontStyle: CSSProperties = manifest?.font === 'sans' ? ({ '--font-serif': 'var(--font-display)' } as CSSProperties) : {};
   const Template = templateComponent(invitation.template.componentKey);
   // Bumped by the guest's first tap on the opening scene: the player may start (autoplay rules).
   const [musicStart, setMusicStart] = useState(0);
@@ -49,7 +54,7 @@ export function InvitationView({ invitation, lang, mode, topBar, greeting, rsvp,
   return (
     <FixedLanguage lang={lang}>
       <main
-        style={paletteStyle(palette)}
+        style={{ ...paletteStyle(palette), ...fontStyle }}
         className="relative mx-auto w-full max-w-md overflow-hidden bg-cream text-ink shadow-2xl shadow-burgundy/10"
       >
         {opening && (
@@ -59,6 +64,7 @@ export function InvitationView({ invitation, lang, mode, topBar, greeting, rsvp,
             mode={mode === 'live' ? 'live' : 'preview'}
             isLooping={opening.isLooping}
             onEnter={() => setMusicStart((n) => n + 1)}
+            manifest={manifest}
           />
         )}
         <div className="absolute inset-x-4 top-4 z-10 flex items-start justify-between gap-3">

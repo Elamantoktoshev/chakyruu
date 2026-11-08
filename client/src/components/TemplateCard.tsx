@@ -44,8 +44,8 @@ type Props = {
 export function TemplateCard({ template, actionLabel, isBusy = false, onSelect, showPreview = true }: Props) {
   const { lang, t } = useI18n();
   return (
-    <article className="group overflow-hidden rounded-3xl border border-gold/40 bg-white/70 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-      <div className="relative h-72 overflow-hidden bg-cream-dark/40" aria-hidden="true">
+    <article className="group overflow-hidden rounded-3xl border border-line bg-white/70 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+      <div className="relative h-72 overflow-hidden bg-brand-soft/40" aria-hidden="true">
         {showPreview && (
           <div
             className="pointer-events-none absolute left-1/2 top-0 w-[28rem] origin-top"
@@ -58,15 +58,15 @@ export function TemplateCard({ template, actionLabel, isBusy = false, onSelect, 
       </div>
       <div className="flex items-center justify-between gap-3 p-4">
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-wider text-gold">{t.eventTypes[template.type]}</p>
-          <h3 className="truncate font-serif text-lg text-burgundy">{template.name}</h3>
+          <p className="text-xs uppercase tracking-wider text-brand">{t.eventTypes[template.type]}</p>
+          <h3 className="truncate font-display font-extrabold text-lg text-night">{template.name}</h3>
         </div>
         {onSelect && actionLabel && (
           <button
             type="button"
             disabled={isBusy}
             onClick={() => onSelect(template)}
-            className="min-h-11 shrink-0 rounded-full bg-burgundy px-5 text-sm font-semibold text-cream transition hover:bg-burgundy-dark disabled:opacity-60"
+            className="min-h-11 shrink-0 rounded-xl bg-brand px-5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-60"
           >
             {actionLabel}
           </button>

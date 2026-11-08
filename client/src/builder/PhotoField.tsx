@@ -44,16 +44,16 @@ export function PhotoField({ invitationId, photoUrl, onUploaded }: Props) {
 
   return (
     <div>
-      <span className="mb-1.5 block text-sm font-medium text-ink/80">{t.fieldPhoto}</span>
+      <span className="mb-1.5 block text-sm font-medium text-night/80">{t.fieldPhoto}</span>
       <div className="flex items-center gap-4">
-        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-gold/50 bg-cream-dark">
+        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-line bg-brand-soft">
           {preview && <img src={preview} alt="" className="h-full w-full object-cover" />}
         </div>
         <button
           type="button"
           disabled={isUploading}
           onClick={() => inputRef.current?.click()}
-          className="min-h-11 rounded-full border-2 border-burgundy px-5 text-sm font-medium text-burgundy transition hover:bg-burgundy hover:text-cream disabled:opacity-60"
+          className="min-h-11 rounded-xl border-2 border-brand px-5 text-sm font-medium text-brand transition hover:bg-brand hover:text-white disabled:opacity-60"
         >
           {isUploading ? t.photoUploading : preview ? t.photoReplace : t.photoUpload}
         </button>

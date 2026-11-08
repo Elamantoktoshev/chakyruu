@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
+import { announcePaid } from '../notify/announce.js';
 
 interface FulfillDetails {
   externalId?: string;
@@ -24,7 +25,7 @@ function toJson(raw: unknown): Prisma.InputJsonValue | undefined {
  * status polls and admin confirmations are safe. Returns true if this call did the fulfilment.
  */
 export async function fulfillPayment(paymentId: string, details: FulfillDetails = {}): Promise<boolean> {
-  return prisma.$transaction(async (tx) => {
+  const didFulfil = await prisma.$transaction(async (tx) => {
     const now = new Date();
     const { count } = await tx.payment.updateMany({
       where: { id: paymentId, status: 'PENDING' },
@@ -59,6 +60,9 @@ export async function fulfillPayment(paymentId: string, details: FulfillDetails 
     }
     return true;
   });
+  // Outside the transaction: the admin hears about it only once it is committed.
+  if (didFulfil) void announcePaid(paymentId);
+  return didFulfil;
 }
 
 export async function markPaymentFailed(paymentId: string, raw?: unknown): Promise<void> {

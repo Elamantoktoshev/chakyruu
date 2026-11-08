@@ -7,6 +7,7 @@ import { isUniqueViolation } from '../invitations/slug.service.js';
 import { fulfillPayment, markPaymentFailed } from './fulfill.service.js';
 import type { CheckoutResult, ManualInstructions, PaymentGateway } from './gateway.js';
 import { logger } from '../lib/logger.js';
+import { notifyAdmin } from '../notify/notifier.js';
 
 const REFERENCE_LENGTH = 5;
 const MAX_REFERENCE_ATTEMPTS = 3;
@@ -85,5 +86,14 @@ export async function runCheckout(gateway: PaymentGateway, input: RunCheckoutInp
     where: { id: payment.id },
     data: { externalId: result.externalId, rawResponse: view as unknown as Prisma.InputJsonValue },
   });
+  if (view.kind === 'manual') {
+    notifyAdmin({
+      type: 'payment_pending',
+      amountSom: input.amountTyiyn / 100,
+      reference: payment.reference,
+      method: input.method,
+      description: input.description,
+    });
+  }
   return { paymentId: payment.id, status: 'PENDING', checkout: view };
 }

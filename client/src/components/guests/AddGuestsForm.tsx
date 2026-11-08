@@ -35,16 +35,16 @@ export function AddGuestsForm({ invitationId, onAdded }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-3xl border border-gold/40 bg-white/70 p-4">
+    <form onSubmit={handleSubmit} className="rounded-3xl border border-line bg-white/70 p-4">
       <label className="block">
-        <span className="block font-serif text-xl text-burgundy">{t.addGuestsTitle}</span>
-        <span className="mt-1 block text-xs text-ink/60">{t.addGuestsHint}</span>
+        <span className="block font-display font-extrabold text-xl text-night">{t.addGuestsTitle}</span>
+        <span className="mt-1 block text-xs text-night/60">{t.addGuestsHint}</span>
         <textarea
           rows={5}
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={t.addGuestsPlaceholder}
-          className="mt-3 w-full resize-y rounded-xl border border-gold/50 bg-white/80 px-4 py-3 text-base outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20"
+          className="mt-3 w-full resize-y rounded-xl border border-line bg-white/80 px-4 py-3 text-base outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
         />
       </label>
       {notice && <p className="mt-2 text-sm text-emerald-700">{notice}</p>}
@@ -56,7 +56,7 @@ export function AddGuestsForm({ invitationId, onAdded }: Props) {
       <button
         type="submit"
         disabled={isBusy || !text.trim()}
-        className="mt-3 min-h-12 w-full rounded-full bg-burgundy font-semibold text-cream disabled:opacity-50"
+        className="mt-3 min-h-12 w-full rounded-xl bg-brand font-semibold text-white disabled:opacity-50"
       >
         {isBusy ? t.adding : t.addGuestsButton}
       </button>

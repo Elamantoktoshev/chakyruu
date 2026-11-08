@@ -68,6 +68,11 @@ services:
         value: fra1
       - key: SPACES_CDN_URL
         value: https://chakyruu.fra1.cdn.digitaloceanspaces.com
+      # Telegram alerts for the owner (DEPLOY.md §13); leave both empty to turn them off.
+      - key: TELEGRAM_BOT_TOKEN
+        type: SECRET
+      - key: TELEGRAM_CHAT_ID
+        type: SECRET
       - key: SENTRY_DSN
         type: SECRET
       - key: UMAMI_WEBSITE_ID
@@ -76,6 +81,16 @@ services:
         value: manual
       - key: MANUAL_PAYMENT_RECEIVER
         type: SECRET
+
+# DNS is hosted by DigitalOcean (NS at the .kg registrar → ns1-4.digitalocean.com); the records
+# and the HTTPS certificate are created automatically. CLIENT_URL=${APP_URL} follows the PRIMARY one.
+domains:
+  - domain: chakyruu.kg
+    type: PRIMARY
+    zone: chakyruu.kg
+  - domain: www.chakyruu.kg
+    type: ALIAS
+    zone: chakyruu.kg
 
 ingress:
   rules:

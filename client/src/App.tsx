@@ -23,6 +23,7 @@ const PartnerPage = lazy(() => import('./pages/PartnerPage').then((m) => ({ defa
 const PayPage = lazy(() => import('./pages/PayPage').then((m) => ({ default: m.PayPage })));
 const PayResultPage = lazy(() => import('./pages/PayResultPage').then((m) => ({ default: m.PayResultPage })));
 const TamadaCatalogPage = lazy(() => import('./pages/TamadaCatalogPage').then((m) => ({ default: m.TamadaCatalogPage })));
+const TemplatesPage = lazy(() => import('./pages/TemplatesPage').then((m) => ({ default: m.TemplatesPage })));
 const PaymentsTab = lazy(() => import('./components/admin/PaymentsTab').then((m) => ({ default: m.PaymentsTab })));
 
 export function App() {
@@ -42,10 +43,12 @@ export function App() {
             <Route path="/dashboard/:id" element={<RequireAuth><DashboardInvitationPage /></RequireAuth>} />
             <Route path="/partner" element={<RequireAuth><PartnerPage /></RequireAuth>} />
             <Route path="/tamadalar" element={<TamadaCatalogPage />} />
+            <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/oferta" element={<LegalPage kind="offer" />} />
             <Route path="/privacy" element={<LegalPage kind="privacy" />} />
             <Route path="/contacts" element={<LegalPage kind="contacts" />} />
             <Route path="/admin" element={<RequireAuth><AdminPage paymentsTab={<PaymentsTab />} /></RequireAuth>} />
+            <Route path="/admin/templates" element={<RequireAuth><AdminPage paymentsTab={<PaymentsTab />} initialTab="templates" /></RequireAuth>} />
             <Route path="/:slug" element={<InvitationPage />} />
           </Routes>
           </Suspense>

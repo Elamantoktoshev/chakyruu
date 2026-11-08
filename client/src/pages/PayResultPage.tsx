@@ -48,24 +48,24 @@ export function PayResultPage() {
       <main className="mx-auto max-w-md space-y-5 px-4 py-10 text-center">
         {payment.status === 'PENDING' && (
           <>
-            <h1 className="font-serif text-3xl text-burgundy">{t.payResultPending}</h1>
-            <p className="text-sm text-ink/60">{t.payResultPendingHint}</p>
+            <h1 className="font-display font-extrabold text-3xl text-night">{t.payResultPending}</h1>
+            <p className="text-sm text-night/60">{t.payResultPendingHint}</p>
             {payment.checkout && payment.checkout.kind !== 'redirect' && <CheckoutPanel checkout={payment.checkout} paymentId={payment.id} />}
           </>
         )}
         {payment.status === 'SUCCEEDED' && (
           <>
-            <h1 className="font-serif text-3xl text-emerald-800">{t.payResultSuccess} 🎉</h1>
+            <h1 className="font-display font-extrabold text-3xl text-emerald-800">{t.payResultSuccess} 🎉</h1>
             {payment.purpose === 'CREDIT_PACKAGE' ? (
               <>
                 <p>{t.payResultCredits.replace('{n}', String(payment.credits ?? 0))}</p>
-                <Link to="/partner" className="flex min-h-12 items-center justify-center rounded-full bg-burgundy font-semibold text-cream">
+                <Link to="/partner" className="flex min-h-12 items-center justify-center rounded-xl bg-brand font-semibold text-white">
                   {t.navPartner}
                 </Link>
               </>
             ) : (
               payment.invitationSlug && (
-                <Link to={`/${payment.invitationSlug}`} className="flex min-h-12 items-center justify-center rounded-full bg-burgundy font-semibold text-cream">
+                <Link to={`/${payment.invitationSlug}`} className="flex min-h-12 items-center justify-center rounded-xl bg-brand font-semibold text-white">
                   {t.openInvitation}
                 </Link>
               )
@@ -74,8 +74,8 @@ export function PayResultPage() {
         )}
         {(payment.status === 'FAILED' || payment.status === 'REFUNDED') && (
           <>
-            <h1 className="font-serif text-3xl text-red-800">{t.payResultFailed}</h1>
-            <Link to="/dashboard" className="flex min-h-12 items-center justify-center rounded-full border-2 border-burgundy font-semibold text-burgundy">
+            <h1 className="font-display font-extrabold text-3xl text-red-800">{t.payResultFailed}</h1>
+            <Link to="/dashboard" className="flex min-h-12 items-center justify-center rounded-xl border-2 border-brand font-semibold text-brand">
               {t.payResultRetry}
             </Link>
           </>

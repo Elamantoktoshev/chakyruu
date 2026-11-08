@@ -77,6 +77,15 @@ describe('parseEnv', () => {
     expect(problemsOf({ ...DEV, ADMIN_PHONE: '+996555000001', TEST_LOGIN_PHONES: '+996555000001:123456' })[0]).toMatch(/ADMIN_PHONE/);
   });
 
+  it('accepts Telegram notifications only with both a valid bot token and chat id', () => {
+    const token = '123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw';
+    expect(parseEnv({ ...DEV, TELEGRAM_BOT_TOKEN: token, TELEGRAM_CHAT_ID: '-1001234567890' })).toMatchObject({ TELEGRAM_CHAT_ID: '-1001234567890' });
+    expect(parseEnv({ ...DEV, TELEGRAM_BOT_TOKEN: '', TELEGRAM_CHAT_ID: '' }).TELEGRAM_BOT_TOKEN).toBeUndefined();
+    expect(problemsOf({ ...DEV, TELEGRAM_BOT_TOKEN: token })).toEqual([expect.stringMatching(/^TELEGRAM_CHAT_ID: .*both/)]);
+    expect(problemsOf({ ...DEV, TELEGRAM_BOT_TOKEN: 'not-a-token', TELEGRAM_CHAT_ID: '42' })).toEqual([expect.stringMatching(/^TELEGRAM_BOT_TOKEN: /)]);
+    expect(problemsOf({ ...DEV, TELEGRAM_BOT_TOKEN: token, TELEGRAM_CHAT_ID: '@channel' })).toEqual([expect.stringMatching(/^TELEGRAM_CHAT_ID: /)]);
+  });
+
   it('keeps accepting the old CORS_ORIGIN / PUBLIC_APP_URL names', () => {
     const env = parseEnv({ ...DEV, CORS_ORIGIN: 'http://localhost:3000', PUBLIC_APP_URL: 'http://localhost:3001' });
     expect(env.clientUrl).toBe('http://localhost:3000');

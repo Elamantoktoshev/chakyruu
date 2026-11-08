@@ -31,10 +31,10 @@ export function TracksTab() {
 
   return (
     <div className="space-y-5">
-      <p className="rounded-2xl bg-gold/15 p-3 text-sm text-ink/75">{t.adminTrackLicense}</p>
+      <p className="rounded-2xl bg-brand/15 p-3 text-sm text-night/75">{t.adminTrackLicense}</p>
       <AddTrackForm onAdd={(input) => run(() => api.admin.createTrack(input))} />
       {state.data.length === 0 ? (
-        <p className="text-sm text-ink/60">{t.adminTracksEmpty}</p>
+        <p className="text-sm text-night/60">{t.adminTracksEmpty}</p>
       ) : (
         <ul className="space-y-3">
           {state.data.map((track) => (
@@ -70,8 +70,8 @@ function AddTrackForm({ onAdd }: { onAdd: (input: AddInput) => Promise<void> }) 
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-2 rounded-2xl border border-gold/40 bg-white/70 p-4">
-      <p className="font-medium text-burgundy">{t.adminTrackAdd}</p>
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-2 rounded-2xl border border-line bg-white/70 p-4">
+      <p className="font-medium text-brand">{t.adminTrackAdd}</p>
       <input name="title" required maxLength={80} placeholder={t.adminTrackTitle} aria-label={t.adminTrackTitle} className={inputClass} />
       <select name="category" aria-label={t.fieldMusic} className={inputClass} defaultValue="ULUTTUK">
         {TRACK_CATEGORIES.map((category) => (
@@ -79,8 +79,8 @@ function AddTrackForm({ onAdd }: { onAdd: (input: AddInput) => Promise<void> }) 
         ))}
       </select>
       <input name="file" placeholder="/music/komuz.mp3" aria-label={t.adminTrackFilePath} className={inputClass} />
-      <p className="text-xs text-ink/55">{t.adminTrackFilePath}</p>
-      <button type="submit" className="min-h-12 rounded-full bg-burgundy px-6 text-sm font-semibold text-cream">{t.adminTrackAdd}</button>
+      <p className="text-xs text-night/55">{t.adminTrackFilePath}</p>
+      <button type="submit" className="min-h-12 rounded-xl bg-brand px-6 text-sm font-semibold text-white">{t.adminTrackAdd}</button>
     </form>
   );
 }
@@ -112,12 +112,12 @@ function TrackRow({ track, isPlaying, onListen, onPatch, onUpload }: RowProps) {
   }
 
   return (
-    <li className={`rounded-2xl border border-gold/30 p-4 ${track.active ? 'bg-white/70' : 'bg-stone-100'}`}>
+    <li className={`rounded-2xl border border-line p-4 ${track.active ? 'bg-white/70' : 'bg-stone-100'}`}>
       <div className="flex items-center gap-3">
         {track.file && <ListenButton title={track.title} isPlaying={isPlaying} onClick={onListen} />}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-ink">{track.title}</p>
-          <p className="text-xs text-ink/60">
+          <p className="truncate font-medium text-night">{track.title}</p>
+          <p className="text-xs text-night/60">
             {t.musicCategories[track.category]} · {fileLabel}
             {track.durationSec ? ` · ${formatDuration(track.durationSec)}` : ''}
             {track.usedBy > 0 ? ` · ${t.adminTrackUsedBy.replace('{n}', String(track.usedBy))}` : ''}
@@ -128,7 +128,7 @@ function TrackRow({ track, isPlaying, onListen, onPatch, onUpload }: RowProps) {
           disabled={!track.file}
           title={track.file ? undefined : t.adminTrackNeedsFile}
           onClick={() => void onPatch({ active: !track.active })}
-          className={`min-h-11 shrink-0 rounded-full px-4 text-sm font-medium disabled:opacity-50 ${track.active ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-700'}`}
+          className={`min-h-11 shrink-0 rounded-xl px-4 text-sm font-medium disabled:opacity-50 ${track.active ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-700'}`}
         >
           {track.active ? t.adminTrackActive : t.adminTrackInactive}
         </button>
@@ -137,7 +137,7 @@ function TrackRow({ track, isPlaying, onListen, onPatch, onUpload }: RowProps) {
         type="button"
         disabled={isUploading}
         onClick={() => inputRef.current?.click()}
-        className="mt-3 min-h-11 rounded-full border border-burgundy/50 px-4 text-sm font-medium text-burgundy disabled:opacity-60"
+        className="mt-3 min-h-11 rounded-xl border border-brand/50 px-4 text-sm font-medium text-brand disabled:opacity-60"
       >
         {isUploading ? t.musicUploading : track.isUploaded ? t.adminTrackReplace : t.adminTrackUpload}
       </button>

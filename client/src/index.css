@@ -14,6 +14,33 @@
 
   --font-serif: 'Playfair Display', 'Playfair Kyrgyz', Georgia, serif;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /*
+   * Site UI (landing, header, cabinet). Invitation templates keep burgundy / gold / cream above,
+   * so the product pages can be bright while the invitations stay elegant.
+   */
+  --font-display: 'Montserrat Variable', 'Inter', system-ui, sans-serif;
+  --color-brand: #0c9a68;
+  --color-brand-dark: #067452;
+  --color-brand-soft: #eafaf3;
+  --color-rose: #e8456b;
+  --color-rose-soft: #fff0f4;
+  --color-night: #15121f;
+  --color-muted: #6b6678;
+  --color-line: #e6ebe8;
+  /** Background of app pages (cabinet, builder, admin); cards on it are white. */
+  --color-page: #f5f8f6;
+  --color-sky: #3b82f6;
+  --color-sky-soft: #eef5ff;
+  --color-mint: #12b886;
+  --color-mint-soft: #eafbf4;
+  --color-lilac: #8b5cf6;
+  --color-lilac-soft: #f4efff;
+  --color-peach: #f97316;
+  --color-peach-soft: #fff4ea;
+  --color-lemon: #eab308;
+  --color-lemon-soft: #fffbe8;
+  --color-whatsapp: #1fae55;
 }
 
 @layer base {
@@ -21,8 +48,39 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-cream font-sans text-ink antialiased;
+    @apply bg-page font-sans text-night antialiased;
   }
+}
+
+/* Soft coloured glow behind hero / section art. */
+@utility brand-glow {
+  background:
+    radial-gradient(40rem 28rem at 85% 10%, rgb(12 154 104 / 0.14), transparent 60%),
+    radial-gradient(30rem 24rem at 5% 90%, rgb(234 179 8 / 0.1), transparent 60%),
+    radial-gradient(26rem 20rem at 50% 50%, rgb(59 130 246 / 0.06), transparent 70%);
+}
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@utility animate-float {
+  animation: float-y 5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-float { animation: none; }
+}
+
+/* Endless ticker under the hero; paused for reduced motion. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@utility animate-marquee {
+  animation: marquee 38s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee { animation: none; }
 }
 
 @utility gold-divider {

@@ -38,8 +38,8 @@ export function TamadaCatalogPage() {
     <div className="min-h-dvh pb-16">
       <AppHeader />
       <main className="mx-auto max-w-5xl px-4 pt-8">
-        <h1 className="font-serif text-4xl text-burgundy">{t.catalogTitle}</h1>
-        <p className="mt-2 text-ink/70">{t.catalogSubtitle}</p>
+        <h1 className="font-display font-extrabold text-4xl text-night">{t.catalogTitle}</h1>
+        <p className="mt-2 text-night/70">{t.catalogSubtitle}</p>
 
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <input aria-label={t.filterCity} placeholder={t.filterCity} value={query.city} onChange={(e) => setFilter('city', e.target.value)} className={inputClass} />
@@ -64,7 +64,7 @@ export function TamadaCatalogPage() {
           <input aria-label={t.filterDate} type="date" value={query.date} onChange={(e) => setFilter('date', e.target.value)} className={inputClass} />
         </div>
 
-        {state.status === 'success' && state.data.length === 0 && <p className="mt-10 text-center text-ink/60">{t.catalogEmpty}</p>}
+        {state.status === 'success' && state.data.length === 0 && <p className="mt-10 text-center text-night/60">{t.catalogEmpty}</p>}
         <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {state.status === 'success' && state.data.map((tamada) => <TamadaCardView key={tamada.id} tamada={tamada} />)}
         </ul>
@@ -77,30 +77,30 @@ function TamadaCardView({ tamada }: { tamada: TamadaCard }) {
   const { t } = useI18n();
   const photo = safeUrl(tamada.photoUrl);
   return (
-    <li className="flex flex-col rounded-3xl border border-gold/40 bg-white/70 p-4 shadow-sm">
+    <li className="flex flex-col rounded-3xl border border-line bg-white/70 p-4 shadow-sm">
       <div className="flex items-center gap-4">
         {photo ? (
           <img src={photo} alt={tamada.displayName} className="h-20 w-20 rounded-full object-cover" />
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-burgundy font-serif text-3xl text-cream">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-brand font-display text-3xl text-white">
             {tamada.displayName.slice(0, 1)}
           </div>
         )}
         <div className="min-w-0">
-          <h2 className="truncate font-serif text-2xl text-burgundy">{tamada.displayName}</h2>
-          <p className="text-sm text-ink/60">
+          <h2 className="truncate font-display font-extrabold text-2xl text-night">{tamada.displayName}</h2>
+          <p className="text-sm text-night/60">
             {tamada.city}
             {tamada.priceFromSom !== null && ` · ${t.priceFrom.replace('{price}', tamada.priceFromSom.toLocaleString('ru-RU'))}`}
           </p>
-          <p className="text-xs text-ink/55">{tamada.languages.map((lang) => t.languageNames[lang]).join(', ')}</p>
+          <p className="text-xs text-night/55">{tamada.languages.map((lang) => t.languageNames[lang]).join(', ')}</p>
         </div>
       </div>
-      {tamada.bio && <p className="mt-3 line-clamp-3 text-sm text-ink/75">{tamada.bio}</p>}
+      {tamada.bio && <p className="mt-3 line-clamp-3 text-sm text-night/75">{tamada.bio}</p>}
       {tamada.videoUrls.length > 0 && (
         <ul className="mt-2 flex flex-wrap gap-2 text-xs">
           {tamada.videoUrls.map((url, index) => (
             <li key={url}>
-              <a href={safeUrl(url)} target="_blank" rel="noopener noreferrer" className="text-burgundy underline">
+              <a href={safeUrl(url)} target="_blank" rel="noopener noreferrer" className="text-brand underline">
                 ▶ {index + 1}
               </a>
             </li>
@@ -111,7 +111,7 @@ function TamadaCardView({ tamada }: { tamada: TamadaCard }) {
         href={`/api/public/tamadas/${encodeURIComponent(tamada.id)}/contact`}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-[#25D366] font-semibold text-white"
+        className="mt-4 flex min-h-12 items-center justify-center rounded-xl bg-[#25D366] font-semibold text-white"
       >
         {t.write}
       </a>

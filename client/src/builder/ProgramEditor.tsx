@@ -24,7 +24,7 @@ export function ProgramEditor({ value, onChange }: Props) {
 
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1.5 text-sm font-medium text-ink/80">{t.fieldProgram}</legend>
+      <legend className="mb-1.5 text-sm font-medium text-night/80">{t.fieldProgram}</legend>
       {rows.map((row, index) => (
         <div key={index} className="grid grid-cols-[6.5rem_1fr_2.75rem] gap-2">
           <input
@@ -56,7 +56,7 @@ export function ProgramEditor({ value, onChange }: Props) {
         <button
           type="button"
           onClick={() => setRows([...rows, EMPTY_ROW])}
-          className="min-h-11 rounded-full border border-burgundy/40 px-4 text-sm font-medium text-burgundy"
+          className="min-h-11 rounded-xl border border-brand/40 px-4 text-sm font-medium text-brand"
         >
           + {t.programAdd}
         </button>

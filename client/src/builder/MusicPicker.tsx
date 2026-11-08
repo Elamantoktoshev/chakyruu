@@ -19,7 +19,7 @@ type Props = {
 
 const chipClass = (isActive: boolean) =>
   `min-h-11 shrink-0 rounded-full border px-4 text-sm font-medium transition ${
-    isActive ? 'border-burgundy bg-burgundy text-cream' : 'border-gold/50 bg-white/70 text-burgundy hover:border-burgundy/60'
+    isActive ? 'border-brand bg-brand text-white' : 'border-line bg-white/70 text-brand hover:border-brand/60'
   }`;
 
 function trackMusic(track: Track): MusicView {
@@ -56,7 +56,7 @@ export function MusicPicker({ invitation, onChange, beforeUpload }: Props) {
 
   return (
     <fieldset className="space-y-3">
-      <legend className="mb-1.5 text-sm font-medium text-ink/80">{t.fieldMusic}</legend>
+      <legend className="mb-1.5 text-sm font-medium text-night/80">{t.fieldMusic}</legend>
 
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
         {sections.map(({ value, label }) => (
@@ -106,15 +106,15 @@ type TrackListProps = {
 
 function TrackList({ tracks, isLoading, selectedId, playingSrc, onListen, onChoose }: TrackListProps) {
   const { t } = useI18n();
-  if (isLoading) return <div className="h-16 animate-pulse rounded-2xl bg-gold/15" aria-hidden="true" />;
-  if (tracks.length === 0) return <p className="rounded-2xl border border-dashed border-gold/50 p-4 text-sm text-ink/60">{t.musicEmpty}</p>;
+  if (isLoading) return <div className="h-16 animate-pulse rounded-2xl bg-brand/15" aria-hidden="true" />;
+  if (tracks.length === 0) return <p className="rounded-2xl border border-dashed border-line p-4 text-sm text-night/60">{t.musicEmpty}</p>;
 
   return (
-    <ul className="divide-y divide-gold/25 overflow-hidden rounded-2xl border border-gold/50 bg-white/70">
+    <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white/70">
       {tracks.map((track) => {
         const isSelected = track.id === selectedId;
         return (
-          <li key={track.id} className={`flex items-center gap-3 p-2.5 ${isSelected ? 'bg-burgundy/5' : ''}`}>
+          <li key={track.id} className={`flex items-center gap-3 p-2.5 ${isSelected ? 'bg-brand/5' : ''}`}>
             <ListenButton title={track.title} isPlaying={playingSrc === track.file} onClick={() => onListen(track.file)} />
             <button
               type="button"
@@ -122,12 +122,12 @@ function TrackList({ tracks, isLoading, selectedId, playingSrc, onListen, onChoo
               onClick={() => onChoose(track)}
               className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-2 text-left"
             >
-              <span className={`truncate text-sm ${isSelected ? 'font-semibold text-burgundy' : 'text-ink'}`}>{track.title}</span>
-              <span className="flex shrink-0 items-center gap-2 text-xs text-ink/50">
+              <span className={`truncate text-sm ${isSelected ? 'font-semibold text-brand' : 'text-night'}`}>{track.title}</span>
+              <span className="flex shrink-0 items-center gap-2 text-xs text-night/50">
                 {track.durationSec && formatDuration(track.durationSec)}
                 <span
                   aria-hidden="true"
-                  className={`h-5 w-5 rounded-full border-2 ${isSelected ? 'border-burgundy bg-burgundy shadow-[inset_0_0_0_3px_white]' : 'border-gold/60'}`}
+                  className={`h-5 w-5 rounded-full border-2 ${isSelected ? 'border-brand bg-brand shadow-[inset_0_0_0_3px_white]' : 'border-line'}`}
                 />
               </span>
             </button>
@@ -143,10 +143,10 @@ function StartSlider({ music, onChange }: { music: MusicView; onChange: (startSe
   const max = maxMusicStart(music.durationSec);
   if (max === 0) return null;
   return (
-    <label className="block rounded-2xl border border-gold/40 bg-white/60 p-3">
-      <span className="flex justify-between text-sm font-medium text-ink/80">
+    <label className="block rounded-2xl border border-line bg-white/60 p-3">
+      <span className="flex justify-between text-sm font-medium text-night/80">
         {t.musicStart.replace('{time}', formatDuration(music.startSec))}
-        {music.durationSec && <span className="text-ink/45">{formatDuration(music.durationSec)}</span>}
+        {music.durationSec && <span className="text-night/45">{formatDuration(music.durationSec)}</span>}
       </span>
       <input
         type="range"
@@ -155,9 +155,9 @@ function StartSlider({ music, onChange }: { music: MusicView; onChange: (startSe
         step={1}
         value={Math.min(music.startSec, max)}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-2 w-full accent-burgundy"
+        className="mt-2 w-full accent-brand"
       />
-      <span className="block text-xs text-ink/55">{t.musicStartHint}</span>
+      <span className="block text-xs text-night/55">{t.musicStartHint}</span>
     </label>
   );
 }

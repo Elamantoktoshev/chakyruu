@@ -56,11 +56,11 @@ export function OwnMusicField({ invitationId, music, playingSrc, onListen, befor
   return (
     <div className="space-y-3">
       {own && (
-        <div className="flex items-center gap-3 rounded-2xl border border-gold/50 bg-white/70 p-3">
+        <div className="flex items-center gap-3 rounded-2xl border border-line bg-white/70 p-3">
           <ListenButton title={t.musicOwnFile} isPlaying={playingSrc === own.src} onClick={() => onListen(own.src)} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-ink">{t.musicOwnFile}</p>
-            {own.durationSec && <p className="text-xs text-ink/55">{formatDuration(own.durationSec)}</p>}
+            <p className="truncate text-sm font-medium text-night">{t.musicOwnFile}</p>
+            {own.durationSec && <p className="text-xs text-night/55">{formatDuration(own.durationSec)}</p>}
           </div>
           <button
             type="button"
@@ -76,7 +76,7 @@ export function OwnMusicField({ invitationId, music, playingSrc, onListen, befor
         type="button"
         disabled={isBusy}
         onClick={() => inputRef.current?.click()}
-        className="min-h-11 w-full rounded-full border-2 border-dashed border-burgundy/60 px-5 text-sm font-medium text-burgundy transition hover:bg-burgundy/5 disabled:opacity-60"
+        className="min-h-11 w-full rounded-xl border-2 border-dashed border-brand/60 px-5 text-sm font-medium text-brand transition hover:bg-brand/5 disabled:opacity-60"
       >
         {isBusy ? t.musicUploading : own ? t.musicReplace : t.musicUpload}
       </button>
@@ -84,7 +84,7 @@ export function OwnMusicField({ invitationId, music, playingSrc, onListen, befor
       {error ? (
         <p role="alert" className="text-xs font-medium text-red-700">{error}</p>
       ) : (
-        <p className="text-xs text-ink/55">{t.musicOwnHint}</p>
+        <p className="text-xs text-night/55">{t.musicOwnHint}</p>
       )}
     </div>
   );

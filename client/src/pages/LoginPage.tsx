@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { AppHeader } from '../components/AppHeader';
-import { OrnamentDivider } from '../components/Ornament';
+import { BrandMark } from '../components/ui/BrandLogo';
 import { useI18n } from '../i18n/LanguageContext';
 import { requestErrorMessage, verifyErrorMessage } from './loginErrors';
 import { PHONE_PREFIX, isValidPhone, safeNextPath, sanitizeLocalPart, toE164 } from '../lib/phone';
@@ -12,9 +12,9 @@ const RESEND_COOLDOWN_S = 60;
 const CODE_LENGTH = 6;
 
 const inputClass =
-  'w-full rounded-xl border border-gold/50 bg-white/80 px-4 py-3 text-base outline-none transition focus:border-burgundy focus:ring-2 focus:ring-burgundy/20';
+  'w-full rounded-xl border border-line bg-white/80 px-4 py-3 text-base outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20';
 const primaryButtonClass =
-  'w-full rounded-full bg-burgundy py-4 font-semibold tracking-wide text-cream shadow-lg shadow-burgundy/20 transition hover:bg-burgundy-dark disabled:opacity-60';
+  'w-full rounded-2xl bg-brand py-4 font-display font-bold text-white shadow-lg shadow-brand/20 transition hover:bg-brand-dark disabled:opacity-60';
 
 /** Seconds left until `deadline`, re-rendering once per second while > 0. */
 function useSecondsUntil(deadline: number): number {
@@ -107,17 +107,17 @@ export function LoginPage() {
       <AppHeader />
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 py-8">
       <div className="my-auto">
-        <h1 className="text-center font-serif text-4xl text-burgundy">{t.loginTitle}</h1>
-        <OrnamentDivider className="mx-auto mt-4 max-w-xs" />
-        <p className="mt-4 text-center text-ink/70">{t.loginSubtitle}</p>
+        <BrandMark className="mx-auto mb-5 h-14 w-14 shadow-xl shadow-brand/25" />
+        <h1 className="text-center font-display font-extrabold text-4xl text-night">{t.loginTitle}</h1>
+        <p className="mt-4 text-center text-night/70">{t.loginSubtitle}</p>
 
-        <div className="mt-8 rounded-3xl border border-gold/40 bg-white/70 p-6 shadow-sm">
+        <div className="mt-8 rounded-3xl border border-line bg-white/70 p-6 shadow-sm">
           {codeSentTo === null ? (
             <form onSubmit={handlePhoneSubmit} noValidate className="space-y-5">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-ink/80">{t.phoneLabel}</span>
+                <span className="mb-1.5 block text-sm font-medium text-night/80">{t.phoneLabel}</span>
                 <div className="flex items-stretch gap-2">
-                  <span className="flex items-center rounded-xl border border-gold/50 bg-cream px-3 font-medium text-burgundy">
+                  <span className="flex items-center rounded-xl border border-line bg-page px-3 font-medium text-brand">
                     {PHONE_PREFIX}
                   </span>
                   <input
@@ -149,11 +149,11 @@ export function LoginPage() {
             </form>
           ) : (
             <form onSubmit={handleCodeSubmit} noValidate className="space-y-5">
-              <p className="text-center text-sm text-ink/70">
-                {t.codeSentTo} <span className="font-semibold text-burgundy tabular-nums">{codeSentTo}</span>
+              <p className="text-center text-sm text-night/70">
+                {t.codeSentTo} <span className="font-semibold text-brand tabular-nums">{codeSentTo}</span>
               </p>
               <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-ink/80">{t.codeLabel}</span>
+                <span className="mb-1.5 block text-sm font-medium text-night/80">{t.codeLabel}</span>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -162,7 +162,7 @@ export function LoginPage() {
                   maxLength={CODE_LENGTH}
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, CODE_LENGTH))}
-                  className={`${inputClass} text-center font-serif text-2xl tracking-[0.5em] tabular-nums`}
+                  className={`${inputClass} text-center font-display text-2xl tracking-[0.5em] tabular-nums`}
                 />
               </label>
               <ErrorMessage message={error} />
@@ -171,18 +171,18 @@ export function LoginPage() {
               </button>
               <div className="flex flex-col items-center gap-2 text-sm">
                 {resendIn > 0 ? (
-                  <span className="text-ink/60">{t.resendIn.replace('{s}', String(resendIn))}</span>
+                  <span className="text-night/60">{t.resendIn.replace('{s}', String(resendIn))}</span>
                 ) : (
                   <button
                     type="button"
                     disabled={isBusy}
                     onClick={() => void sendCode(codeSentTo)}
-                    className="text-burgundy underline underline-offset-4 disabled:opacity-60"
+                    className="text-brand underline underline-offset-4 disabled:opacity-60"
                   >
                     {t.resend}
                   </button>
                 )}
-                <button type="button" onClick={handleChangePhone} className="text-ink/60 hover:text-burgundy">
+                <button type="button" onClick={handleChangePhone} className="text-night/60 hover:text-brand">
                   {t.changePhone}
                 </button>
               </div>

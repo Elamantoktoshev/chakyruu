@@ -1,7 +1,14 @@
 import type { EventType } from './catalog.js';
+import { manifestOf } from './manifest.js';
 
 /** Invitation design components. A new template = one entry here + one folder in client/src/templates. */
-export const TEMPLATE_KEYS = ['classic', 'minimal', 'alatoo', 'nazik', 'bala', 'batyr', 'yubiley', 'shyrdak'] as const;
+export const DRAWN_TEMPLATE_KEYS = ['classic', 'minimal', 'alatoo', 'nazik', 'bala', 'batyr', 'yubiley', 'shyrdak'] as const;
+export type DrawnTemplateKey = (typeof DRAWN_TEMPLATE_KEYS)[number];
+
+/** One component for every illustrated template; the look comes from its manifest (Template.config). */
+export const ILLUSTRATED_TEMPLATE_KEY = 'illustrated';
+
+export const TEMPLATE_KEYS = [...DRAWN_TEMPLATE_KEYS, ILLUSTRATED_TEMPLATE_KEY] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
 export interface Palette {
@@ -38,7 +45,8 @@ const palette = (
   isDark = false,
 ): Palette => ({ id, label: { ky, ru }, primary, accent, background, ink, isDark });
 
-export const TEMPLATE_CATALOG: Readonly<Record<TemplateKey, TemplateDefinition>> = {
+/** Palettes of the code-drawn templates (illustrated ones take theirs from the manifest). */
+export const TEMPLATE_CATALOG: Readonly<Record<DrawnTemplateKey, TemplateDefinition>> = {
   classic: {
     eventType: 'WEDDING',
     isUniversal: false,
@@ -120,14 +128,28 @@ export function isTemplateKey(value: string): value is TemplateKey {
   return (TEMPLATE_KEYS as readonly string[]).includes(value);
 }
 
-/** The palette to render: the chosen one if it belongs to this template, else the template's first. */
-export function resolvePalette(templateKey: string, paletteId: string | null | undefined): Palette {
-  const definition = TEMPLATE_CATALOG[isTemplateKey(templateKey) ? templateKey : 'classic'];
+export function isDrawnTemplateKey(value: string): value is DrawnTemplateKey {
+  return (DRAWN_TEMPLATE_KEYS as readonly string[]).includes(value);
+}
+
+/**
+ * The palette to render: the chosen one if it belongs to this template, else the template's first.
+ * Illustrated templates use the colours of their manifest (`templateConfig`).
+ */
+export function resolvePalette(templateKey: string, paletteId: string | null | undefined, templateConfig?: unknown): Palette {
+  if (templateKey === ILLUSTRATED_TEMPLATE_KEY) {
+    const manifest = manifestOf(templateConfig);
+    if (manifest) {
+      const { primary, accent, background, ink, isDark } = manifest.palette;
+      return { id: 'manifest', label: { ky: 'Шаблондун түсү', ru: 'Цвета шаблона' }, primary, accent, background, ink, isDark };
+    }
+  }
+  const definition = TEMPLATE_CATALOG[isDrawnTemplateKey(templateKey) ? templateKey : 'classic'];
   const [first] = definition.palettes;
   if (!first) throw new Error(`Template ${templateKey} has no palettes`);
   return definition.palettes.find((candidate) => candidate.id === paletteId) ?? first;
 }
 
 export function isPaletteOf(templateKey: string, paletteId: string): boolean {
-  return isTemplateKey(templateKey) && TEMPLATE_CATALOG[templateKey].palettes.some((candidate) => candidate.id === paletteId);
+  return isDrawnTemplateKey(templateKey) && TEMPLATE_CATALOG[templateKey].palettes.some((candidate) => candidate.id === paletteId);
 }

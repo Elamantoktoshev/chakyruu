@@ -1,0 +1,51 @@
+/*
+ * Layered openings of illustrated templates. Each layer gets --t-from/--t-to (transform),
+ * --o-from/--o-to (opacity), --dur and --delay from its manifest entry; one keyframe set plays them.
+ * Transform and opacity only, so it stays smooth on cheap Android phones.
+ */
+.layered-stage {
+  /* Layer offsets are written in cqw / cqh: % of this stage, whatever its size. */
+  container-type: size;
+}
+
+/* Closed: only the cover with the name; layers wait out of sight. */
+.layered-anchor {
+  visibility: hidden;
+}
+.layered-motion {
+  transform: var(--t-from);
+  opacity: var(--o-from);
+  will-change: transform, opacity;
+}
+.layered-poster {
+  transition: opacity 0.45s ease;
+}
+
+.is-opening .layered-anchor {
+  visibility: visible;
+}
+.is-opening .layered-poster {
+  opacity: 0;
+}
+.is-opening .layered-motion {
+  animation: layered-move var(--dur) cubic-bezier(0.22, 0.8, 0.24, 1) var(--delay) both;
+}
+
+@keyframes layered-move {
+  from {
+    transform: var(--t-from);
+    opacity: var(--o-from);
+  }
+  to {
+    transform: var(--t-to);
+    opacity: var(--o-to);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-opening .layered-motion {
+    animation: none;
+    transform: var(--t-to);
+    opacity: var(--o-to);
+  }
+}

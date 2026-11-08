@@ -36,32 +36,32 @@ export function PaymentsTab() {
             type="button"
             aria-pressed={status === value}
             onClick={() => setStatus(value)}
-            className={`min-h-11 rounded-full border px-4 text-sm font-medium ${status === value ? 'border-burgundy bg-burgundy text-cream' : 'border-gold/50 bg-white/70 text-burgundy'}`}
+            className={`min-h-11 rounded-xl border px-4 text-sm font-medium ${status === value ? 'border-brand bg-brand text-white' : 'border-line bg-white/70 text-brand'}`}
           >
             {value === 'PENDING' ? t.adminPaymentsPending : t.adminPaymentsPaid}
           </button>
         ))}
       </div>
-      {payments.length === 0 && <p className="text-center text-ink/60">{t.adminPaymentsEmpty}</p>}
+      {payments.length === 0 && <p className="text-center text-night/60">{t.adminPaymentsEmpty}</p>}
       <ul className="space-y-3">
         {payments.map((payment) => (
-          <li key={payment.id} className="rounded-2xl border border-gold/30 bg-white/70 p-4">
+          <li key={payment.id} className="rounded-2xl border border-line bg-white/70 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-mono text-xl font-bold tracking-wider text-burgundy">{payment.reference ?? '—'}</p>
-                <p className="text-sm text-ink/70">
+                <p className="font-mono text-xl font-bold tracking-wider text-brand">{payment.reference ?? '—'}</p>
+                <p className="text-sm text-night/70">
                   {payment.purpose === 'INVITATION'
                     ? `${t.adminPaymentInvitation}: ${payment.invitation?.hostNames ?? ''} · ${payment.invitation?.owner.phone ?? ''}`
                     : `${t.adminPaymentPackage} ${payment.credits ?? ''}: ${payment.organization?.name ?? ''}`}
                 </p>
-                <p className="text-xs text-ink/50">
+                <p className="text-xs text-night/50">
                   {payment.provider} · {payment.gateway} · {formatDateTime(payment.createdAt, locale)}
                 </p>
               </div>
-              <span className="shrink-0 font-serif text-xl font-bold tabular-nums text-ink">{(payment.amount / 100).toLocaleString('ru-RU')} сом</span>
+              <span className="shrink-0 font-display text-xl font-bold tabular-nums text-night">{(payment.amount / 100).toLocaleString('ru-RU')} сом</span>
             </div>
             {payment.status === 'PENDING' && (
-              <button type="button" onClick={() => void confirm(payment.id)} className="mt-3 min-h-11 w-full rounded-full bg-emerald-600 font-semibold text-white">
+              <button type="button" onClick={() => void confirm(payment.id)} className="mt-3 min-h-11 w-full rounded-xl bg-emerald-600 font-semibold text-white">
                 ✓ {t.adminConfirmPayment}
               </button>
             )}

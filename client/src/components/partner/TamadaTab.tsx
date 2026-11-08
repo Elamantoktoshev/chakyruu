@@ -55,7 +55,7 @@ export function TamadaTab({ profile, onChange }: Props) {
           <textarea rows={3} maxLength={600} value={bio} onChange={(e) => setBio(e.target.value)} className={`${inputClass} resize-y`} />
         </Field>
         <fieldset>
-          <legend className="mb-1.5 text-sm font-medium text-ink/80">{t.fieldLanguages}</legend>
+          <legend className="mb-1.5 text-sm font-medium text-night/80">{t.fieldLanguages}</legend>
           <div className="flex gap-2">
             {PARTNER_LANGUAGES.map((lang) => (
               <button
@@ -63,8 +63,8 @@ export function TamadaTab({ profile, onChange }: Props) {
                 type="button"
                 aria-pressed={languages.includes(lang)}
                 onClick={() => toggleLanguage(lang)}
-                className={`min-h-11 rounded-full border px-4 text-sm font-medium ${
-                  languages.includes(lang) ? 'border-burgundy bg-burgundy text-cream' : 'border-gold/50 bg-white/70 text-burgundy'
+                className={`min-h-11 rounded-xl border px-4 text-sm font-medium ${
+                  languages.includes(lang) ? 'border-brand bg-brand text-white' : 'border-line bg-white/70 text-brand'
                 }`}
               >
                 {t.languageNames[lang]}
@@ -103,11 +103,11 @@ function BusyDates({ dates, onChange }: { dates: readonly string[]; onChange: (d
 
   return (
     <section className="space-y-3">
-      <h3 className="font-serif text-xl text-burgundy">{t.busyCalendar}</h3>
-      <p className="text-xs text-ink/60">{t.busyHint}</p>
+      <h3 className="font-display font-extrabold text-xl text-night">{t.busyCalendar}</h3>
+      <p className="text-xs text-night/60">{t.busyHint}</p>
       <div className="flex gap-2">
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
-        <button type="button" disabled={!date} onClick={() => void toggle(date, true)} className="min-h-12 shrink-0 rounded-full bg-burgundy px-5 font-semibold text-cream disabled:opacity-50">
+        <button type="button" disabled={!date} onClick={() => void toggle(date, true)} className="min-h-12 shrink-0 rounded-xl bg-brand px-5 font-semibold text-white disabled:opacity-50">
           {t.markBusy}
         </button>
       </div>
@@ -118,7 +118,7 @@ function BusyDates({ dates, onChange }: { dates: readonly string[]; onChange: (d
             <button
               type="button"
               onClick={() => void toggle(day, false)}
-              className="min-h-11 rounded-full border border-burgundy/40 bg-white/70 px-3 text-sm text-burgundy"
+              className="min-h-11 rounded-xl border border-brand/40 bg-white/70 px-3 text-sm text-brand"
             >
               {day} ✕
             </button>

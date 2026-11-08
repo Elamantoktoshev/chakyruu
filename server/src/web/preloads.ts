@@ -1,6 +1,6 @@
 import { readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { isTemplateKey } from '@chakyruu/shared';
+import { isTemplateKey, type OpeningAnimation } from '@chakyruu/shared';
 
 /** The part of Vite's dist/.vite/manifest.json we use. */
 interface ManifestChunk {
@@ -19,9 +19,11 @@ export interface Preloads {
 const NONE: Preloads = { scripts: [], styles: [] };
 
 /** Lazy chunks an invitation needs before its first paint: its template and the opening scenes. */
-export function invitationModules(componentKey: string, hasOpening: boolean): string[] {
+export function invitationModules(componentKey: string, opening: OpeningAnimation): string[] {
   const template = `src/templates/${isTemplateKey(componentKey) ? componentKey : 'classic'}/index.tsx`;
-  return hasOpening ? [template, 'src/openings/scenes.tsx'] : [template];
+  if (opening === 'NONE') return [template];
+  if (opening === 'TEMPLATE') return [template, 'src/openings/layered/LayeredScene.tsx', 'src/openings/scenes.tsx'];
+  return [template, 'src/openings/scenes.tsx'];
 }
 
 /** Lazy chunks (with their static imports and CSS), minus what index.html already loads. */

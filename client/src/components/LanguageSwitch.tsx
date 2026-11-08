@@ -13,7 +13,7 @@ export function LanguageSwitch() {
     <div
       role="group"
       aria-label="Language"
-      className="inline-flex rounded-full border border-gold/60 bg-cream/90 p-0.5 text-xs font-semibold shadow-sm backdrop-blur"
+      className="inline-flex rounded-xl border border-line bg-white p-0.5 text-xs font-bold shadow-sm"
     >
       {OPTIONS.map((option) => (
         <button
@@ -21,8 +21,8 @@ export function LanguageSwitch() {
           type="button"
           aria-pressed={lang === option.value}
           onClick={() => setLang(option.value)}
-          className={`rounded-full px-3 py-1 transition-colors ${
-            lang === option.value ? 'bg-burgundy text-cream' : 'text-burgundy hover:bg-cream-dark'
+          className={`min-h-9 rounded-[0.6rem] px-2.5 transition-colors ${
+            lang === option.value ? 'bg-night text-white' : 'text-muted hover:bg-brand-soft hover:text-brand'
           }`}
         >
           {option.label}

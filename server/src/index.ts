@@ -12,6 +12,8 @@ import { createGatewayFromEnv } from './payments/registry.js';
 import { SpacesStorageProvider, createSpacesClient } from './storage/spaces.provider.js';
 import { LocalStorageProvider, type StorageProvider } from './storage/storage.provider.js';
 import { logger } from './lib/logger.js';
+import { configureAdminNotifier, flushAdminNotifications } from './notify/notifier.js';
+import { createTelegramSender } from './notify/telegram.js';
 
 /** server/uploads — next to src/ and dist/. */
 const UPLOADS_DIR = fileURLToPath(new URL('../uploads', import.meta.url));
@@ -47,6 +49,16 @@ function createStorage(env: Env): StorageProvider {
     cdnUrl: env.SPACES_CDN_URL ?? '',
   };
   return new SpacesStorageProvider(createSpacesClient(config), config.bucket, config.cdnUrl);
+}
+
+/** Telegram alerts for the site owner; skipped (with a note in the log) when not configured. */
+function setUpAdminNotifications(env: Env): void {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
+    logger.info('[notify] Telegram notifications are off (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set)');
+    return;
+  }
+  configureAdminNotifier({ send: createTelegramSender({ token: env.TELEGRAM_BOT_TOKEN, chatId: env.TELEGRAM_CHAT_ID }), appUrl: env.appUrl });
+  logger.info('[notify] Telegram notifications are on');
 }
 
 function buildConfig(env: Env): AppConfig & { port: number } {
@@ -102,8 +114,13 @@ async function createErrorReporter(env: Env): Promise<ErrorReporter> {
 }
 
 const env = loadEnv();
+setUpAdminNotifications(env);
 const config = { ...buildConfig(env), errorReporter: await createErrorReporter(env) };
 const server = createApp(config).listen(config.port, () => {
   logger.info(`API listening on http://localhost:${config.port}`);
 });
-installGracefulShutdown(server, () => prisma.$disconnect());
+// Let alerts already on their way to Telegram finish before the process exits.
+installGracefulShutdown(server, async () => {
+  await flushAdminNotifications();
+  await prisma.$disconnect();
+});

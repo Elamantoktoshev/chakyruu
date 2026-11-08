@@ -104,7 +104,7 @@ export function createWebRouter({ clientDir, appUrl, headTags = '' }: WebDeps): 
     // Everything the first paint needs arrives with the HTML: data, template chunk, hero photo.
     const { g: guestToken } = publicInvitationQuerySchema.parse(req.query);
     const invitation = await getPublicInvitation(slug, undefined, guestToken);
-    const preloads = renderPreloadTags(preloadsFor(invitationModules(card.template.componentKey, card.openingAnimation !== 'NONE')));
+    const preloads = renderPreloadTags(preloadsFor(invitationModules(card.template.componentKey, card.openingAnimation)));
     const withMeta = injectMeta(indexHtml, invitationMeta(card, invitation.guest?.name ?? null, appUrl));
     res.setHeader('X-Robots-Tag', 'noindex, nofollow');
     res.send(embedInvitation(addToHead(withMeta, preloads), slug, invitation));

@@ -10,6 +10,7 @@ import { landingDict } from './landing';
 import { partnerDict } from './partner';
 import { paymentsDict } from './payments';
 import { layoutDict } from './layout';
+import { templateCatalogDict } from './templateCatalog';
 
 const commonKy = {
   invitationTitle: 'Той чакыруусу',
@@ -161,10 +162,11 @@ export const featureDictionaries = {
   catalog: catalogDict,
   admin: adminDict,
   payments: paymentsDict,
+  templateCatalog: templateCatalogDict,
 } as const;
 
-const ky = { ...commonKy, ...layoutDict.ky, ...invitationDict.ky, ...builderDict.ky, ...guestsDict.ky, ...tilekDict.ky, ...dashboardDict.ky, ...landingDict.ky, ...partnerDict.ky, ...catalogDict.ky, ...adminDict.ky, ...paymentsDict.ky };
-const ru = { ...commonRu, ...layoutDict.ru, ...invitationDict.ru, ...builderDict.ru, ...guestsDict.ru, ...tilekDict.ru, ...dashboardDict.ru, ...landingDict.ru, ...partnerDict.ru, ...catalogDict.ru, ...adminDict.ru, ...paymentsDict.ru };
+const ky = { ...commonKy, ...layoutDict.ky, ...invitationDict.ky, ...builderDict.ky, ...guestsDict.ky, ...tilekDict.ky, ...dashboardDict.ky, ...landingDict.ky, ...partnerDict.ky, ...catalogDict.ky, ...adminDict.ky, ...paymentsDict.ky, ...templateCatalogDict.ky };
+const ru = { ...commonRu, ...layoutDict.ru, ...invitationDict.ru, ...builderDict.ru, ...guestsDict.ru, ...tilekDict.ru, ...dashboardDict.ru, ...landingDict.ru, ...partnerDict.ru, ...catalogDict.ru, ...adminDict.ru, ...paymentsDict.ru, ...templateCatalogDict.ru };
 
 export type Dict = typeof ky;
 

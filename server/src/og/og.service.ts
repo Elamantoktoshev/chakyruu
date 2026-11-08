@@ -25,7 +25,7 @@ const cardSelect = {
   paletteId: true,
   openingAnimation: true,
   updatedAt: true,
-  template: { select: { componentKey: true } },
+  template: { select: { componentKey: true, config: true } },
 } as const;
 
 /** Only published invitations get preview pictures (drafts must not leak through a guessed slug). */
@@ -45,7 +45,7 @@ export function cardContent(row: CardRow): CardContent {
     dateLine: iso ? `${formatEventDate(iso, lang).date} · ${formatEventTime(iso, TIME_LOCALE[lang])}` : null,
     venue: row.venueName || null,
     scanLine: SCAN_LINE[lang],
-    palette: resolvePalette(row.template.componentKey, row.paletteId),
+    palette: resolvePalette(row.template.componentKey, row.paletteId, row.template.config),
   };
 }
 

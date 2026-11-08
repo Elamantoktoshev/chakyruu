@@ -24,8 +24,8 @@ export function StatsTab() {
             type="button"
             aria-pressed={period === value}
             onClick={() => setPeriod(value)}
-            className={`min-h-11 rounded-full border px-4 text-sm font-medium ${
-              period === value ? 'border-burgundy bg-burgundy text-cream' : 'border-gold/50 bg-white/70 text-burgundy'
+            className={`min-h-11 rounded-xl border px-4 text-sm font-medium ${
+              period === value ? 'border-brand bg-brand text-white' : 'border-line bg-white/70 text-brand'
             }`}
           >
             {t.statsPeriods[value]}
@@ -55,10 +55,10 @@ function StatsGrid({ stats }: { stats: AdminStats }) {
 
 function Tile({ label, value, note, isAccent = false }: { label: string; value: string; note?: string; isAccent?: boolean }) {
   return (
-    <div className={`rounded-2xl border p-4 ${isAccent ? 'border-burgundy bg-burgundy text-cream' : 'border-gold/40 bg-white/70'}`}>
-      <dt className={`text-xs ${isAccent ? 'text-cream/80' : 'text-ink/60'}`}>{label}</dt>
-      <dd className="mt-1 font-serif text-3xl tabular-nums">{value}</dd>
-      {note && <p className={`mt-1 text-xs ${isAccent ? 'text-cream/70' : 'text-ink/50'}`}>{note}</p>}
+    <div className={`rounded-2xl border p-4 ${isAccent ? 'border-brand bg-brand text-white' : 'border-line bg-white/70'}`}>
+      <dt className={`text-xs ${isAccent ? 'text-white/80' : 'text-night/60'}`}>{label}</dt>
+      <dd className="mt-1 font-display text-3xl font-extrabold tabular-nums">{value}</dd>
+      {note && <p className={`mt-1 text-xs ${isAccent ? 'text-white/70' : 'text-night/50'}`}>{note}</p>}
     </div>
   );
 }

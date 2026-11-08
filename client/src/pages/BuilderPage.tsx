@@ -82,7 +82,7 @@ function Builder({ invitation: initial, templates, partners }: BuilderData) {
         <button
           type="button"
           onClick={() => setReplayKey((n) => n + 1)}
-          className="mx-auto flex min-h-11 items-center rounded-full border border-burgundy/40 px-5 text-sm font-medium text-burgundy"
+          className="mx-auto flex min-h-11 items-center rounded-xl border border-brand/40 px-5 text-sm font-medium text-brand"
         >
           ↻ {t.replayOpening}
         </button>
@@ -93,7 +93,7 @@ function Builder({ invitation: initial, templates, partners }: BuilderData) {
   return (
     <div className="min-h-dvh pb-28 lg:pb-10">
       <AppHeader />
-      <div className="sticky top-14 z-20 grid grid-cols-2 border-b border-gold/30 bg-cream/95 lg:hidden" role="tablist">
+      <div className="sticky top-14 z-20 grid grid-cols-2 border-b border-line bg-page/95 lg:hidden" role="tablist">
         {(['form', 'preview'] as const).map((value) => (
           <button
             key={value}
@@ -101,7 +101,7 @@ function Builder({ invitation: initial, templates, partners }: BuilderData) {
             role="tab"
             aria-selected={tab === value}
             onClick={() => setTab(value)}
-            className={`min-h-12 text-sm font-semibold ${tab === value ? 'border-b-2 border-burgundy text-burgundy' : 'text-ink/60'}`}
+            className={`min-h-12 text-sm font-semibold ${tab === value ? 'border-b-2 border-brand text-brand' : 'text-night/60'}`}
           >
             {value === 'form' ? t.tabForm : t.tabPreview}
           </button>
@@ -110,7 +110,7 @@ function Builder({ invitation: initial, templates, partners }: BuilderData) {
 
       <main className="mx-auto grid max-w-6xl gap-10 px-4 pt-6 lg:grid-cols-[1fr_24rem]">
         <section className={tab === 'form' ? '' : 'hidden lg:block'}>
-          <h1 className="font-serif text-3xl text-burgundy">{t.builderTitle}</h1>
+          <h1 className="font-display font-extrabold text-3xl text-night">{t.builderTitle}</h1>
           <SlugHint slug={invitation.slug} t={t} />
           {invitation.isGift && invitation.giftFrom && (
             <p className="mt-3 rounded-2xl bg-emerald-50 p-3 text-sm font-medium text-emerald-800">
@@ -130,11 +130,11 @@ function Builder({ invitation: initial, templates, partners }: BuilderData) {
         <aside className={`${tab === 'preview' ? '' : 'hidden'} lg:sticky lg:top-20 lg:block lg:self-start`}>{preview}</aside>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gold/30 bg-cream/95 px-4 py-3 backdrop-blur lg:static lg:mx-auto lg:mt-8 lg:max-w-6xl lg:border-0 lg:bg-transparent">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-page/95 px-4 py-3 backdrop-blur lg:static lg:mx-auto lg:mt-8 lg:max-w-6xl lg:border-0 lg:bg-transparent">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <SaveIndicator status={autosave.status} t={t} />
           {isPublished ? (
-            <Link to={`/${invitation.slug}`} className="min-h-12 rounded-full bg-burgundy px-6 py-3 font-semibold text-cream">
+            <Link to={`/${invitation.slug}`} className="min-h-12 rounded-xl bg-brand px-6 py-3 font-semibold text-white">
               {t.openInvitation}
             </Link>
           ) : (
@@ -142,11 +142,11 @@ function Builder({ invitation: initial, templates, partners }: BuilderData) {
               <button
                 type="button"
                 onClick={() => void handlePublish()}
-                className="min-h-12 rounded-full bg-burgundy px-7 font-semibold text-cream shadow-lg shadow-burgundy/20 transition hover:bg-burgundy-dark"
+                className="min-h-12 rounded-xl bg-brand px-7 font-semibold text-white shadow-lg shadow-brand/20 transition hover:bg-brand-dark"
               >
                 {invitation.isGift ? t.publishFree : t.publish}
               </button>
-              <p className="mt-1 hidden text-xs text-ink/55 sm:block">{t.publishHint}</p>
+              <p className="mt-1 hidden text-xs text-night/55 sm:block">{t.publishHint}</p>
             </div>
           )}
         </div>
@@ -158,12 +158,12 @@ function Builder({ invitation: initial, templates, partners }: BuilderData) {
 function SlugHint({ slug, t }: { slug: string; t: Dict }) {
   const isPlaceholder = slug.startsWith('draft-');
   return (
-    <p className="mt-2 text-sm text-ink/65">
+    <p className="mt-2 text-sm text-night/65">
       {t.yourLink}:{' '}
       {isPlaceholder ? (
         <span className="italic">{t.linkAfterNames}</span>
       ) : (
-        <span className="break-all font-medium text-burgundy">
+        <span className="break-all font-medium text-brand">
           {window.location.host}/{slug}
         </span>
       )}
@@ -172,9 +172,9 @@ function SlugHint({ slug, t }: { slug: string; t: Dict }) {
 }
 
 const STATUS_STYLE: Record<SaveStatus, string> = {
-  idle: 'text-ink/40',
-  dirty: 'text-ink/50',
-  saving: 'text-ink/60',
+  idle: 'text-night/40',
+  dirty: 'text-night/50',
+  saving: 'text-night/60',
   saved: 'text-emerald-700',
   error: 'text-red-700',
 };

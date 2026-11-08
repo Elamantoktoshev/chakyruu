@@ -28,11 +28,11 @@ export function PricesTab() {
   return (
     <ul className="space-y-3">
       {prices.map((price) => (
-        <li key={price.code} className={`rounded-2xl border border-gold/30 p-4 ${price.active ? 'bg-white/70' : 'bg-stone-100'}`}>
+        <li key={price.code} className={`rounded-2xl border border-line p-4 ${price.active ? 'bg-white/70' : 'bg-stone-100'}`}>
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="font-mono text-sm font-semibold text-burgundy">{price.code}</p>
-              <p className="text-xs text-ink/60">
+              <p className="font-mono text-sm font-semibold text-brand">{price.code}</p>
+              <p className="text-xs text-night/60">
                 {price.audience}
                 {price.credits ? ` · ${t.adminPriceCredits.replace('{n}', String(price.credits))}` : ''}
               </p>
@@ -40,7 +40,7 @@ export function PricesTab() {
             <button
               type="button"
               onClick={() => void update(price, { active: !price.active })}
-              className={`min-h-11 shrink-0 rounded-full px-4 text-sm font-medium ${price.active ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-700'}`}
+              className={`min-h-11 shrink-0 rounded-xl px-4 text-sm font-medium ${price.active ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-700'}`}
             >
               {price.active ? t.adminPriceActive : t.adminPriceInactive}
             </button>
@@ -54,8 +54,8 @@ export function PricesTab() {
             }}
           >
             <input name="amountSom" type="number" min={0} inputMode="numeric" defaultValue={price.amountSom} key={price.amountSom} className={inputClass} />
-            <span className="text-sm text-ink/60">сом</span>
-            <button type="submit" className="min-h-12 shrink-0 rounded-full bg-burgundy px-5 text-sm font-semibold text-cream">
+            <span className="text-sm text-night/60">сом</span>
+            <button type="submit" className="min-h-12 shrink-0 rounded-xl bg-brand px-5 text-sm font-semibold text-white">
               {t.save}
             </button>
           </form>

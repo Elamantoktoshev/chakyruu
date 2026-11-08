@@ -26,7 +26,7 @@ export function PartnerPage() {
     return isNotPartner ? (
       <div className="min-h-dvh">
         <AppHeader />
-        <p className="mx-auto max-w-md px-4 py-16 text-center text-ink/70">{t.notPartner}</p>
+        <p className="mx-auto max-w-md px-4 py-16 text-center text-night/70">{t.notPartner}</p>
       </div>
     ) : (
       <ErrorView error={state.error} onRetry={state.reload} />
@@ -56,13 +56,13 @@ function Cabinet({ initial }: { initial: PartnerProfile }) {
       <main className="mx-auto max-w-3xl space-y-5 px-4 pt-6">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-wider text-gold">
+            <p className="text-xs uppercase tracking-wider text-brand">
               {t.partnerTitle} · {t.orgType[profile.type]}
             </p>
-            <h1 className="font-serif text-3xl text-burgundy">{profile.name}</h1>
+            <h1 className="font-display font-extrabold text-3xl text-night">{profile.name}</h1>
           </div>
-          <span className="rounded-2xl bg-burgundy px-3 py-2 text-center text-cream">
-            <span className="block font-serif text-2xl font-bold tabular-nums">{profile.invitationCredits}</span>
+          <span className="rounded-2xl bg-brand px-3 py-2 text-center text-white">
+            <span className="block font-display text-2xl font-bold tabular-nums">{profile.invitationCredits}</span>
             <span className="block text-[10px]">{t.tabCredits}</span>
           </span>
         </div>
@@ -76,7 +76,7 @@ function Cabinet({ initial }: { initial: PartnerProfile }) {
               aria-selected={tab === value}
               onClick={() => setTab(value)}
               className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-medium ${
-                tab === value ? 'border-burgundy bg-burgundy text-cream' : 'border-gold/50 bg-white/70 text-burgundy'
+                tab === value ? 'border-brand bg-brand text-white' : 'border-line bg-white/70 text-brand'
               }`}
             >
               {label}

@@ -49,14 +49,14 @@ export function GiftsTab({ halls, onCreditsChange }: Props) {
           onCreditsChange(-1);
         }}
       />
-      {state.status === 'success' && gifts.length === 0 && <p className="text-center text-ink/60">{t.noGifts}</p>}
+      {state.status === 'success' && gifts.length === 0 && <p className="text-center text-night/60">{t.noGifts}</p>}
       <ul className="space-y-2">
         {gifts.map((gift) => (
-          <li key={gift.id} className="rounded-2xl border border-gold/30 bg-white/70 p-4">
+          <li key={gift.id} className="rounded-2xl border border-line bg-white/70 p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-mono text-lg font-semibold tracking-wider text-burgundy">{formatGiftCode(gift.code)}</p>
-                <p className="text-sm text-ink/70">
+                <p className="font-mono text-lg font-semibold tracking-wider text-brand">{formatGiftCode(gift.code)}</p>
+                <p className="text-sm text-night/70">
                   {gift.clientPhone} · {formatEventDate(gift.eventDate, lang).date}
                   {gift.hall ? ` · ${gift.hall.name}` : ''}
                 </p>
@@ -112,11 +112,11 @@ function IssueGiftForm({ halls, onIssued }: { halls: readonly Hall[]; onIssued: 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-3xl border border-gold/40 bg-white/70 p-4">
-      <h3 className="font-serif text-xl text-burgundy">{t.giftTitle}</h3>
-      <p className="text-xs text-ink/60">{t.giftHint}</p>
+    <form onSubmit={handleSubmit} className="space-y-3 rounded-3xl border border-line bg-white/70 p-4">
+      <h3 className="font-display font-extrabold text-xl text-night">{t.giftTitle}</h3>
+      <p className="text-xs text-night/60">{t.giftHint}</p>
       <div className="flex gap-2">
-        <span className="flex items-center rounded-xl border border-gold/50 bg-cream px-3 font-medium text-burgundy">{PHONE_PREFIX}</span>
+        <span className="flex items-center rounded-xl border border-line bg-page px-3 font-medium text-brand">{PHONE_PREFIX}</span>
         <input
           type="tel"
           inputMode="numeric"
@@ -139,14 +139,14 @@ function IssueGiftForm({ halls, onIssued }: { halls: readonly Hall[]; onIssued: 
         </select>
       )}
       {error && <p role="alert" className="text-sm font-medium text-red-700">{error}</p>}
-      <button type="submit" disabled={isBusy || localPhone.length < 9 || !eventDate} className="min-h-12 w-full rounded-full bg-burgundy font-semibold text-cream disabled:opacity-50">
+      <button type="submit" disabled={isBusy || localPhone.length < 9 || !eventDate} className="min-h-12 w-full rounded-xl bg-brand font-semibold text-white disabled:opacity-50">
         🎁 {t.giftIssue}
       </button>
       {issued && (
         <div className="rounded-2xl bg-emerald-50 p-3 text-center">
           <p className="text-sm text-emerald-900">{t.giftIssued}</p>
           <p className="font-mono text-2xl font-bold tracking-widest text-emerald-900">{formatGiftCode(issued.code)}</p>
-          <button type="button" onClick={() => void handleShare(issued)} className="mt-2 min-h-11 rounded-full bg-[#25D366] px-5 text-sm font-semibold text-white">
+          <button type="button" onClick={() => void handleShare(issued)} className="mt-2 min-h-11 rounded-xl bg-[#25D366] px-5 text-sm font-semibold text-white">
             {t.share}
           </button>
         </div>

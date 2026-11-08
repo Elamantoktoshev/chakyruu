@@ -1,9 +1,10 @@
-import { isPaletteOf, summarizeGroups, type GuestGroup, type InvitationDraftInput } from '@chakyruu/shared';
+import { ILLUSTRATED_TEMPLATE_KEY, isPaletteOf, summarizeGroups, type GuestGroup, type InvitationDraftInput } from '@chakyruu/shared';
 import type { Prisma } from '@prisma/client';
 import type { SessionUser } from '../auth/auth.service.js';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
-import { templateSelect } from '../templates/template.routes.js';
+import { findTemplatePublishPriceSom } from '../pricing/price.service.js';
+import { publicTemplate, templateSelect } from '../templates/template.routes.js';
 import { removeQuietly } from '../storage/audioUpload.js';
 import { replaceImage } from '../storage/imageUpload.js';
 import type { StorageProvider } from '../storage/storage.provider.js';
@@ -52,15 +53,20 @@ export const ownerInvitationSelect = {
 
 type OwnerInvitationRow = Prisma.InvitationGetPayload<{ select: typeof ownerInvitationSelect }>;
 
-/** Builder DTO: the raw gift relation becomes "is this a gift, and from whom". */
-function toOwnerDto({ giftCode, ...invitation }: OwnerInvitationRow) {
+/** Builder DTO: the raw gift relation becomes "is this a gift, and from whom", plus the publish price. */
+async function toOwnerDto({ giftCode, ...invitation }: OwnerInvitationRow) {
   const isGift = giftCode !== null && giftCode.cancelledAt === null;
-  return { ...withMusicView(invitation), isGift, giftFrom: isGift ? giftCode.organization : null };
+  const priceSom = await findTemplatePublishPriceSom(invitation.template.priceSom);
+  return { ...withMusicView({ ...invitation, template: publicTemplate(invitation.template) }), isGift, giftFrom: isGift ? giftCode.organization : null, priceSom };
 }
 
 async function assertTemplateExists(templateId: string) {
-  const template = await prisma.template.findUnique({ where: { id: templateId }, select: { id: true, type: true, componentKey: true } });
-  if (!template) throw new HttpError(400, 'Unknown template');
+  const template = await prisma.template.findUnique({
+    where: { id: templateId },
+    select: { id: true, type: true, componentKey: true, isActive: true },
+  });
+  // Switched-off designs cannot start new invitations (existing ones keep working).
+  if (!template?.isActive) throw new HttpError(400, 'Unknown template');
   return template;
 }
 
@@ -72,6 +78,8 @@ export async function createDraft(user: SessionUser, templateId: string, giftCod
     eventType: template.type,
     ownerId: user.id,
     organizationId: user.organizationId,
+    // Illustrated designs open with their own layered scene by default.
+    ...(template.componentKey === ILLUSTRATED_TEMPLATE_KEY ? { openingAnimation: 'TEMPLATE' as const } : {}),
   };
   if (!giftCode) return toOwnerDto(await prisma.invitation.create({ data: base, select: ownerInvitationSelect }));
 

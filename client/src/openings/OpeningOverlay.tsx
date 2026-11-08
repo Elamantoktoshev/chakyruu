@@ -1,4 +1,4 @@
-import { effectiveOpening, type OpeningAnimation } from '@chakyruu/shared';
+import { openingDurationMs, resolveOpening, type OpeningAnimation, type TemplateManifest } from '@chakyruu/shared';
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useI18n } from '../i18n/LanguageContext';
@@ -11,6 +11,8 @@ const LazyScene = lazy(async () => {
     return <Scene {...props} />;
   } };
 });
+
+const LazyLayeredScene = lazy(async () => ({ default: (await import('./layered/LayeredScene')).LayeredScene }));
 
 const LEAVE_MS = 450;
 /** Landing hero loop: closed → open → invitation visible → closed again. */
@@ -29,6 +31,8 @@ type Props = {
   isLooping?: boolean;
   /** The guest's first tap: the music may start now (browsers block autoplay without a gesture). */
   onEnter?: () => void;
+  /** Illustrated templates: their manifest, used when the opening is TEMPLATE. */
+  manifest?: TemplateManifest | null;
 };
 
 /** Joining words between the two names ("Айбек жана Айзада", "Бакыт и Айгүл"). */
@@ -44,10 +48,12 @@ export function initialsOf(names: string): string {
 }
 
 /** Full-screen opening scene above the invitation. NONE / reduced motion render nothing. */
-export function OpeningOverlay({ animation, doorLabel, mode, isLooping = false, onEnter }: Props) {
+export function OpeningOverlay({ animation, doorLabel, mode, isLooping = false, onEnter, manifest = null }: Props) {
   const { t } = useI18n();
   const prefersReducedMotion = useReducedMotion();
-  const effective = effectiveOpening(animation, prefersReducedMotion);
+  const resolved = resolveOpening(animation, manifest?.opening.kind ?? null, prefersReducedMotion);
+  // One string per visual, so timers and replays react when the builder switches template or scene.
+  const effective = resolved.kind === 'none' ? 'NONE' : resolved.kind === 'scene' ? resolved.scene : `layered:${resolved.opening}`;
   const [phase, setPhase] = useState<Phase>('closed');
   const [duration, setDuration] = useState(2000);
   const timers = useRef<number[]>([]);
@@ -62,16 +68,20 @@ export function OpeningOverlay({ animation, doorLabel, mode, isLooping = false, 
 
   useEffect(() => clearTimers, []);
   useEffect(() => {
-    void loadScenes().then(({ SCENE_DURATION_MS }) => {
-      if (effective !== 'NONE') setDuration(SCENE_DURATION_MS[effective]);
-    });
-  }, [effective]);
+    if (resolved.kind === 'layered' && manifest) {
+      setDuration(openingDurationMs(manifest));
+      return;
+    }
+    if (resolved.kind !== 'scene') return;
+    const { scene } = resolved;
+    void loadScenes().then(({ SCENE_DURATION_MS }) => setDuration(SCENE_DURATION_MS[scene]));
+  }, [effective]); // eslint-disable-line react-hooks/exhaustive-deps -- `effective` already encodes resolved + manifest kind
 
   // A new choice in the builder replays from the start.
   useEffect(() => {
     clearTimers();
     setPhase('closed');
-  }, [animation]);
+  }, [effective]);
 
   // Live page: no scrolling under the overlay.
   const isCovering = mode === 'live' && effective !== 'NONE' && phase !== 'done';
@@ -127,7 +137,11 @@ export function OpeningOverlay({ animation, doorLabel, mode, isLooping = false, 
       className={`opening-root ${position} overflow-hidden ${phase === 'opening' ? 'is-opening' : ''} ${phase === 'leaving' ? 'is-opening is-leaving' : ''}`}
     >
       <Suspense fallback={<div className="absolute inset-0 bg-cream" />}>
-        <LazyScene animation={effective} doorLabel={doorLabel} initials={initialsOf(doorLabel)} />
+        {resolved.kind === 'layered' && manifest ? (
+          <LazyLayeredScene manifest={manifest} doorLabel={doorLabel} />
+        ) : resolved.kind === 'scene' ? (
+          <LazyScene animation={resolved.scene} doorLabel={doorLabel} initials={initialsOf(doorLabel)} />
+        ) : null}
       </Suspense>
       {!isLooping && (
         <>

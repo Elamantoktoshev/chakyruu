@@ -7,6 +7,8 @@ const ky = {
     BESHIK: 'Бешик той',
     SUNNOT: 'Сүннөт той',
     MAARAKE: 'Маараке',
+    KECHE: 'Кече',
+    OTHER: 'Той',
   } satisfies Record<EventType, string>,
   inviteSubtitle: {
     WEDDING: 'Сиздерди үйлөнүү тоюбузга чакырабыз',
@@ -14,6 +16,8 @@ const ky = {
     BESHIK: 'Сиздерди бешик тоюбузга чакырабыз',
     SUNNOT: 'Сиздерди сүннөт тоюбузга чакырабыз',
     MAARAKE: 'Сиздерди мааракебизге чакырабыз',
+    KECHE: 'Сиздерди кечебизге чакырабыз',
+    OTHER: 'Сиздерди тоюбузга чакырабыз',
   } satisfies Record<EventType, string>,
   adultsOnly: '18+ · Чоңдор үчүн гана',
   draftBanner: 'Черновик — бул баракты сиз гана көрөсүз',
@@ -36,7 +40,7 @@ const ky = {
   gallerySlide: '{n}-сүрөт, жалпы {total}',
   brandingLine: 'Chakyruu.kg аркылуу түзүлгөн — өзүңүздүкүн түзүңүз',
   openingSkip: 'Өткөрүп жиберүү',
-  openingNames: { BOZ_UY: 'Боз үй', ENVELOPE: 'Конверт', CURTAINS: 'Пардалар', TUNDUK: 'Түндүк', NONE: 'Жөнөкөй' } satisfies Record<OpeningAnimation, string>,
+  openingNames: { TEMPLATE: 'Шаблондун анимациясы', BOZ_UY: 'Боз үй', ENVELOPE: 'Конверт', CURTAINS: 'Пардалар', TUNDUK: 'Түндүк', NONE: 'Жөнөкөй' } satisfies Record<OpeningAnimation, string>,
 };
 
 export type InvitationDict = typeof ky;
@@ -48,6 +52,8 @@ const ru: InvitationDict = {
     BESHIK: 'Бешик той',
     SUNNOT: 'Сүннөт той',
     MAARAKE: 'Юбилей',
+    KECHE: 'Вечеринка',
+    OTHER: 'Той',
   },
   inviteSubtitle: {
     WEDDING: 'Приглашаем вас на нашу свадьбу',
@@ -55,6 +61,8 @@ const ru: InvitationDict = {
     BESHIK: 'Приглашаем вас на бешик той',
     SUNNOT: 'Приглашаем вас на сүннөт той',
     MAARAKE: 'Приглашаем вас на наш юбилей',
+    KECHE: 'Приглашаем вас на нашу вечеринку',
+    OTHER: 'Приглашаем вас на наш той',
   },
   adultsOnly: '18+ · Только для взрослых',
   draftBanner: 'Черновик — эту страницу видите только вы',
@@ -77,7 +85,7 @@ const ru: InvitationDict = {
   gallerySlide: 'Фото {n} из {total}',
   brandingLine: 'Создано на Chakyruu.kg — создайте своё',
   openingSkip: 'Пропустить',
-  openingNames: { BOZ_UY: 'Юрта', ENVELOPE: 'Конверт', CURTAINS: 'Шторы', TUNDUK: 'Түндүк', NONE: 'Без анимации' },
+  openingNames: { TEMPLATE: 'Анимация шаблона', BOZ_UY: 'Юрта', ENVELOPE: 'Конверт', CURTAINS: 'Шторы', TUNDUK: 'Түндүк', NONE: 'Без анимации' },
 };
 
 export const invitationDict = { ky, ru };

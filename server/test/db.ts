@@ -11,9 +11,9 @@ export async function resetDatabase(): Promise<void> {
   await prisma.price.createMany({ data: DEFAULT_PRICES });
 }
 
-/** Same defaults as the `admin` migration inserts. */
+/** Same defaults as the migrations leave (`admin`, then `publish_price_499`). */
 export const DEFAULT_PRICES = [
-  { code: 'INVITATION_PUBLISH', audience: 'CLIENT', amountSom: 700, credits: null, sortOrder: 0 },
+  { code: 'INVITATION_PUBLISH', audience: 'CLIENT', amountSom: 499, credits: null, sortOrder: 0 },
   { code: 'VENUE_PACK_10', audience: 'VENUE', amountSom: 5000, credits: 10, sortOrder: 10 },
   { code: 'VENUE_PACK_30', audience: 'VENUE', amountSom: 13500, credits: 30, sortOrder: 11 },
   { code: 'VENUE_PACK_100', audience: 'VENUE', amountSom: 40000, credits: 100, sortOrder: 12 },

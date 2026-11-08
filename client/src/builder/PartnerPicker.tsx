@@ -50,7 +50,7 @@ export function PartnerPicker({ invitation, options, onChange }: Props) {
   }
 
   return (
-    <div className="space-y-4 rounded-2xl border border-gold/40 bg-white/50 p-4">
+    <div className="space-y-4 rounded-2xl border border-line bg-white/50 p-4">
       <Field label={t.pickerVenue}>
         <select
           value={invitation.venueOrgId ?? ''}

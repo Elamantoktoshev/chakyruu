@@ -46,38 +46,38 @@ export function LeadsTab() {
             type="button"
             aria-pressed={status === value}
             onClick={() => setStatus(value)}
-            className={`min-h-11 rounded-full border px-4 text-sm font-medium ${
-              status === value ? 'border-burgundy bg-burgundy text-cream' : 'border-gold/50 bg-white/70 text-burgundy'
+            className={`min-h-11 rounded-xl border px-4 text-sm font-medium ${
+              status === value ? 'border-brand bg-brand text-white' : 'border-line bg-white/70 text-brand'
             }`}
           >
             {value ? t.leadStatus[value] : t.adminFilterAll}
           </button>
         ))}
       </div>
-      {leads.length === 0 && <p className="text-center text-ink/60">{t.adminLeadsEmpty}</p>}
+      {leads.length === 0 && <p className="text-center text-night/60">{t.adminLeadsEmpty}</p>}
       <ul className="space-y-3">
         {leads.map((lead) => (
-          <li key={lead.id} className="rounded-2xl border border-gold/30 bg-white/70 p-4">
-            <p className="text-xs uppercase tracking-wider text-gold">
+          <li key={lead.id} className="rounded-2xl border border-line bg-white/70 p-4">
+            <p className="text-xs uppercase tracking-wider text-brand">
               {t.orgType[lead.type]} · {t.leadStatus[lead.status]}
             </p>
-            <p className="font-serif text-xl text-burgundy">{lead.venueName}</p>
-            <p className="text-sm text-ink/70">
+            <p className="font-display font-extrabold text-xl text-night">{lead.venueName}</p>
+            <p className="text-sm text-night/70">
               {lead.name} ·{' '}
               <a href={`tel:${lead.phone}`} className="underline">
                 {lead.phone}
               </a>
               {lead.city ? ` · ${lead.city}` : ''}
             </p>
-            <p className="text-xs text-ink/50">{formatDateTime(lead.createdAt, locale)}</p>
+            <p className="text-xs text-night/50">{formatDateTime(lead.createdAt, locale)}</p>
             {lead.status !== 'CONVERTED' && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {lead.status === 'NEW' && (
-                  <button type="button" onClick={() => void markContacted(lead)} className="min-h-11 rounded-full border border-burgundy/40 px-4 text-sm font-medium text-burgundy">
+                  <button type="button" onClick={() => void markContacted(lead)} className="min-h-11 rounded-xl border border-brand/40 px-4 text-sm font-medium text-brand">
                     {t.adminMarkContacted}
                   </button>
                 )}
-                <button type="button" onClick={() => void convert(lead)} className="min-h-11 rounded-full bg-burgundy px-4 text-sm font-semibold text-cream">
+                <button type="button" onClick={() => void convert(lead)} className="min-h-11 rounded-xl bg-brand px-4 text-sm font-semibold text-white">
                   {t.adminConvert}
                 </button>
               </div>

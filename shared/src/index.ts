@@ -23,3 +23,5 @@ export * from './music.schemas.js';
 export * from './media.schemas.js';
 export * from './partners.schemas.js';
 export * from './admin.schemas.js';
+export * from './manifest.js';
+export * from './manifest.schema.js';

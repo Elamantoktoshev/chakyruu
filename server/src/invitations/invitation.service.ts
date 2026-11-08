@@ -3,7 +3,7 @@ import { canManageInvitation, type PolicyUser } from '../auth/policy.js';
 import { findGuestByToken } from '../guests/rsvp.service.js';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
-import { templateSelect } from '../templates/template.routes.js';
+import { publicTemplate, templateSelect } from '../templates/template.routes.js';
 import { gallerySelect } from './gallery.service.js';
 import { invitationMusicSelect, withMusicView } from './music.service.js';
 
@@ -62,5 +62,5 @@ export async function getPublicInvitation(slug: string, viewer: PolicyUser | und
   }
   const { status: _status, ownerId: _ownerId, organizationId: _organizationId, venueOrg, hall, tamadaOrg, ...rest } = invitation;
   const guest = await findGuestByToken(invitation.id, guestToken);
-  return { ...withMusicView(rest), ...partnerBlocks({ venueOrg, hall, tamadaOrg }), isDraft, guest };
+  return { ...withMusicView({ ...rest, template: publicTemplate(rest.template) }), ...partnerBlocks({ venueOrg, hall, tamadaOrg }), isDraft, guest };
 }

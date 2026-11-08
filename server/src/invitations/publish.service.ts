@@ -5,7 +5,8 @@ import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
 import { createPendingPayment, runCheckout, type CheckoutView } from '../payments/checkout.service.js';
 import type { PaymentGateway } from '../payments/gateway.js';
-import { getActivePrice } from '../pricing/price.service.js';
+import { announcePublished } from '../notify/announce.js';
+import { getTemplatePublishPrice } from '../pricing/price.service.js';
 import { findManagedInvitation } from './access.js';
 
 async function missingForPublish(id: string): Promise<MissingForPublish[]> {
@@ -72,9 +73,13 @@ export async function publishInvitation(
   const missing = await missingForPublish(id);
   if (missing.length > 0) throw new HttpError(400, 'Invitation is not ready to publish', missing);
   // A partner's gift pays for it: no checkout at all.
-  if (await publishWithGift(id)) return { status: 'PUBLISHED', slug: invitation.slug, paymentId: null };
+  if (await publishWithGift(id)) {
+    void announcePublished(id, true);
+    return { status: 'PUBLISHED', slug: invitation.slug, paymentId: null };
+  }
 
-  const price = await getActivePrice(INVITATION_PRICE_CODE);
+  const { template } = await prisma.invitation.findUniqueOrThrow({ where: { id }, select: { template: { select: { priceSom: true } } } });
+  const price = await getTemplatePublishPrice(template.priceSom);
   const payment = await startInvitationPayment(id, provider, price.amountTyiyn, gateway);
   const outcome = await runCheckout(gateway, {
     payment,
