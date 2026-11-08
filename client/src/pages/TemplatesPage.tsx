@@ -10,6 +10,9 @@ import { ErrorView, LoadingView } from '../components/StatusView';
 import { CatalogGrid, type CatalogFilter } from '../components/templateCatalog/CatalogGrid';
 import { CatalogHeading } from '../components/templateCatalog/CatalogHeading';
 import { useI18n } from '../i18n/LanguageContext';
+import { Seo } from '../seo/Seo';
+import { PAGE_TEXTS } from '../seo/seoContent';
+import { useInitialData } from '../ssr/initialData';
 
 function parseFilter(value: string | null): CatalogFilter {
   return value && (EVENT_TYPES as readonly string[]).includes(value) ? (value as EventType) : 'ALL';
@@ -17,11 +20,11 @@ function parseFilter(value: string | null): CatalogFilter {
 
 /** /templates: every design, filterable by toi type (the filter lives in the URL, so it can be shared). */
 export function TemplatesPage() {
-  const { t } = useI18n();
+  const { t, siteLocale } = useI18n();
   const { state: auth } = useAuth();
   const [params, setParams] = useSearchParams();
   const load = useCallback(() => api.listTemplates(), []);
-  const templates = useAsync(load);
+  const templates = useAsync(load, useInitialData('templates'));
   const filter = parseFilter(params.get('type'));
   const isLoggedIn = auth.status === 'authenticated';
   const templateHref = (templateId: string) => {
@@ -32,6 +35,7 @@ export function TemplatesPage() {
 
   return (
     <div className="min-h-dvh bg-page">
+      <Seo locale={siteLocale} page="templates" {...PAGE_TEXTS.templates[siteLocale]} />
       <AppHeader />
       <main className="mx-auto max-w-6xl px-5 pb-20 pt-10 lg:pt-14">
         <CatalogHeading title={t.tplCatalogTitle} subtitle={t.tplCatalogSubtitle} isPageTitle />

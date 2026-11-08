@@ -8,6 +8,8 @@ import { AppHeader } from '../components/AppHeader';
 import { inputClass } from '../builder/fields';
 import { useI18n } from '../i18n/LanguageContext';
 import { safeUrl } from '../lib/format';
+import { Seo } from '../seo/Seo';
+import { PAGE_TEXTS } from '../seo/seoContent';
 
 const FILTERS = ['city', 'lang', 'priceMax', 'date'] as const;
 
@@ -19,7 +21,7 @@ function readFilters(params: URLSearchParams): Filters {
 
 /** Filters live in the URL, so a filtered catalogue can be shared as a link. */
 export function TamadaCatalogPage() {
-  const { t } = useI18n();
+  const { t, siteLocale } = useI18n();
   const [params, setParams] = useSearchParams();
   const query = readFilters(params);
   // The query string is the stable dependency: the catalogue reloads only when a filter changes.
@@ -36,6 +38,7 @@ export function TamadaCatalogPage() {
 
   return (
     <div className="min-h-dvh pb-16">
+      <Seo locale={siteLocale} page="tamadalar" {...PAGE_TEXTS.tamadalar[siteLocale]} />
       <AppHeader />
       <main className="mx-auto max-w-5xl px-4 pt-8">
         <h1 className="font-display font-extrabold text-4xl text-night">{t.catalogTitle}</h1>

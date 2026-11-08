@@ -8,7 +8,7 @@ import { useI18n } from '../i18n/LanguageContext';
 
 /** Wrong link or a removed invitation: say so and offer the two useful next steps. */
 export function NotFoundPage() {
-  const { t } = useI18n();
+  const { t, localePath } = useI18n();
   const { state } = useAuth();
   const createHref = state.status === 'authenticated' ? '/create' : '/login?next=/create';
 
@@ -28,7 +28,7 @@ export function NotFoundPage() {
               {t.heroCta}
               <ArrowRightIcon className="h-5 w-5 transition group-hover:translate-x-1" />
             </Link>
-            <Link to="/" className={`${secondaryButton} min-h-14`}>
+            <Link to={localePath('')} className={`${secondaryButton} min-h-14`}>
               {t.navHome}
             </Link>
           </div>

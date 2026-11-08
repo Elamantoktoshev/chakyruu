@@ -9,7 +9,7 @@ import { ChatIcon } from './ui/SiteIcons';
 
 /** Site header: brand, section links, WhatsApp, login / cabinet and language. Shown on every app page. */
 export function AppHeader() {
-  const { t } = useI18n();
+  const { t, localePath } = useI18n();
   const { state } = useAuth();
   const isLoggedIn = state.status === 'authenticated';
   const role = state.status === 'authenticated' ? state.user.role : null;
@@ -20,27 +20,27 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line/80 bg-white/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
-        <Link to="/" aria-label={t.brand} className="min-w-0 rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/20">
+        <Link to={localePath('')} aria-label={t.brand} className="min-w-0 rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/20">
           <BrandLogo />
         </Link>
         <nav className="flex shrink-0 items-center gap-1 text-sm">
-          <Link to="/" aria-current={pathname === '/' ? 'page' : undefined} className={`${linkClass} hidden md:flex ${pathname === '/' ? activeClass : ''}`}>
+          <Link to={localePath('')} aria-current={pathname === localePath('') ? 'page' : undefined} className={`${linkClass} hidden md:flex ${pathname === localePath('') ? activeClass : ''}`}>
             {t.navHome}
           </Link>
           <Link
-            to="/templates"
-            aria-current={pathname === '/templates' ? 'page' : undefined}
-            className={`${linkClass} hidden md:flex ${pathname === '/templates' ? activeClass : ''}`}
+            to={localePath('templates')}
+            aria-current={pathname === localePath('templates') ? 'page' : undefined}
+            className={`${linkClass} hidden md:flex ${pathname === localePath('templates') ? activeClass : ''}`}
           >
             {t.navTemplates}
           </Link>
-          <a href="/#prices" className={`${linkClass} hidden md:flex`}>
+          <a href={`${localePath('')}#prices`} className={`${linkClass} hidden md:flex`}>
             {t.navPrices}
           </a>
           <Link
-            to="/tamadalar"
-            aria-current={pathname === '/tamadalar' ? 'page' : undefined}
-            className={`${linkClass} hidden lg:flex ${pathname === '/tamadalar' ? activeClass : ''}`}
+            to={localePath('tamadalar')}
+            aria-current={pathname === localePath('tamadalar') ? 'page' : undefined}
+            className={`${linkClass} hidden lg:flex ${pathname === localePath('tamadalar') ? activeClass : ''}`}
           >
             {t.catalogTitle}
           </Link>

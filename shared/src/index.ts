@@ -26,3 +26,4 @@ export * from './admin.schemas.js';
 export * from './manifest.js';
 export * from './manifest.schema.js';
 export * from './promo.js';
+export * from './seo.js';

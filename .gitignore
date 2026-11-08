@@ -9,3 +9,4 @@ coverage/
 *.tsbuildinfo
 server/uploads/
 dist-seed/
+dist-ssr/

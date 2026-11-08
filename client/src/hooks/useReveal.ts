@@ -24,7 +24,8 @@ function sharedObserver(): IntersectionObserver | null {
 /** Adds `is-visible` once the element scrolls into view. Without IntersectionObserver it shows at once. */
 export function useReveal<T extends Element>(): { ref: React.RefObject<T | null>; isVisible: boolean } {
   const ref = useRef<T>(null);
-  const [isVisible, setIsVisible] = useState(() => typeof IntersectionObserver === 'undefined');
+  // Same first value on the server and in the browser (hydration); the effect reveals it.
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const element = ref.current;

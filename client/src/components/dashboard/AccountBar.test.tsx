@@ -31,7 +31,7 @@ function renderCabinet() {
         <AuthProvider>
           <Routes>
             <Route path="/dashboard" element={<AccountBar />} />
-            <Route path="/" element={<p>home page</p>} />
+            <Route path="/ky/" element={<p>home page</p>} />
           </Routes>
         </AuthProvider>
       </LanguageProvider>

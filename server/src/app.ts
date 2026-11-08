@@ -31,6 +31,7 @@ import { createOgRouter } from './og/og.routes.js';
 import { createPictureRenderer } from './og/og.service.js';
 import { createSeoRouter } from './web/seo.js';
 import { createWebRouter } from './web/spa.js';
+import type { SsrRender } from './web/ssr.js';
 import { templateRouter } from './templates/template.routes.js';
 import { createTilekLikeRouter } from './tilek/tilek.routes.js';
 
@@ -67,6 +68,8 @@ export interface AppConfig {
   commitSha?: string;
   /** Built React app (client/dist). When set, the API also serves the site and invitation previews. */
   clientDir?: string;
+  /** Server render of public pages (client/dist-ssr/entry-server.js). */
+  ssrRender?: SsrRender | null;
   /** mp3 re-encoding (ffmpeg); tests pass a no-op so they do not depend on ffmpeg. */
   compressAudio?: AudioCompressor;
   /** Demo numbers with a fixed login code and no SMS (TEST_LOGIN_PHONES). */
@@ -144,7 +147,16 @@ export function createApp(config: AppConfig): Express {
   app.use(createSeoRouter(checkout.appUrl));
   if (config.clientDir) {
     const headTags = config.browser ? integrationTags(config.browser) : '';
-    app.use(createWebRouter({ clientDir: config.clientDir, appUrl: checkout.appUrl, headTags }));
+    app.use(
+      createWebRouter({
+        clientDir: config.clientDir,
+        appUrl: checkout.appUrl,
+        headTags,
+        ssrRender: config.ssrRender,
+        // One indexable site: www.chakyruu.kg and the *.ondigitalocean.app address redirect to it.
+        isCanonicalHostEnforced: isProduction,
+      }),
+    );
   }
 
   app.use(notFoundHandler);

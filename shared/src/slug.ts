@@ -30,6 +30,11 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   'templates',
   'terms',
   'uploads',
+  // Localized public pages (/ky/…, /ru/…) and the future blog.
+  'ky',
+  'ru',
+  'blog',
+  'en',
 ]);
 
 /** Russian + Kyrgyz (and common Kazakh) Cyrillic → readable latin. */

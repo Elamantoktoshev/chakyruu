@@ -4,7 +4,7 @@ import { useI18n } from '../../i18n/LanguageContext';
 import { ChatIcon } from '../ui/SiteIcons';
 
 export function SiteFooter() {
-  const { t } = useI18n();
+  const { t, localePath } = useI18n();
   const linkClass = 'flex min-h-11 items-center transition hover:text-white';
   return (
     <footer className="bg-night text-white/65">
@@ -34,11 +34,11 @@ export function SiteFooter() {
         </div>
         <div className="text-sm">
           <ul>
-            <li><Link to="/templates" className={linkClass}>{t.navTemplates}</Link></li>
-            <li><Link to="/tamadalar" className={linkClass}>{t.catalogTitle}</Link></li>
-            <li><Link to="/oferta" className={linkClass}>{t.footerOffer}</Link></li>
-            <li><Link to="/privacy" className={linkClass}>{t.footerPrivacy}</Link></li>
-            <li><Link to="/contacts" className={linkClass}>{t.footerContacts}</Link></li>
+            <li><Link to={localePath('templates')} className={linkClass}>{t.navTemplates}</Link></li>
+            <li><Link to={localePath('tamadalar')} className={linkClass}>{t.catalogTitle}</Link></li>
+            <li><Link to={localePath('oferta')} className={linkClass}>{t.footerOffer}</Link></li>
+            <li><Link to={localePath('privacy')} className={linkClass}>{t.footerPrivacy}</Link></li>
+            <li><Link to={localePath('contacts')} className={linkClass}>{t.footerContacts}</Link></li>
           </ul>
         </div>
       </div>

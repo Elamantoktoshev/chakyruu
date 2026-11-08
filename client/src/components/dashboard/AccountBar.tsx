@@ -5,7 +5,7 @@ import { useI18n } from '../../i18n/LanguageContext';
 
 /** Who is signed in (phone or Google e-mail) and the "log out" button, at the top of the cabinet. */
 export function AccountBar() {
-  const { t } = useI18n();
+  const { t, localePath } = useI18n();
   const { state, signOut } = useAuth();
   const navigate = useNavigate();
   const [isLeaving, setIsLeaving] = useState(false);
@@ -16,7 +16,7 @@ export function AccountBar() {
   async function handleLogout() {
     setIsLeaving(true);
     await signOut();
-    navigate('/', { replace: true });
+    navigate(localePath(''), { replace: true });
   }
 
   return (

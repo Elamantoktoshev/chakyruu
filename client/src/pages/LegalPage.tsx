@@ -6,10 +6,15 @@ import { CONTACTS } from '../legal/contacts';
 import { OFFER } from '../legal/offer';
 import { PRIVACY } from '../legal/privacy';
 import { PLACEHOLDER, PLACEHOLDER_START, type LegalTexts } from '../legal/types';
+import { Seo } from '../seo/Seo';
+import { PAGE_TEXTS } from '../seo/seoContent';
+import type { PublicPage } from '@chakyruu/shared';
 
 export type LegalKind = 'offer' | 'privacy' | 'contacts';
 
 const DOCS: Readonly<Record<LegalKind, LegalTexts>> = { offer: OFFER, privacy: PRIVACY, contacts: CONTACTS };
+/** URL of each document under /ky/… and /ru/… */
+const LEGAL_PAGES = { offer: 'oferta', privacy: 'privacy', contacts: 'contacts' } as const satisfies Readonly<Record<LegalKind, PublicPage>>;
 
 /** "[ЗАПОЛНИТЬ: …]" stands out so no placeholder survives to launch unnoticed. */
 function withPlaceholders(text: string): ReactNode {
@@ -27,10 +32,12 @@ function withPlaceholders(text: string): ReactNode {
 
 /** Offer, privacy policy and contacts in the visitor's language. */
 export function LegalPage({ kind }: { kind: LegalKind }) {
-  const { lang } = useI18n();
+  const { lang, siteLocale } = useI18n();
   const doc = DOCS[kind][lang];
+  const page = LEGAL_PAGES[kind];
   return (
     <div className="flex min-h-dvh flex-col">
+      <Seo locale={siteLocale} page={page} {...PAGE_TEXTS[page][siteLocale]} />
       <AppHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-12">
         <h1 className="font-display font-extrabold text-4xl text-night">{doc.title}</h1>

@@ -113,6 +113,11 @@
   opacity: 1;
   transform: none;
 }
+/* Until the app script runs (server-rendered HTML, no-JS readers) everything is visible. */
+html:not(.js) .reveal {
+  opacity: 1;
+  transform: none;
+}
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     opacity: 1;

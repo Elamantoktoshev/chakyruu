@@ -21,8 +21,8 @@ type Props = {
 
 /** Landing excerpt of the /templates catalog: same cards, first six, then a link to the full page. */
 export function TemplateCatalog({ templates, filter, onFilterChange, templateHref }: Props) {
-  const { t } = useI18n();
-  const allHref = filter === 'ALL' ? '/templates' : `/templates?type=${filter}`;
+  const { t, localePath } = useI18n();
+  const allHref = filter === 'ALL' ? localePath('templates') : `${localePath('templates')}?type=${filter}`;
   return (
     <section id="templates" className="scroll-mt-20 bg-gradient-to-b from-white via-brand-soft/60 to-white py-20 lg:py-24">
       <div className="mx-auto max-w-6xl px-5">

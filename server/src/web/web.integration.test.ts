@@ -57,17 +57,17 @@ describe('web pages', () => {
     const asset = await request(app()).get('/assets/app-abc123.js').expect(200);
     expect(asset.headers['cache-control']).toContain('immutable');
 
-    for (const page of ['/', '/dashboard', '/create?template=tpl-test']) {
+    for (const page of ['/ky/', '/dashboard', '/create?template=tpl-test']) {
       const res = await request(app()).get(page).expect(200);
       expect(res.headers['cache-control']).toBe('no-cache');
       expect(res.text).toContain('<title>Chakyruu.kg — той чакыруулары</title>');
-      // Every non-invitation page shares the landing's preview.
+      // Without a server render bundle every page shares the landing's preview.
       expect(metaContent(res.text, 'og:title')).toBe('Chakyruu.kg landing');
     }
   });
 
   it('preloads chunks only for invitations', async () => {
-    for (const page of ['/', '/dashboard']) {
+    for (const page of ['/ky/', '/dashboard']) {
       expect((await request(app()).get(page).expect(200)).text).not.toContain('modulepreload');
     }
   });
@@ -97,18 +97,22 @@ describe('web pages', () => {
   });
 
   it('gives the landing an absolute preview picture', async () => {
-    const res = await request(app()).get('/').expect(200);
+    const res = await request(app()).get('/ky/').expect(200);
     expect(metaContent(res.text, 'og:image')).toBe('http://localhost:5173/og-landing.png');
   });
 
-  it('serves robots.txt and a sitemap of public pages only', async () => {
+  it('serves robots.txt and a sitemap of the public pages in both languages', async () => {
     const robots = await request(app()).get('/robots.txt').expect(200);
     expect(robots.headers['content-type']).toContain('text/plain');
     expect(robots.text).toContain('Allow: /api/og/');
     expect(robots.text).toContain('Disallow: /api/');
     expect(robots.text).toContain('Sitemap: http://localhost:5173/sitemap.xml');
     const sitemap = await request(app()).get('/sitemap.xml').expect(200);
-    expect(sitemap.text).toContain('<loc>http://localhost:5173/oferta</loc>');
+    expect(sitemap.text).toContain('<loc>http://localhost:5173/ky/</loc>');
+    expect(sitemap.text).toContain('<loc>http://localhost:5173/ru/templates</loc>');
+    expect(sitemap.text).toContain('<xhtml:link rel="alternate" hreflang="ru" href="http://localhost:5173/ru/oferta"/>');
+    expect(sitemap.text).toContain('<xhtml:link rel="alternate" hreflang="x-default" href="http://localhost:5173/ky/oferta"/>');
+    expect(sitemap.text.match(/<url>/g)).toHaveLength(12);
     expect(sitemap.text).not.toContain(SLUG);
   });
 
@@ -206,3 +210,64 @@ describe('pictures', () => {
     await request(app()).get('/api/og/no-such-toi/qr.png').expect(404);
   });
 });
+
+describe('public pages: server render, redirects, indexing', () => {
+  const rendered = (overrides: Partial<Parameters<typeof buildTestApp>[1]> = {}) =>
+    buildTestApp(ctx, {
+      clientDir,
+      ssrRender: async ({ url, data, siteUrl }) => ({
+        html: `<main><h1>Rendered ${url}</h1><p>${Object.keys(data).join(',')}</p></main>`,
+        head: `<title data-seo="">Page title</title>\n<link data-seo="" rel="canonical" href="${siteUrl}${url}" />`,
+        lang: url.startsWith('/ru') ? 'ru' : 'ky',
+      }),
+      ...overrides,
+    });
+
+  it('returns the full page HTML with its own head, language and the data it was rendered with', async () => {
+    const res = await request(rendered()).get('/ru/templates').expect(200);
+    expect(res.text).toContain('<html lang="ru">');
+    expect(res.text).toContain('<div id="root"><main><h1>Rendered /ru/templates</h1><p>templates</p></main></div>');
+    expect(res.text).toContain('<title data-seo="">Page title</title>');
+    // The default landing title and description are replaced, not duplicated.
+    expect(res.text).not.toContain('Chakyruu.kg — той чакыруулары');
+    expect(res.text).not.toContain('Default description');
+    expect(res.text).toMatch(/<script id="initial-data" type="application\/json">\{"templates":\[.*\]\}<\/script>/);
+    expect(res.text).not.toContain('noindex');
+  });
+
+  it('serves the browser-rendered page when the server render fails', async () => {
+    const broken = buildTestApp(ctx, { clientDir, ssrRender: async () => Promise.reject(new Error('boom')) });
+    const res = await request(broken).get('/ky/').expect(200);
+    expect(res.text).toContain('<div id="root"></div>');
+    expect(res.text).not.toContain('noindex');
+  });
+
+  it('moves old addresses to the Kyrgyz pages with 301, keeping the query', async () => {
+    mkdirSync(path.join(clientDir, 'templates'), { recursive: true });
+    for (const [from, to] of [
+      ['/', '/ky/'],
+      ['/templates', '/ky/templates'],
+      ['/tamadalar?city=osh', '/ky/tamadalar?city=osh'],
+      ['/oferta', '/ky/oferta'],
+      ['/ky', '/ky/'],
+      ['/ru/templates/', '/ru/templates'],
+    ]) {
+      const res = await request(rendered()).get(from).expect(301);
+      expect(res.headers.location, from).toBe(to);
+    }
+  });
+
+  it('marks app pages and unknown paths noindex', async () => {
+    for (const page of ['/dashboard', '/login', '/no-such-thing']) {
+      expect((await request(rendered()).get(page).expect(200)).text, page).toContain('<meta name="robots" content="noindex, nofollow" />');
+    }
+  });
+
+  it('sends other hosts (www, *.ondigitalocean.app) to the main site in production, but not the API', async () => {
+    const production = rendered({ isProduction: true, appUrl: 'https://chakyruu.kg' });
+    const res = await request(production).get('/ru/templates?type=WEDDING').set('Host', 'www.chakyruu.kg').expect(301);
+    expect(res.headers.location).toBe('https://chakyruu.kg/ru/templates?type=WEDDING');
+    await request(production).get('/api/health').set('Host', 'chakyruu-umdne.ondigitalocean.app').expect(200);
+  });
+});
+

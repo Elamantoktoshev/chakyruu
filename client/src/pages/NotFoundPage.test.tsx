@@ -44,7 +44,7 @@ describe('NotFoundPage', () => {
     renderAt('/ормормо');
     const main = within(await screen.findByRole('main'));
     expect(main.getByRole('link', { name: /түзүү/i }).getAttribute('href')).toBe('/login?next=/create');
-    expect(main.getByRole('link', { name: 'Башкы бет' }).getAttribute('href')).toBe('/');
+    expect(main.getByRole('link', { name: 'Башкы бет' }).getAttribute('href')).toBe('/ky/');
   });
 
   it('also catches deeper unknown paths', async () => {

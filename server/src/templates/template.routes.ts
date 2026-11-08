@@ -29,18 +29,19 @@ export function publicTemplate<T extends { config: unknown }>(template: T): T {
 
 export const templateRouter = Router();
 
-templateRouter.get('/', async (req, res) => {
-  const { type } = listQuerySchema.parse(req.query);
+/** Active designs in catalog order, each with its final price (own, or the shop-wide publish price). */
+export async function listPublicTemplates(type?: (typeof EVENT_TYPES)[number]) {
   const templates = await prisma.template.findMany({
     // Universal templates (Shyrdak) fit every kind of toi.
     where: { isActive: true, ...(type ? { OR: [{ type }, { isUniversal: true }] } : {}) },
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     select: templateSelect,
   });
-  // The card shows the final price: the design's own one, or the shop-wide publish price.
   const shopPriceSom = await findTemplatePublishPriceSom(null);
-  sendOk(
-    res,
-    templates.map((template) => publicTemplate({ ...template, priceSom: template.priceSom ?? shopPriceSom })),
-  );
+  return templates.map((template) => publicTemplate({ ...template, priceSom: template.priceSom ?? shopPriceSom }));
+}
+
+templateRouter.get('/', async (req, res) => {
+  const { type } = listQuerySchema.parse(req.query);
+  sendOk(res, await listPublicTemplates(type));
 });

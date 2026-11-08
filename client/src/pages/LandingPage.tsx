@@ -20,6 +20,9 @@ import { Steps } from '../components/landing/Steps';
 import { TemplateCatalog, type CatalogFilter } from '../components/landing/TemplateCatalog';
 import { Reveal } from '../components/Reveal';
 import { useI18n } from '../i18n/LanguageContext';
+import { Seo } from '../seo/Seo';
+import { PAGE_TEXTS } from '../seo/seoContent';
+import { useInitialData } from '../ssr/initialData';
 
 /** Shows the floating mobile CTA once the hero has scrolled out of view. */
 function useScrolledPast<T extends Element>(): [React.RefObject<T | null>, boolean] {
@@ -36,11 +39,11 @@ function useScrolledPast<T extends Element>(): [React.RefObject<T | null>, boole
 }
 
 export function LandingPage() {
-  const { t } = useI18n();
+  const { t, siteLocale } = useI18n();
   const { state: auth } = useAuth();
   const { prices, publishPriceSom } = usePrices();
   const load = useCallback(() => api.listTemplates(), []);
-  const templates = useAsync(load);
+  const templates = useAsync(load, useInitialData('templates'));
   const [heroRef, isPastHero] = useScrolledPast<HTMLDivElement>();
   const [filter, setFilter] = useState<CatalogFilter>('ALL');
 
@@ -57,6 +60,7 @@ export function LandingPage() {
 
   return (
     <div className="min-h-dvh bg-white font-sans text-night">
+      <Seo locale={siteLocale} page="" {...PAGE_TEXTS[''][siteLocale]} />
       <AppHeader />
       <div ref={heroRef}>
         <Hero createHref={createHref} publishPriceSom={publishPriceSom} />

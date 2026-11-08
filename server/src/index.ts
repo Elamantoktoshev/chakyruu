@@ -15,6 +15,7 @@ import { logger } from './lib/logger.js';
 import { createGoogleOAuth, type GoogleOAuth } from './auth/google.js';
 import { configureAdminNotifier, flushAdminNotifications } from './notify/notifier.js';
 import { createTelegramSender } from './notify/telegram.js';
+import { loadSsrRender } from './web/ssr.js';
 
 /** server/uploads — next to src/ and dist/. */
 const UPLOADS_DIR = fileURLToPath(new URL('../uploads', import.meta.url));
@@ -131,7 +132,12 @@ async function createErrorReporter(env: Env): Promise<ErrorReporter> {
 
 const env = loadEnv();
 setUpAdminNotifications(env);
-const config = { ...buildConfig(env), errorReporter: await createErrorReporter(env) };
+const baseConfig = buildConfig(env);
+const config = {
+  ...baseConfig,
+  errorReporter: await createErrorReporter(env),
+  ssrRender: baseConfig.clientDir ? await loadSsrRender(baseConfig.clientDir) : null,
+};
 const server = createApp(config).listen(config.port, () => {
   logger.info(`API listening on http://localhost:${config.port}`);
 });

@@ -42,6 +42,8 @@ COPY --from=build /app/server/dist server/dist
 COPY --from=build /app/server/dist-seed server/dist-seed
 COPY --from=build /app/server/prisma server/prisma
 COPY --from=build /app/client/dist client/dist
+# Server render of the public pages (/ky/…, /ru/…): React is bundled in, no client dependencies needed.
+COPY --from=build /app/client/dist-ssr client/dist-ssr
 RUN npx prisma generate --schema server/prisma/schema.prisma
 
 WORKDIR /app/server

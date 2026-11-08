@@ -13,7 +13,7 @@ type Props = {
 
 /** Phone-only navigation ("☰"): native <details>, closes itself after a tap on a link. */
 export function MobileMenu({ role }: Props) {
-  const { t } = useI18n();
+  const { t, localePath } = useI18n();
   const menuRef = useRef<HTMLDetailsElement>(null);
   const close = () => menuRef.current?.removeAttribute('open');
   const itemClass = 'flex min-h-12 items-center rounded-xl px-4 font-display font-bold text-night transition hover:bg-brand-soft hover:text-brand';
@@ -30,10 +30,10 @@ export function MobileMenu({ role }: Props) {
         </svg>
       </summary>
       <nav className="absolute right-0 top-13 w-64 max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-white p-2 shadow-2xl shadow-night/10">
-        <Link to="/" onClick={close} className={itemClass}>{t.navHome}</Link>
-        <Link to="/templates" onClick={close} className={itemClass}>{t.navTemplates}</Link>
-        <a href="/#prices" onClick={close} className={itemClass}>{t.navPrices}</a>
-        <Link to="/tamadalar" onClick={close} className={itemClass}>{t.catalogTitle}</Link>
+        <Link to={localePath('')} onClick={close} className={itemClass}>{t.navHome}</Link>
+        <Link to={localePath('templates')} onClick={close} className={itemClass}>{t.navTemplates}</Link>
+        <a href={`${localePath('')}#prices`} onClick={close} className={itemClass}>{t.navPrices}</a>
+        <Link to={localePath('tamadalar')} onClick={close} className={itemClass}>{t.catalogTitle}</Link>
         {role === 'ORG_ADMIN' && <Link to="/partner" onClick={close} className={itemClass}>{t.navPartner}</Link>}
         {role === 'ADMIN' && <Link to="/admin" onClick={close} className={itemClass}>{t.navAdmin}</Link>}
         <a
