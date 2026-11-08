@@ -2,11 +2,12 @@ import { PAYMENT_PROVIDERS, type PaymentProviderId } from '@chakyruu/shared';
 import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { api, ApiError } from '../api/client';
-import type { CheckoutView, OwnerInvitation } from '../api/types';
+import type { CheckoutView, OwnerInvitation, PromoPreview } from '../api/types';
 import { useAsync } from '../api/useAsync';
 import { AppHeader } from '../components/AppHeader';
-import { PAYMENT_LABELS, PaymentBadge } from '../components/PaymentBadges';
+import { PAYMENT_LABELS } from '../components/PaymentBadges';
 import { CheckoutPanel } from '../components/payments/CheckoutPanel';
+import { PromoCodeField, promoErrorText } from '../components/payments/PromoCodeField';
 import { ErrorView, LoadingView } from '../components/StatusView';
 import type { Dict } from '../i18n/dict';
 import { useI18n } from '../i18n/LanguageContext';
@@ -14,6 +15,13 @@ import { copyText } from '../lib/share';
 import { track } from '../lib/analytics';
 
 const FIELD_LABEL_KEYS = { hostNames: 'fieldHostNames', eventDate: 'fieldDate', venueName: 'fieldVenueName' } as const;
+
+/** 409 from publish: really paid already, or a parallel tap is still setting the payment up. */
+function conflictText(error: unknown, t: Dict): string | null {
+  if (!(error instanceof ApiError) || error.status !== 409) return null;
+  const reason = (error.details as { reason?: unknown } | undefined)?.reason;
+  return reason === 'in_progress' ? t.payInProgress : t.alreadyPublished;
+}
 
 function missingFieldLabels(error: unknown, t: Dict): string[] | null {
   if (!(error instanceof ApiError) || error.status !== 400 || !Array.isArray(error.details)) return null;
@@ -47,14 +55,17 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
   const [missing, setMissing] = useState<string[] | null>(null);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const [pending, setPending] = useState<{ paymentId: string; checkout: CheckoutView } | null>(null);
-  const priceLabel = invitation.isGift ? '0' : invitation.priceSom === null ? '…' : invitation.priceSom.toLocaleString('ru-RU');
+  const [promo, setPromo] = useState<PromoPreview | null>(null);
+  const finalSom = invitation.isGift ? 0 : promo ? promo.finalPriceSom : invitation.priceSom;
+  const priceLabel = finalSom === null ? '…' : finalSom.toLocaleString('ru-RU');
+  const isFree = finalSom === 0;
 
   async function handlePay() {
     setIsPaying(true);
     setError(null);
     setMissing(null);
     try {
-      const result = await api.publishInvitation(invitation.id, provider);
+      const result = await api.publishInvitation(invitation.id, provider, promo?.code);
       if (result.status === 'PENDING') {
         setPending({ paymentId: result.paymentId, checkout: result.checkout });
         return;
@@ -63,8 +74,11 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
       setPublishedSlug(result.slug);
     } catch (err: unknown) {
       const labels = missingFieldLabels(err, t);
+      const promoProblem = promoErrorText(err, t);
+      // The code stopped working between "Колдонуу" and "Төлөө" (used up, switched off).
+      if (promoProblem) setPromo(null);
       if (labels) setMissing(labels);
-      else setError(err instanceof ApiError && err.status === 409 ? t.alreadyPublished : t.errorGeneric);
+      else setError(promoProblem ?? conflictText(err, t) ?? t.errorGeneric);
       setIsPaying(false);
     }
   }
@@ -77,11 +91,16 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
       <h1 className="font-display font-extrabold text-3xl text-night">{t.payTitle}</h1>
       <div className="rounded-3xl border border-line bg-white/70 p-6 text-center">
         <p className="text-sm text-night/60">{t.payPrice}</p>
+        {promo && <p className="mt-1 text-lg text-night/40 line-through">{promo.priceSom.toLocaleString('ru-RU')} сом</p>}
         <p className="mt-1 font-display text-5xl font-bold text-night">{priceLabel} сом</p>
         <p className="mt-2 text-sm text-night/70">{invitation.hostNames}</p>
       </div>
 
-      <fieldset>
+      {!invitation.isGift && (
+        <PromoCodeField invitationId={invitation.id} applied={promo} onApply={setPromo} onRemove={() => setPromo(null)} />
+      )}
+
+      <fieldset hidden={isFree}>
         <legend className="mb-2 text-sm font-medium text-night/80">{t.payChoose}</legend>
         <div className="grid gap-3">
           {PAYMENT_PROVIDERS.map((value) => (
@@ -94,7 +113,6 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
                 provider === value ? 'border-brand bg-white' : 'border-line bg-white/60'
               }`}
             >
-              <PaymentBadge provider={value} />
               <span>{PAYMENT_LABELS[value]}</span>
             </button>
           ))}
@@ -123,7 +141,7 @@ function Checkout({ invitation }: { invitation: OwnerInvitation }) {
         onClick={() => void handlePay()}
         className="min-h-14 w-full rounded-xl bg-brand font-semibold text-white shadow-lg shadow-brand/20 transition hover:bg-brand-dark disabled:opacity-60"
       >
-        {isPaying ? t.paying : invitation.isGift ? t.publishFree : `${t.payButton} · ${priceLabel} сом`}
+        {isPaying ? t.paying : isFree ? t.publishFree : `${t.payButton} · ${priceLabel} сом`}
       </button>
       <p className="text-center text-xs text-night/50">{t.payFakeNote}</p>
       <Link to={`/create/${invitation.id}`} className="block text-center text-sm text-brand underline underline-offset-4">

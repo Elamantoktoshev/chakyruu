@@ -1,13 +1,16 @@
-import { INVITATION_PRICE_CODE, type MissingForPublish, type PaymentProviderId } from '@chakyruu/shared';
+import { discountedSom, type MissingForPublish, type PaymentProviderId } from '@chakyruu/shared';
 import type { SessionUser } from '../auth/auth.service.js';
 import { publishWithGift } from '../gifts/gift.service.js';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
 import { transferComment } from '../payments/transferComment.js';
-import { createPendingPayment, runCheckout, type CheckoutView } from '../payments/checkout.service.js';
+import { runCheckout, type CheckoutView } from '../payments/checkout.service.js';
+import { fulfillPayment } from '../payments/fulfill.service.js';
+import { findUsablePromo } from '../promo/promo.service.js';
+import { startOrResumeInvitationPayment } from './invitationPayment.js';
 import type { PaymentGateway } from '../payments/gateway.js';
 import { announcePublished } from '../notify/announce.js';
-import { getTemplatePublishPrice } from '../pricing/price.service.js';
+import { TYIYN_PER_SOM, getTemplatePublishPrice } from '../pricing/price.service.js';
 import { findManagedInvitation } from './access.js';
 
 async function missingForPublish(id: string): Promise<MissingForPublish[]> {
@@ -22,55 +25,54 @@ async function missingForPublish(id: string): Promise<MissingForPublish[]> {
   ];
 }
 
-/** A redirect checkout the guest abandoned stops blocking a new attempt after this long. */
-const PENDING_PAYMENT_TTL_MS = 30 * 60 * 1000;
-
 /** Where the payer returns from the provider and where links in emails / SMS point. */
 export interface PublishContext {
   gateway: PaymentGateway;
   appUrl: string;
 }
 
-/**
- * Creates the PENDING payment under a row lock on the invitation, so a double tap on "Pay"
- * cannot start two checkouts: the second request waits, sees the first payment and gets 409.
- * The provider is called after this short transaction, never inside it.
- */
-async function startInvitationPayment(
-  invitationId: string,
-  provider: PaymentProviderId,
-  amountTyiyn: number,
-  gateway: PaymentGateway,
-) {
-  return prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "Invitation" WHERE id = ${invitationId} FOR UPDATE`;
-    const active = await tx.payment.findFirst({
-      where: {
-        invitationId,
-        OR: [{ status: 'SUCCEEDED' }, { status: 'PENDING', createdAt: { gt: new Date(Date.now() - PENDING_PAYMENT_TTL_MS) } }],
-      },
-      select: { id: true },
-    });
-    if (active) throw new HttpError(409, 'A payment for this invitation is already in progress');
-    return createPendingPayment(
-      { purpose: 'INVITATION', invitationId, priceCode: INVITATION_PRICE_CODE, amount: amountTyiyn, provider, gateway: gateway.id },
-      tx,
-    );
-  });
-}
+/** Gateway name stored on payments a 100 % promo code covers completely (no money moves). */
+const PROMO_GATEWAY_ID = 'promo';
 
 export type PublishResult =
   | { status: 'PUBLISHED'; slug: string; paymentId: string | null }
   | { status: 'PENDING'; slug: string; paymentId: string; checkout: CheckoutView };
 
+export interface PublishOptions {
+  provider: PaymentProviderId;
+  promoCode?: string;
+}
+
+/** What the pay page shows after "Колдонуу": the code works, and the new price. */
+export interface PromoPreview {
+  code: string;
+  discountPercent: number;
+  priceSom: number;
+  finalPriceSom: number;
+}
+
+async function invitationPrice(id: string) {
+  const { template, hostNames, eventDate } = await prisma.invitation.findUniqueOrThrow({
+    where: { id },
+    select: { hostNames: true, eventDate: true, template: { select: { priceSom: true } } },
+  });
+  return { price: await getTemplatePublishPrice(template.priceSom), hostNames, eventDate };
+}
+
+export async function previewPromo(id: string, user: SessionUser, code: string): Promise<PromoPreview> {
+  await findManagedInvitation(id, user);
+  const [{ price }, promo] = await Promise.all([invitationPrice(id), findUsablePromo(code)]);
+  return { code: promo.code, discountPercent: promo.discountPercent, priceSom: price.amountSom, finalPriceSom: discountedSom(price.amountSom, promo.discountPercent) };
+}
+
 export async function publishInvitation(
   id: string,
   user: SessionUser,
-  provider: PaymentProviderId,
+  { provider, promoCode }: PublishOptions,
   { gateway, appUrl }: PublishContext,
 ): Promise<PublishResult> {
   const invitation = await findManagedInvitation(id, user);
-  if (invitation.status === 'PUBLISHED') throw new HttpError(409, 'Invitation is already published');
+  if (invitation.status === 'PUBLISHED') throw new HttpError(409, 'Invitation is already published', { reason: 'paid' });
   const missing = await missingForPublish(id);
   if (missing.length > 0) throw new HttpError(400, 'Invitation is not ready to publish', missing);
   // A partner's gift pays for it: no checkout at all.
@@ -79,17 +81,31 @@ export async function publishInvitation(
     return { status: 'PUBLISHED', slug: invitation.slug, paymentId: null };
   }
 
-  const { template, hostNames, eventDate } = await prisma.invitation.findUniqueOrThrow({
-    where: { id },
-    select: { hostNames: true, eventDate: true, template: { select: { priceSom: true } } },
+  const { price, hostNames, eventDate } = await invitationPrice(id);
+  const promo = promoCode ? await findUsablePromo(promoCode) : null;
+  const amountTyiyn = promo ? discountedSom(price.amountSom, promo.discountPercent) * TYIYN_PER_SOM : price.amountTyiyn;
+  const isFree = amountTyiyn === 0;
+  const started = await startOrResumeInvitationPayment({
+    invitationId: id,
+    provider,
+    amountTyiyn,
+    gatewayId: isFree ? PROMO_GATEWAY_ID : gateway.id,
+    promoCodeId: promo?.id ?? null,
   });
-  const price = await getTemplatePublishPrice(template.priceSom);
-  const payment = await startInvitationPayment(id, provider, price.amountTyiyn, gateway);
+  if (started.kind === 'resume') {
+    return { status: 'PENDING', slug: invitation.slug, paymentId: started.paymentId, checkout: started.checkout };
+  }
+  if (isFree) {
+    // The code covers everything: no bank involved, publish right away.
+    await fulfillPayment(started.payment.id, { raw: { promoCode: promo?.code } });
+    return { status: 'PUBLISHED', slug: invitation.slug, paymentId: started.payment.id };
+  }
+
   const outcome = await runCheckout(gateway, {
-    payment,
-    amountTyiyn: price.amountTyiyn,
+    payment: started.payment,
+    amountTyiyn,
     method: provider,
-    description: `Chakyruu.kg: ${invitation.slug}`,
+    description: `Chakyruu.kg: ${invitation.slug}${promo ? ` (${promo.code} −${promo.discountPercent}%)` : ''}`,
     // A ready invitation always has a date; today is only a safety net.
     comment: transferComment(hostNames, eventDate ?? new Date()),
     appUrl,

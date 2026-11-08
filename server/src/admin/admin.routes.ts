@@ -10,6 +10,8 @@ import {
   leadPatchSchema,
   priceCodeParamsSchema,
   pricePatchSchema,
+  promoCreateSchema,
+  promoPatchSchema,
 } from '@chakyruu/shared';
 import { Router } from 'express';
 import { currentUser, requireAuth } from '../auth/auth.middleware.js';
@@ -19,6 +21,7 @@ import { createAdminTrackRouter, type AdminTrackDeps } from '../music/track.rout
 import { createAdminTemplateRouter } from '../templates/template.admin.routes.js';
 import { confirmPaymentByAdmin, listPaymentsForAdmin } from '../payments/status.service.js';
 import { listAllPrices, updatePrice } from '../pricing/price.service.js';
+import { createPromoCode, listPromoCodes, setPromoActive } from '../promo/promo.service.js';
 import { getAdminStats } from './stats.service.js';
 import { convertLead, grantCredits, listLeads, listOrganizations, setCatalogStatus, setLeadStatus } from './admin.service.js';
 
@@ -57,6 +60,13 @@ export function createAdminRouter(tracks: AdminTrackDeps): Router {
   router.patch('/prices/:code', async (req, res) => {
     const { code } = priceCodeParamsSchema.parse(req.params);
     sendOk(res, await updatePrice(code, pricePatchSchema.parse(req.body)));
+  });
+
+  router.get('/promo-codes', async (_req, res) => sendOk(res, await listPromoCodes()));
+  router.post('/promo-codes', async (req, res) => sendOk(res, await createPromoCode(promoCreateSchema.parse(req.body))));
+  router.patch('/promo-codes/:id', async (req, res) => {
+    const { id } = adminIdParamsSchema.parse(req.params);
+    sendOk(res, await setPromoActive(id, promoPatchSchema.parse(req.body).isActive));
   });
 
   router.get('/payments', async (req, res) => {

@@ -25,3 +25,4 @@ export * from './partners.schemas.js';
 export * from './admin.schemas.js';
 export * from './manifest.js';
 export * from './manifest.schema.js';
+export * from './promo.js';

@@ -139,7 +139,8 @@ Integration-тесты сервера работают в отдельной с�
 | DELETE | `/api/my/invitations/:id/gallery/:photoId` | Удалить фото вместе с файлом |
 | POST   | `/api/my/invitations/:id/music` | multipart `music` (+ `durationSec`): свой mp3 ≤ 10 МБ (по сигнатуре), сжатие ffmpeg до 128 kbps |
 | DELETE | `/api/my/invitations/:id/music` | Удалить свой mp3 |
-| POST   | `/api/my/invitations/:id/publish` | `{ provider: MBANK | SIMBANK }` — оплата 499 сом (цена из таблицы Price) → PUBLISHED |
+| POST   | `/api/my/invitations/:id/publish` | `{ provider: MBANK | SIMBANK, promoCode? }` — оплата 499 сом (цена из таблицы Price) → PUBLISHED. Повторное нажатие с тем же банком и кодом возвращает ту же инструкцию; другой банк/код заменяет неоплаченный платёж; 409 `{reason: paid}` — только после оплаты |
+| POST   | `/api/my/invitations/:id/promo` | `{ code }` → `{ code, discountPercent, priceSom, finalPriceSom }`; 400 `{reason: not_found | expired | used_up}` |
 | GET    | `/api/my/invitations/:id/guests?status=` | Гости |
 | POST   | `/api/my/invitations/:id/guests/bulk` | `{ text }` — одно имя на строку (`+996…` в конце строки — телефон) |
 | DELETE | `/api/my/invitations/:id/guests/:guestId` | Удалить гостя |
@@ -158,6 +159,8 @@ Integration-тесты сервера работают в отдельной с�
 ### Админ (`/api/admin/*`, роль ADMIN, иначе 403)
 
 `GET/POST /tracks`, `PATCH /tracks/:id { title, category, active, sortOrder, durationSec }`, `POST /tracks/:id/file` (mp3 ≤ 20 МБ), `GET /organizations?type=`, `PATCH /organizations/:id { catalogStatus }`, `POST /organizations/:id/credits { amount }`, `GET /leads?status=`, `PATCH /leads/:id { status }`, `POST /leads/:id/convert`, `GET /prices`, `PATCH /prices/:code`, `GET /payments?status=`, `POST /payments/:id/confirm`.
+
+Промокоды: `GET /api/admin/promo-codes`, `POST /api/admin/promo-codes` (`code`, `discountPercent` 1–100, `maxUses`, `expiresAt`, `note`), `PATCH /api/admin/promo-codes/:id` (`isActive`). Использование засчитывается, когда платёж прошёл; код на 100 % публикует без банка (платёж `gateway=promo`, 0 сом). Страница — `/admin` → «Промокоддор».
 
 Шаблоны: `GET /api/admin/templates` (все, с картинками иллюстрированных), `PATCH /api/admin/templates/:id` (название, вид тоя, цена `priceSom` или `null` = общая, бейдж `HIT`/`NEW`/`null`, порядок, `isActive`, описание KY/RU), `POST /api/admin/templates/:id/assets?file=layers/hand-left.webp` (multipart `image`), `DELETE …/assets?file=…` (вернуть файл из репозитория). Страница — `/admin/templates`.
 

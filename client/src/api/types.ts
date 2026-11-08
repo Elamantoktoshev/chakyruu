@@ -398,6 +398,34 @@ export interface AdminTemplatePatch {
   description?: Partial<Record<'ky' | 'ru', string>>;
 }
 
+/** "Колдонуу" on the pay page: the code works and this is the new price. */
+export interface PromoPreview {
+  code: string;
+  discountPercent: number;
+  priceSom: number;
+  finalPriceSom: number;
+}
+
+export interface AdminPromoCode {
+  id: string;
+  code: string;
+  discountPercent: number;
+  maxUses: number | null;
+  usedCount: number;
+  expiresAt: string | null;
+  isActive: boolean;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface AdminPromoInput {
+  code: string;
+  discountPercent: number;
+  maxUses: number | null;
+  expiresAt: string | null;
+  note: string | null;
+}
+
 export interface AdminPrice extends PublicPrice {
   active: boolean;
   sortOrder: number;

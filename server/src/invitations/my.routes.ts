@@ -2,6 +2,7 @@ import {
   createInvitationSchema,
   invitationDraftSchema,
   invitationIdSchema,
+  promoCheckSchema,
   publishSchema,
   galleryOrderSchema,
   galleryPhotoParamsSchema,
@@ -18,7 +19,7 @@ import type { StorageProvider } from '../storage/storage.provider.js';
 import { createDraft, getOwnerInvitation, listMyInvitations, setPhoto, updateDraft } from './my.service.js';
 import { addGalleryPhoto, removeGalleryPhoto, reorderGallery } from './gallery.service.js';
 import { removeCustomMusic, setCustomMusic } from './music.service.js';
-import { publishInvitation, type PublishContext } from './publish.service.js';
+import { previewPromo, publishInvitation, type PublishContext } from './publish.service.js';
 
 export interface MyInvitationsRouterDeps {
   storage: StorageProvider;
@@ -84,8 +85,14 @@ export function createMyInvitationsRouter({ storage, checkout, compressAudio }: 
 
   router.post('/:id/publish', async (req, res) => {
     const { id } = invitationIdSchema.parse(req.params);
-    const { provider } = publishSchema.parse(req.body);
-    sendOk(res, await publishInvitation(id, currentUser(res), provider, checkout));
+    sendOk(res, await publishInvitation(id, currentUser(res), publishSchema.parse(req.body), checkout));
+  });
+
+  // "Колдонуу" on the pay page: is the code valid, and what will it cost?
+  router.post('/:id/promo', async (req, res) => {
+    const { id } = invitationIdSchema.parse(req.params);
+    const { code } = promoCheckSchema.parse(req.body);
+    sendOk(res, await previewPromo(id, currentUser(res), code));
   });
 
   router.use('/:id/guests', guestRouter);

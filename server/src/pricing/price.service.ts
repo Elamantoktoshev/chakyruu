@@ -2,7 +2,7 @@ import { INVITATION_PRICE_CODE } from '@chakyruu/shared';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
 
-const TYIYN_PER_SOM = 100;
+export const TYIYN_PER_SOM = 100;
 
 const priceSelect = { code: true, audience: true, amountSom: true, credits: true, active: true, sortOrder: true } as const;
 

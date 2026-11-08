@@ -1,9 +1,9 @@
 import type { StatsPeriod } from '@chakyruu/shared';
 import { prisma } from '../lib/prisma.js';
+import { TYIYN_PER_SOM } from '../pricing/price.service.js';
 
 const PERIOD_DAYS: Readonly<Record<StatsPeriod, number>> = { day: 1, week: 7, month: 30 };
 const DAY_MS = 24 * 60 * 60 * 1000;
-const TYIYN_PER_SOM = 100;
 const PERCENT = 100;
 
 export interface AdminStats {

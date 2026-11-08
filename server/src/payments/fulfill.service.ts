@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { announcePaid } from '../notify/announce.js';
+import { countPromoUse } from '../promo/promo.service.js';
 
 interface FulfillDetails {
   externalId?: string;
@@ -41,8 +42,9 @@ export async function fulfillPayment(paymentId: string, details: FulfillDetails 
 
     const payment = await tx.payment.findUniqueOrThrow({
       where: { id: paymentId },
-      select: { purpose: true, invitationId: true, organizationId: true, credits: true },
+      select: { purpose: true, invitationId: true, organizationId: true, credits: true, promoCodeId: true },
     });
+    if (payment.promoCodeId) await countPromoUse(tx, payment.promoCodeId);
     if (payment.purpose === 'INVITATION' && payment.invitationId) {
       await tx.invitation.updateMany({
         where: { id: payment.invitationId, status: { not: 'PUBLISHED' } },

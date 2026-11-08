@@ -1,8 +1,8 @@
 import { logger } from '../lib/logger.js';
 import { prisma } from '../lib/prisma.js';
 import { notifyAdmin } from './notifier.js';
+import { TYIYN_PER_SOM } from '../pricing/price.service.js';
 
-const TYIYN_PER_SOM = 100;
 
 /** After an invitation goes public (paid or by a gift code). Never throws into the caller. */
 export async function announcePublished(invitationId: string, isGift: boolean): Promise<void> {

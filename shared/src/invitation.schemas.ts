@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { EVENT_TYPES, LANGUAGES, PAYMENT_PROVIDERS } from './catalog.js';
+import { promoCodeSchema } from './promo.js';
 import { musicStartSchema, trackIdSchema } from './music.schemas.js';
 import { OPENING_ANIMATIONS } from './openings.js';
 import { programSchema } from './program.schemas.js';
@@ -77,4 +78,4 @@ export const publishReadySchema = z.object({
 
 export type MissingForPublish = 'hostNames' | 'eventDate' | 'venueName';
 
-export const publishSchema = z.object({ provider: z.enum(PAYMENT_PROVIDERS) });
+export const publishSchema = z.object({ provider: z.enum(PAYMENT_PROVIDERS), promoCode: promoCodeSchema.optional() });

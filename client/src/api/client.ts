@@ -15,6 +15,9 @@ import type {
 } from '@chakyruu/shared';
 import type {
   AddGuestsResult,
+  AdminPromoCode,
+  AdminPromoInput,
+  PromoPreview,
   AuthOptions,
   AdminLead,
   AdminOrganization,
@@ -155,8 +158,9 @@ export const api = {
     request<MusicUpdate>(`/my/invitations/${encode(id)}/music`, { method: 'POST', body: audioForm('music', file, durationSec) }),
   removeMusic: (id: string) => request<MusicUpdate>(`/my/invitations/${encode(id)}/music`, { method: 'DELETE' }),
   listTracks: () => request<Track[]>('/public/tracks'),
-  publishInvitation: (id: string, provider: PaymentProviderId) =>
-    request<PublishResult>(`/my/invitations/${encode(id)}/publish`, json('POST', { provider })),
+  publishInvitation: (id: string, provider: PaymentProviderId, promoCode?: string) =>
+    request<PublishResult>(`/my/invitations/${encode(id)}/publish`, json('POST', promoCode ? { provider, promoCode } : { provider })),
+  checkPromo: (id: string, code: string) => request<PromoPreview>(`/my/invitations/${encode(id)}/promo`, json('POST', { code })),
 
   listGuests: (id: string, status?: GuestStatus) =>
     request<Guest[]>(`/my/invitations/${encode(id)}/guests${status ? `?status=${status}` : ''}`),
@@ -230,6 +234,9 @@ export const api = {
     payments: (status?: 'PENDING' | 'SUCCEEDED' | 'FAILED') =>
       request<AdminPayment[]>(`/admin/payments${status ? `?status=${status}` : ''}`),
     confirmPayment: (id: string) => request<{ confirmed: true }>(`/admin/payments/${encode(id)}/confirm`, { method: 'POST' }),
+    promoCodes: () => request<AdminPromoCode[]>('/admin/promo-codes'),
+    createPromo: (input: AdminPromoInput) => request<AdminPromoCode>('/admin/promo-codes', json('POST', input)),
+    setPromoActive: (id: string, isActive: boolean) => request<AdminPromoCode>(`/admin/promo-codes/${encode(id)}`, json('PATCH', { isActive })),
     templates: () => request<AdminTemplate[]>('/admin/templates'),
     updateTemplate: (id: string, patch: AdminTemplatePatch) => request<AdminTemplate>(`/admin/templates/${encode(id)}`, json('PATCH', patch)),
     uploadTemplateAsset: (id: string, file: string, image: File) => {

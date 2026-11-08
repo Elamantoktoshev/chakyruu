@@ -404,21 +404,25 @@ model Payment {
   credits        Int?
   /// Amount in tyiyn (1 som = 100 tyiyn) to avoid floating point errors.
   amount         Int
-  /// Payment method the client picked (MBank / O!Деньги / Элсом).
+  /// Payment method the client picked (MBank / Симбанк).
   provider       PaymentProvider
   /// Implementation that processed it: fake | manual | mbank | odengi | elsom (PAYMENT_PROVIDER).
   gateway        String          @default("fake")
   status         PaymentStatus   @default(PENDING)
   externalId     String?
-  /// Short code for manual transfers ("CH-7K3M") — the payer writes it in the transfer comment.
+  /// Short unique code ("CH-7K3MX"): provider order id; the admin finds the payment by it.
   reference      String?         @unique
   rawResponse    Json?
   paidAt         DateTime?
   confirmedById  String?
+  /// Promo code applied to this payment; counted as used once the payment succeeds.
+  promoCode      PromoCode?      @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
+  promoCodeId    String?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
   @@unique([gateway, externalId])
+  @@index([promoCodeId])
   @@index([invitationId])
   @@index([organizationId])
   @@index([status, createdAt])
@@ -534,4 +538,24 @@ model InvitationPhoto {
   createdAt    DateTime   @default(now())
 
   @@index([invitationId, sortOrder])
+}
+
+/// Discount on publishing an invitation, created by the admin in /admin → Промокоддор.
+model PromoCode {
+  id              String    @id @default(cuid())
+  /// Upper-case, what people type ("TOI2027").
+  code            String    @unique
+  /// 1–100: percent off the publish price; 100 publishes for free.
+  discountPercent Int
+  /// Null = unlimited.
+  maxUses         Int?
+  /// Successful payments that used it.
+  usedCount       Int       @default(0)
+  expiresAt       DateTime?
+  isActive        Boolean   @default(true)
+  /// Admin's own note: who it was given to, which campaign.
+  note            String?
+  payments        Payment[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }

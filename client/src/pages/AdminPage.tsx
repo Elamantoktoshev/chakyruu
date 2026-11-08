@@ -3,13 +3,14 @@ import { useAuth } from '../auth/AuthContext';
 import { LeadsTab } from '../components/admin/LeadsTab';
 import { OrganizationsTab } from '../components/admin/OrganizationsTab';
 import { PricesTab } from '../components/admin/PricesTab';
+import { PromoTab } from '../components/admin/PromoTab';
 import { StatsTab } from '../components/admin/StatsTab';
 import { TemplatesTab } from '../components/admin/TemplatesTab';
 import { TracksTab } from '../components/admin/TracksTab';
 import { AppHeader } from '../components/AppHeader';
 import { useI18n } from '../i18n/LanguageContext';
 
-export type AdminTab = 'stats' | 'leads' | 'orgs' | 'catalog' | 'payments' | 'prices' | 'tracks' | 'templates';
+export type AdminTab = 'stats' | 'leads' | 'orgs' | 'catalog' | 'payments' | 'prices' | 'promo' | 'tracks' | 'templates';
 
 type Props = {
   /** Payments tab (manual confirmation) is plugged in by the payments module. */
@@ -32,6 +33,7 @@ export function AdminPage({ paymentsTab, initialTab = 'stats' }: Props) {
     { value: 'catalog', label: t.adminTabCatalog },
     ...(paymentsTab ? [{ value: 'payments' as const, label: t.adminTabPayments }] : []),
     { value: 'prices', label: t.adminTabPrices },
+    { value: 'promo', label: t.adminTabPromo },
     { value: 'templates', label: t.adminTabTemplates },
     { value: 'tracks', label: t.adminTabTracks },
   ];
@@ -67,6 +69,7 @@ export function AdminPage({ paymentsTab, initialTab = 'stats' }: Props) {
             {tab === 'catalog' && <OrganizationsTab fixedType="TAMADA" />}
             {tab === 'payments' && paymentsTab}
             {tab === 'prices' && <PricesTab />}
+            {tab === 'promo' && <PromoTab />}
             {tab === 'tracks' && <TracksTab />}
             {tab === 'templates' && <TemplatesTab />}
           </>
