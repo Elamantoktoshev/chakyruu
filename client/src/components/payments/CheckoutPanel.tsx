@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import type { CheckoutView } from '../../api/types';
 import { useI18n } from '../../i18n/LanguageContext';
 import { copyText } from '../../lib/share';
+import { PAYMENT_LABELS } from '../PaymentBadges';
 
 type Props = { checkout: CheckoutView; paymentId: string };
 
@@ -55,12 +56,13 @@ function ManualTransfer({ instructions, resultHref }: { instructions: Extract<Ch
   const { t } = useI18n();
   const [isCopied, setIsCopied] = useState(false);
   const comment = instructions.comment ?? instructions.reference;
+  const bank = PAYMENT_LABELS[instructions.bank ?? 'MBANK'];
   return (
     <div className="space-y-4 rounded-3xl border-2 border-emerald-300 bg-emerald-50 p-5">
-      <h2 className="font-display font-extrabold text-2xl text-emerald-900">{t.payManualTitle}</h2>
+      <h2 className="font-display font-extrabold text-2xl text-emerald-900">{t.payManualTitle.replace('{bank}', bank)}</h2>
       <ol className="list-inside list-decimal space-y-3 text-sm text-night/80">
         <li>
-          {t.payManualStep1}{' '}
+          {t.payManualStep1.replace('{bank}', bank)}{' '}
           <span className="font-mono text-lg font-semibold text-night">{instructions.receiver}</span>
           <span className="block">
             {t.payManualAmount} <b>{instructions.amountSom.toLocaleString('ru-RU')} сом</b>

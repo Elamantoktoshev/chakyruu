@@ -5,7 +5,8 @@ export type EventType = (typeof EVENT_TYPES)[number];
 export const LANGUAGES = ['KY', 'RU'] as const;
 export type Language = (typeof LANGUAGES)[number];
 
-export const PAYMENT_PROVIDERS = ['MBANK', 'ODENGI', 'ELSOM'] as const;
+/** Ways to pay offered to people. O!Деньги and Элсом were removed; old payments may still carry them. */
+export const PAYMENT_PROVIDERS = ['MBANK', 'SIMBANK'] as const;
 export type PaymentProviderId = (typeof PAYMENT_PROVIDERS)[number];
 
 /** Human names of the toi kinds (calendar entries, link previews). */

@@ -1,4 +1,4 @@
-import type { EventType, GuestStatus, GuestSummary, Language, OpeningAnimation, TrackCategory } from '@chakyruu/shared';
+import type { EventType, GuestStatus, GuestSummary, Language, OpeningAnimation, PaymentProviderId, TrackCategory } from '@chakyruu/shared';
 
 export type { EventType, GuestStatus, Language } from '@chakyruu/shared';
 export type TemplateType = EventType;
@@ -151,6 +151,8 @@ export interface OwnerInvitation extends InvitationContent {
 }
 
 export interface ManualInstructions {
+  /** The bank the payer picked; absent on payments started before Simbank was added (MBank). */
+  bank?: PaymentProviderId;
   receiver: string;
   /** Names + toy day for the transfer comment; absent on payments started before it existed. */
   comment?: string;
@@ -190,7 +192,8 @@ export interface AdminPayment {
   purpose: 'INVITATION' | 'CREDIT_PACKAGE';
   status: 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'REFUNDED';
   amount: number;
-  provider: 'MBANK' | 'ODENGI' | 'ELSOM';
+  /** Old payments may still say ODENGI / ELSOM. */
+  provider: PaymentProviderId | 'ODENGI' | 'ELSOM';
   gateway: string;
   reference: string | null;
   credits: number | null;

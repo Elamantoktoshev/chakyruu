@@ -35,6 +35,12 @@ describe('CheckoutPanel — manual MBank transfer', () => {
     await waitFor(() => expect(copyText).toHaveBeenCalledWith('Айбек & Айзада 15.06.2027'));
   });
 
+  it('names the bank the payer picked', () => {
+    renderManual({ bank: 'SIMBANK', receiver: '0555 444 333', amountSom: 499, comment: 'Асан 15.06.2027', reference: 'CH-7K3MX' });
+    expect(screen.getByRole('heading', { name: 'Симбанк аркылуу которуу' })).toBeTruthy();
+    expect(screen.getByText(/Симбанк тиркемесинде/)).toBeTruthy();
+  });
+
   it('falls back to the code for payments started before comments existed', () => {
     renderManual({ receiver: '0700 123 456', amountSom: 499, reference: 'CH-7K3MX' });
     expect(screen.getByText('CH-7K3MX')).toBeTruthy();

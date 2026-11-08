@@ -1,6 +1,6 @@
 const ky = {
-  payManualTitle: 'MBank аркылуу которуу',
-  payManualStep1: 'MBank тиркемесинде ушул номерге которуңуз:',
+  payManualTitle: '{bank} аркылуу которуу',
+  payManualStep1: '{bank} тиркемесинде ушул номерге которуңуз:',
   payManualAmount: 'Суммасы:',
   payManualStep2: 'Которуунун комментарийине ушуну жазыңыз (аттар жана той күнү):',
   payManualStep3: 'Акча келгенин текшергенден кийин администратор ырастайт (адатта 1 сааттын ичинде).',
@@ -27,8 +27,8 @@ const ky = {
 export type PaymentsDict = typeof ky;
 
 const ru: PaymentsDict = {
-  payManualTitle: 'Перевод через MBank',
-  payManualStep1: 'Переведите в приложении MBank на этот номер:',
+  payManualTitle: 'Перевод через {bank}',
+  payManualStep1: 'Переведите в приложении {bank} на этот номер:',
   payManualAmount: 'Сумма:',
   payManualStep2: 'В комментарии к переводу напишите (имена и дата тоя):',
   payManualStep3: 'Администратор подтвердит оплату, как только увидит перевод (обычно в течение часа).',

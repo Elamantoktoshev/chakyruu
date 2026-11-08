@@ -1,3 +1,4 @@
+import { PAYMENT_PROVIDERS } from './catalog.js';
 import { z } from 'zod';
 import { isTwoGisUrl } from './urls.js';
 import { phoneSchema } from './phone.schemas.js';
@@ -140,5 +141,5 @@ export const catalogQuerySchema = z.object({
 export type CatalogQuery = z.infer<typeof catalogQuerySchema>;
 
 export const purchaseCreditsSchema = z
-  .object({ priceCode: z.string().regex(/^[A-Z0-9_]{2,40}$/), provider: z.enum(['MBANK', 'ODENGI', 'ELSOM']) })
+  .object({ priceCode: z.string().regex(/^[A-Z0-9_]{2,40}$/), provider: z.enum(PAYMENT_PROVIDERS) })
   .strict();

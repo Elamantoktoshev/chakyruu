@@ -73,7 +73,7 @@ describe('publish price per template', () => {
     const draft = await owner.get(`/api/my/invitations/${id}`).expect(200);
     expect(draft.body.data.priceSom).toBe(990);
 
-    await owner.post(`/api/my/invitations/${id}/publish`).send({ provider: 'ODENGI' }).expect(200);
+    await owner.post(`/api/my/invitations/${id}/publish`).send({ provider: 'SIMBANK' }).expect(200);
     const payment = await prisma.payment.findFirstOrThrow({ where: { invitationId: id } });
     expect(payment.amount).toBe(99_000);
   });
@@ -89,6 +89,6 @@ describe('publish price per template', () => {
     const { id } = (await owner.post('/api/my/invitations').send({ templateId: PREMIUM_ID }).expect(201)).body.data;
     await owner.patch(`/api/my/invitations/${id}`).send(COMPLETE).expect(200);
     await prisma.template.update({ where: { id: PREMIUM_ID }, data: { isActive: false } });
-    await owner.post(`/api/my/invitations/${id}/publish`).send({ provider: 'ODENGI' }).expect(200);
+    await owner.post(`/api/my/invitations/${id}/publish`).send({ provider: 'SIMBANK' }).expect(200);
   });
 });

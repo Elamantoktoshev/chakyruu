@@ -139,7 +139,7 @@ Integration-тесты сервера работают в отдельной с�
 | DELETE | `/api/my/invitations/:id/gallery/:photoId` | Удалить фото вместе с файлом |
 | POST   | `/api/my/invitations/:id/music` | multipart `music` (+ `durationSec`): свой mp3 ≤ 10 МБ (по сигнатуре), сжатие ffmpeg до 128 kbps |
 | DELETE | `/api/my/invitations/:id/music` | Удалить свой mp3 |
-| POST   | `/api/my/invitations/:id/publish` | `{ provider: MBANK | ODENGI | ELSOM }` — оплата 499 сом (цена из таблицы Price) → PUBLISHED |
+| POST   | `/api/my/invitations/:id/publish` | `{ provider: MBANK | SIMBANK }` — оплата 499 сом (цена из таблицы Price) → PUBLISHED |
 | GET    | `/api/my/invitations/:id/guests?status=` | Гости |
 | POST   | `/api/my/invitations/:id/guests/bulk` | `{ text }` — одно имя на строку (`+996…` в конце строки — телефон) |
 | DELETE | `/api/my/invitations/:id/guests/:guestId` | Удалить гостя |
@@ -190,7 +190,7 @@ server
   src/templates/ шаблоны
   src/partners/  заявки тойкан
   src/storage/   StorageProvider (local → DO Spaces), проверка изображений
-  src/payments/  PaymentProvider (fake → MBank / O!Деньги / Элсом)
+  src/payments/  PaymentProvider (fake → manual: MBank / Симбанк; заготовки mbank / odengi / elsom)
   test/          хелперы integration-тестов (app, db, globalSetup)
 client/src
   pages/         Landing, Login, Create, Builder, Pay, Dashboard, DashboardInvitation, Invitation

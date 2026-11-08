@@ -100,7 +100,10 @@ enum GuestSource {
 
 enum PaymentProvider {
   MBANK
+  SIMBANK
+  /** No longer offered; kept for payments made before. */
   ODENGI
+  /** No longer offered; kept for payments made before. */
   ELSOM
 }
 

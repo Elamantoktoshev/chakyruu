@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { GIFT_CODE_ALPHABET } from '@chakyruu/shared';
+import { GIFT_CODE_ALPHABET, type PaymentProviderId } from '@chakyruu/shared';
 import { Prisma } from '@prisma/client';
 import { HttpError } from '../lib/http.js';
 import { prisma } from '../lib/prisma.js';
@@ -53,7 +53,8 @@ function toView(result: Exclude<CheckoutResult, { kind: 'completed' }>): Checkou
 interface RunCheckoutInput {
   payment: { id: string; reference: string };
   amountTyiyn: number;
-  method: Prisma.PaymentUncheckedCreateInput['provider'];
+  /** Only the ways to pay we offer today. */
+  method: PaymentProviderId;
   description: string;
   /** Names + day the payer writes in a manual transfer comment (see transferComment). */
   comment: string;

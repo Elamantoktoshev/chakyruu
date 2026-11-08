@@ -14,7 +14,7 @@ let ctx: TestContext;
 let sent: string[];
 
 beforeEach(async () => {
-  ctx = createTestContext(new ManualGateway('+996700555666'));
+  ctx = createTestContext(new ManualGateway({ MBANK: '+996700555666', SIMBANK: '+996700555666' }));
   sent = [];
   configureAdminNotifier({ send: async (text) => void sent.push(text), appUrl: APP_URL });
   await resetDatabase();

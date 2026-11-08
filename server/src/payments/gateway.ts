@@ -18,6 +18,8 @@ export interface CheckoutRequest {
 }
 
 export interface ManualInstructions {
+  /** The bank the payer picked; the page names it and shows our number there. */
+  bank: PaymentProviderId;
   receiver: string;
   /** Names + day for the transfer comment (shown to the payer). */
   comment: string;

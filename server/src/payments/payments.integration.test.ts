@@ -12,6 +12,7 @@ const TAMADA_ADMIN = '+996700000020';
 const VENUE_ADMIN = '+996700000010';
 const ADMIN = '+996700000099';
 const MBANK_RECEIVER = '+996700555666';
+const SIMBANK_RECEIVER = '+996555444333';
 
 let ctx: TestContext;
 let gateway: FakeGateway;
@@ -88,7 +89,7 @@ describe('invitation payment through a redirect provider', () => {
     const { paymentId } = (await client.post(`/api/my/invitations/${id}/publish`).send({ provider: 'MBANK' }).expect(200)).body.data;
     await sendWebhook(`fake_${paymentId}`, 'FAILED').expect(200);
     expect((await prisma.payment.findUniqueOrThrow({ where: { id: paymentId } })).status).toBe('FAILED');
-    await client.post(`/api/my/invitations/${id}/publish`).send({ provider: 'ELSOM' }).expect(200);
+    await client.post(`/api/my/invitations/${id}/publish`).send({ provider: 'SIMBANK' }).expect(200);
   });
 
   it('lets the payer poll the status, which also asks the provider (lost webhook)', async () => {
@@ -111,7 +112,7 @@ describe('credit packages', () => {
   it('adds the package credits once when the payment succeeds', async () => {
     const { orgId } = await createOrgFixture({ type: 'TAMADA', name: 'Нурбек', adminPhone: TAMADA_ADMIN, credits: 5 });
     const tamada = await loginAgent(ctx, TAMADA_ADMIN);
-    const res = await tamada.post('/api/partner/credits/purchase').send({ priceCode: 'TAMADA_PACK_10', provider: 'ODENGI' }).expect(200);
+    const res = await tamada.post('/api/partner/credits/purchase').send({ priceCode: 'TAMADA_PACK_10', provider: 'SIMBANK' }).expect(200);
     expect(res.body.data.status).toBe('PENDING');
     const externalId = `fake_${res.body.data.paymentId}`;
 
@@ -137,7 +138,7 @@ describe('credit packages', () => {
 
 describe('manual MBank transfers confirmed by the admin', () => {
   beforeEach(() => {
-    ctx = createTestContext(new ManualGateway(MBANK_RECEIVER));
+    ctx = createTestContext(new ManualGateway({ MBANK: MBANK_RECEIVER, SIMBANK: SIMBANK_RECEIVER }));
   });
 
   it('shows transfer instructions and publishes after the admin confirms, once', async () => {
@@ -147,6 +148,7 @@ describe('manual MBank transfers confirmed by the admin', () => {
     expect(res.body.data.checkout).toEqual({
       kind: 'manual',
       instructions: {
+        bank: 'MBANK',
         receiver: MBANK_RECEIVER,
         amountSom: 499,
         // People write names and the toy day, not a code; the code stays for the admin.
@@ -167,6 +169,22 @@ describe('manual MBank transfers confirmed by the admin', () => {
     expect(await invitationStatus(id)).toBe('PUBLISHED');
     const adminUser = await prisma.user.findUniqueOrThrow({ where: { phone: ADMIN } });
     expect((await prisma.payment.findUniqueOrThrow({ where: { id: paymentId } })).confirmedById).toBe(adminUser.id);
+  });
+
+  it('gives the Simbank number when the payer picks Simbank', async () => {
+    const client = await loginAgent(ctx, CLIENT);
+    const id = await readyInvitation(client);
+    const res = await client.post(`/api/my/invitations/${id}/publish`).send({ provider: 'SIMBANK' }).expect(200);
+    expect(res.body.data.checkout.instructions).toMatchObject({ bank: 'SIMBANK', receiver: SIMBANK_RECEIVER, amountSom: 499 });
+    expect((await prisma.payment.findUniqueOrThrow({ where: { id: res.body.data.paymentId } })).provider).toBe('SIMBANK');
+  });
+
+  it('no longer offers O!Dengi or Elsom', async () => {
+    const client = await loginAgent(ctx, CLIENT);
+    const id = await readyInvitation(client);
+    for (const provider of ['ODENGI', 'ELSOM']) {
+      await client.post(`/api/my/invitations/${id}/publish`).send({ provider }).expect(400);
+    }
   });
 
   it('never accepts webhooks for manual payments', async () => {

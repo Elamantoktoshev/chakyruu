@@ -1,20 +1,24 @@
+import type { PaymentProviderId } from '@chakyruu/shared';
 import type { CheckoutRequest, CheckoutResult, GatewayPaymentStatus, PaymentGateway, WebhookEvent } from './gateway.js';
 import { WebhookRejected } from './gateway.js';
 
+/** Our account number in each bank people can transfer from. */
+export type ManualReceivers = Readonly<Record<PaymentProviderId, string>>;
+
 /**
- * Launch mode: the payer transfers to our MBank number with their names and the toy day in the comment,
- * and an ADMIN confirms the payment in /admin after seeing the money arrive.
+ * Launch mode: the payer transfers to our number in the bank they picked (MBank or Simbank) with
+ * their names and the toy day in the comment, and an ADMIN confirms the payment in /admin.
  */
 export class ManualGateway implements PaymentGateway {
   readonly id = 'manual' as const;
 
-  constructor(private readonly receiver: string) {}
+  constructor(private readonly receivers: ManualReceivers) {}
 
-  async createPayment({ paymentId, amountTyiyn, reference, comment }: CheckoutRequest): Promise<CheckoutResult> {
+  async createPayment({ paymentId, amountTyiyn, reference, comment, method }: CheckoutRequest): Promise<CheckoutResult> {
     return {
       kind: 'manual',
       externalId: `manual_${paymentId}`,
-      instructions: { receiver: this.receiver, comment, reference, amountSom: amountTyiyn / 100 },
+      instructions: { bank: method, receiver: this.receivers[method], comment, reference, amountSom: amountTyiyn / 100 },
     };
   }
 

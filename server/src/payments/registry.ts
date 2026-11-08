@@ -20,9 +20,12 @@ export function createGatewayFromEnv(env: NodeJS.ProcessEnv, isProduction: boole
     case 'fake':
       return new FakeGateway({ webhookSecret: env.FAKE_WEBHOOK_SECRET });
     case 'manual': {
-      const receiver = env.MANUAL_PAYMENT_RECEIVER ?? '';
-      if (!PHONE_PATTERN.test(receiver)) throw new Error('MANUAL_PAYMENT_RECEIVER must be the MBank number, +996XXXXXXXXX');
-      return new ManualGateway(receiver);
+      const mbank = env.MANUAL_PAYMENT_RECEIVER ?? '';
+      if (!PHONE_PATTERN.test(mbank)) throw new Error('MANUAL_PAYMENT_RECEIVER must be the MBank number, +996XXXXXXXXX');
+      // Simbank transfers go to the same number unless a separate one is set.
+      const simbank = env.MANUAL_PAYMENT_RECEIVER_SIMBANK || mbank;
+      if (!PHONE_PATTERN.test(simbank)) throw new Error('MANUAL_PAYMENT_RECEIVER_SIMBANK must be the Simbank number, +996XXXXXXXXX');
+      return new ManualGateway({ MBANK: mbank, SIMBANK: simbank });
     }
     case 'mbank':
       return new MBankGateway(readMBankConfig(env));

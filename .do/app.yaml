@@ -87,6 +87,9 @@ services:
         value: manual
       - key: MANUAL_PAYMENT_RECEIVER
         type: SECRET
+      # Simbank number for manual transfers; empty → the MBank number above.
+      - key: MANUAL_PAYMENT_RECEIVER_SIMBANK
+        scope: RUN_TIME
 
 # DNS is hosted by DigitalOcean (NS at the .kg registrar → ns1-4.digitalocean.com); the records
 # and the HTTPS certificate are created automatically. CLIENT_URL=${APP_URL} follows the PRIMARY one.

@@ -201,16 +201,16 @@ describe('publishing', () => {
     const id = await createDraft(owner);
     await owner.patch(`/api/my/invitations/${id}`).send(COMPLETE).expect(200);
 
-    const res = await owner.post(`/api/my/invitations/${id}/publish`).send({ provider: 'ODENGI' }).expect(200);
+    const res = await owner.post(`/api/my/invitations/${id}/publish`).send({ provider: 'SIMBANK' }).expect(200);
     expect(res.body.data).toMatchObject({ status: 'PUBLISHED', slug: 'aibek-aizada' });
 
     const payment = await prisma.payment.findFirstOrThrow({ where: { invitationId: id } });
-    expect(payment).toMatchObject({ amount: 49_900, provider: 'ODENGI', status: 'SUCCEEDED' } /* 499 som default price, in tyiyn */);
+    expect(payment).toMatchObject({ amount: 49_900, provider: 'SIMBANK', status: 'SUCCEEDED' } /* 499 som default price, in tyiyn */);
 
     const pub = await request(buildTestApp(ctx)).get('/api/public/invitations/aibek-aizada').expect(200);
     expect(pub.body.data.isDraft).toBe(false);
 
-    await owner.post(`/api/my/invitations/${id}/publish`).send({ provider: 'ODENGI' }).expect(409);
+    await owner.post(`/api/my/invitations/${id}/publish`).send({ provider: 'SIMBANK' }).expect(409);
   });
 
   it('publishes and charges only once when "Pay" is tapped twice at the same time', async () => {
