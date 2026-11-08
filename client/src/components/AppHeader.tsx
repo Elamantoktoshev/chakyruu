@@ -20,10 +20,10 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line/80 bg-white/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
-        <Link to="/" aria-label={t.brand} className="rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/20">
+        <Link to="/" aria-label={t.brand} className="min-w-0 rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/20">
           <BrandLogo />
         </Link>
-        <nav className="flex items-center gap-1 text-sm">
+        <nav className="flex shrink-0 items-center gap-1 text-sm">
           <Link to="/" aria-current={pathname === '/' ? 'page' : undefined} className={`${linkClass} hidden md:flex ${pathname === '/' ? activeClass : ''}`}>
             {t.navHome}
           </Link>
@@ -45,12 +45,12 @@ export function AppHeader() {
             {t.catalogTitle}
           </Link>
           {role === 'ORG_ADMIN' && (
-            <Link to="/partner" className={linkClass}>
+            <Link to="/partner" className={`${linkClass} hidden md:flex`}>
               {t.navPartner}
             </Link>
           )}
           {role === 'ADMIN' && (
-            <Link to="/admin" className={linkClass}>
+            <Link to="/admin" className={`${linkClass} hidden md:flex`}>
               {t.navAdmin}
             </Link>
           )}
@@ -65,12 +65,15 @@ export function AppHeader() {
           </a>
           <Link
             to={isLoggedIn ? '/dashboard' : '/login?next=/dashboard'}
-            className="flex min-h-11 items-center rounded-xl bg-brand-soft px-4 font-display font-bold text-brand transition hover:bg-brand hover:text-white"
+            className="flex min-h-11 items-center whitespace-nowrap rounded-xl bg-brand-soft px-3 font-display font-bold text-brand transition hover:bg-brand hover:text-white sm:px-4"
           >
             {isLoggedIn ? t.navDashboard : t.navLogin}
           </Link>
-          <LanguageSwitch />
-          <MobileMenu />
+          {/* On phones the language switch lives inside the ☰ menu, so the header fits a 320 px screen. */}
+          <div className="hidden md:block">
+            <LanguageSwitch />
+          </div>
+          <MobileMenu role={role} />
         </nav>
       </div>
     </header>

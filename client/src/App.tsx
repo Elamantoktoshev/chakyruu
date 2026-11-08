@@ -5,6 +5,7 @@ import { RequireAuth } from './auth/RequireAuth';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { InvitationPage } from './pages/InvitationPage';
 import { LoginPage } from './pages/LoginPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 import { LoadingView } from './components/StatusView';
 
@@ -50,6 +51,7 @@ export function App() {
             <Route path="/admin" element={<RequireAuth><AdminPage paymentsTab={<PaymentsTab />} /></RequireAuth>} />
             <Route path="/admin/templates" element={<RequireAuth><AdminPage paymentsTab={<PaymentsTab />} initialTab="templates" /></RequireAuth>} />
             <Route path="/:slug" element={<InvitationPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </Suspense>
         </BrowserRouter>

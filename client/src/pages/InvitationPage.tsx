@@ -1,7 +1,7 @@
 import { guestGreeting } from '@chakyruu/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
-import { api } from '../api/client';
+import { ApiError, api } from '../api/client';
 import { takeEmbeddedInvitation } from '../api/embeddedInvitation';
 import type { Invitation } from '../api/types';
 import { useAsync } from '../api/useAsync';
@@ -9,6 +9,7 @@ import { InvitationView } from '../components/invitation/InvitationView';
 import { LanguageSwitch } from '../components/LanguageSwitch';
 import { RsvpForm } from '../components/RsvpForm';
 import { ErrorView, LoadingView } from '../components/StatusView';
+import { NotFoundPage } from './NotFoundPage';
 import { TilekSection } from '../components/tilek/TilekSection';
 import { useI18n } from '../i18n/LanguageContext';
 import { track } from '../lib/analytics';
@@ -28,7 +29,10 @@ function FetchedInvitation({ slug, guestToken }: { slug: string; guestToken: str
   const state = useAsync(load);
 
   if (state.status === 'loading') return <LoadingView />;
-  if (state.status === 'error') return <ErrorView error={state.error} onRetry={state.reload} />;
+  if (state.status === 'error') {
+    if (state.error instanceof ApiError && state.error.status === 404) return <NotFoundPage />;
+    return <ErrorView error={state.error} onRetry={state.reload} />;
+  }
   // A token that does not belong to this invitation is ignored: the page works like the shared link.
   return <LiveInvitation invitation={state.data} guestToken={state.data.guest ? guestToken : null} />;
 }

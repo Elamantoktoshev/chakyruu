@@ -21,9 +21,9 @@ export function BrandMark({ className = 'h-9 w-9' }: Props) {
 /** Chakyruu mark plus the wordmark (header). */
 export function BrandLogo({ className = '' }: Props) {
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
+    <span className={`inline-flex items-center gap-2 sm:gap-2.5 ${className}`}>
       <BrandMark />
-      <span className="font-display text-xl font-extrabold tracking-tight text-night">
+      <span className="font-display text-lg font-extrabold tracking-tight text-night sm:text-xl">
         Chakyruu<span className="text-brand">.kg</span>
       </span>
     </span>
