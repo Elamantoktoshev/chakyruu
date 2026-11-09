@@ -1,23 +1,22 @@
 import { MAX_MUSIC_BYTES } from '@chakyruu/shared';
 import type { RequestHandler } from 'express';
 import { HttpError } from '../lib/http.js';
-import { compressMp3, type CompressedAudio } from './audio.js';
-import { detectMp3 } from './audio.js';
+import { compressMp3, convertToMp3, detectAudioFormat, type AudioFormat, type CompressedAudio } from './audio.js';
 import { receiveFile } from './receiveFile.js';
 import type { StorageProvider, StoredFile } from './storage.provider.js';
 import { logger } from '../lib/logger.js';
 
-/** Re-encodes an uploaded mp3; injectable so tests do not depend on ffmpeg being installed. */
-export type AudioCompressor = (data: Buffer) => Promise<CompressedAudio>;
+/** Turns an upload into the mp3 we store; injectable so tests do not depend on ffmpeg being installed. */
+export type AudioCompressor = (data: Buffer, format: AudioFormat) => Promise<CompressedAudio>;
 
-export const defaultAudioCompressor: AudioCompressor = (data) => compressMp3(data);
+export const defaultAudioCompressor: AudioCompressor = (data, format) => (format === 'mp3' ? compressMp3(data) : convertToMp3(data));
 
-/** One mp3 field plus the `durationSec` measured by the browser. */
+/** One audio field (mp3, m4a, aac, ogg, wav, flac) plus the `durationSec` measured by the browser. */
 export function receiveAudio(field: string, maxBytes: number = MAX_MUSIC_BYTES): RequestHandler {
   return receiveFile({ field, maxBytes, maxFields: 1 });
 }
 
-/** Validates by magic bytes, compresses, stores, then deletes the file it replaces. */
+/** Validates by magic bytes, converts / compresses to mp3, stores, then deletes the file it replaces. */
 export async function replaceAudio(
   storage: StorageProvider,
   compress: AudioCompressor,
@@ -25,8 +24,9 @@ export async function replaceAudio(
   previousKey: string | null,
   save: (stored: StoredFile) => Promise<void>,
 ): Promise<StoredFile> {
-  if (!detectMp3(data)) throw new HttpError(400, 'Only mp3 files are allowed');
-  const { data: compressed } = await compress(data);
+  const format = detectAudioFormat(data);
+  if (!format) throw new HttpError(400, 'Only audio files are allowed (mp3, m4a, aac, ogg, wav, flac)');
+  const { data: compressed } = await compress(data, format);
   const stored = await storage.save(compressed, 'mp3');
   try {
     await save(stored);

@@ -121,6 +121,18 @@ describe('invitation music', () => {
     expect(ctx.storage.size).toBe(0);
   });
 
+  it('accepts a song recorded or shared on a phone (m4a, ogg) and stores it as mp3', async () => {
+    const { owner, id } = await ownerWithDraft();
+    const m4a = Buffer.concat([Buffer.from([0, 0, 0, 0x20]), Buffer.from('ftypM4A ', 'latin1'), Buffer.alloc(256, 0x11)]);
+    const res = await owner.post(`/api/my/invitations/${id}/music`).field('durationSec', '120').attach('music', m4a, 'IMG_0042.m4a').expect(200);
+    expect(res.body.data.music).toMatchObject({ isCustom: true, durationSec: 120 });
+    expect(res.body.data.music.src).toMatch(/\.mp3$/);
+
+    const ogg = Buffer.concat([Buffer.from('OggS\x00\x02', 'latin1'), Buffer.alloc(256, 0x22)]);
+    await owner.post(`/api/my/invitations/${id}/music`).attach('music', ogg, 'PTT-20261109-WA0001.opus').expect(200);
+    expect(ctx.storage.size).toBe(1);
+  });
+
   it('removes an own mp3', async () => {
     const { owner, id } = await ownerWithDraft();
     await owner.post(`/api/my/invitations/${id}/music`).attach('music', TINY_MP3, 'my.mp3').expect(200);

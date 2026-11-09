@@ -16,9 +16,10 @@ type Props = {
   onChanged: (update: MusicUpdate) => void;
 };
 
-const MP3_ACCEPT = 'audio/mpeg,.mp3';
+/** What phones offer: iPhone m4a/aac, WhatsApp ogg/opus, recorders wav; the server converts all of it to mp3. */
+const AUDIO_ACCEPT = 'audio/*,.mp3,.m4a,.aac,.ogg,.opus,.wav,.flac';
 
-/** Upload of the owner's own mp3 (≤ 10 MB; the server checks the content and compresses it). */
+/** Upload of the owner's own song (≤ 10 MB; the server checks the content and converts it to mp3). */
 export function OwnMusicField({ invitationId, music, playingSrc, onListen, beforeUpload, onChanged }: Props) {
   const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -80,7 +81,7 @@ export function OwnMusicField({ invitationId, music, playingSrc, onListen, befor
       >
         {isBusy ? t.musicUploading : own ? t.musicReplace : t.musicUpload}
       </button>
-      <input ref={inputRef} type="file" accept={MP3_ACCEPT} className="hidden" onChange={(e) => void handleFile(e)} />
+      <input ref={inputRef} type="file" accept={AUDIO_ACCEPT} className="hidden" onChange={(e) => void handleFile(e)} />
       {error ? (
         <p role="alert" className="text-xs font-medium text-red-700">{error}</p>
       ) : (

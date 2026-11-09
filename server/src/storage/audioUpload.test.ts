@@ -13,6 +13,24 @@ describe('replaceAudio', () => {
     expect(storage.size).toBe(1);
   });
 
+  it('passes the detected format to the converter and stores an mp3', async () => {
+    const storage = new MemoryStorageProvider();
+    const formats: string[] = [];
+    const ogg = Buffer.from('OggS\x00\x02rest-of-the-file', 'latin1');
+    const stored = await replaceAudio(storage, async (data, format) => {
+      formats.push(format);
+      return { data: TINY_MP3, isCompressed: true };
+    }, ogg, null, async () => undefined);
+    expect(formats).toEqual(['ogg']);
+    expect(stored.key.endsWith('.mp3')).toBe(true);
+  });
+
+  it('rejects files that are not audio', async () => {
+    const storage = new MemoryStorageProvider();
+    await expect(replaceAudio(storage, keepAsIs, Buffer.from('<html>'), null, async () => undefined)).rejects.toMatchObject({ status: 400 });
+    expect(storage.size).toBe(0);
+  });
+
   it('removes the new file when saving its URL fails', async () => {
     const storage = new MemoryStorageProvider();
     const failingSave = async () => {

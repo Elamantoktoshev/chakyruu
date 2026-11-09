@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TINY_MP3 } from '../../test/app.js';
 import { HttpError } from '../lib/http.js';
 import { existsSync } from 'node:fs';
-import { FFMPEG_COMMAND, compressMp3, detectMp3, spawnFfmpeg, type FfmpegRunner } from './audio.js';
+import { FFMPEG_COMMAND, compressMp3, convertToMp3, detectAudioFormat, detectMp3, spawnFfmpeg, type FfmpegRunner } from './audio.js';
 
 /** MPEG-1 Layer III frame header without an ID3 tag. */
 const BARE_FRAME = Buffer.from([0xff, 0xfb, 0x90, 0x64, 0x00, 0x00]);
@@ -23,6 +23,53 @@ describe('detectMp3', () => {
     }
     // Frame sync with the reserved "layer 00" bits is not MPEG audio.
     expect(detectMp3(Buffer.from([0xff, 0xf9, 0x90, 0x64]))).toBe(false);
+  });
+});
+
+describe('detectAudioFormat', () => {
+  it('recognizes the formats phones record and share, by content', () => {
+    const at4 = (tag: string) => Buffer.concat([Buffer.from([0, 0, 0, 0x20]), Buffer.from(tag, 'latin1')]);
+    expect(detectAudioFormat(TINY_MP3)).toBe('mp3');
+    expect(detectAudioFormat(at4('ftypM4A '))).toBe('m4a');
+    expect(detectAudioFormat(Buffer.from([0xff, 0xf1, 0x50, 0x80]))).toBe('aac');
+    expect(detectAudioFormat(Buffer.from('OggS\x00\x02', 'latin1'))).toBe('ogg');
+    expect(detectAudioFormat(Buffer.from('RIFF\x24\x00\x00\x00WAVEfmt ', 'latin1'))).toBe('wav');
+    expect(detectAudioFormat(Buffer.from('fLaC\x00', 'latin1'))).toBe('flac');
+  });
+
+  it('rejects anything else, whatever the file is called', () => {
+    for (const data of ['<html><script>', '\x89PNG\r\n\x1a\n', 'RIFF\x00\x00\x00\x00AVI ', 'ID', '%PDF-1.7']) {
+      expect(detectAudioFormat(Buffer.from(data, 'latin1')), JSON.stringify(data)).toBeNull();
+    }
+    // A video container (mp4 "isom") is not accepted as music.
+    expect(detectAudioFormat(Buffer.concat([Buffer.from([0, 0, 0, 0x20]), Buffer.from('ftypisom', 'latin1')]))).toBeNull();
+  });
+});
+
+describe('convertToMp3', () => {
+  it('always re-encodes other formats to a 128 kbps mp3', async () => {
+    const mp3 = Buffer.concat([Buffer.from('ID3', 'latin1'), Buffer.alloc(64)]);
+    const runner: FfmpegRunner = async (_input, args) => {
+      expect(args).toEqual(expect.arrayContaining(['-codec:a', 'libmp3lame', '-b:a', '128k']));
+      return mp3;
+    };
+    expect(await convertToMp3(Buffer.alloc(16), runner)).toEqual({ data: mp3, isCompressed: true });
+  });
+
+  it('refuses when ffmpeg is missing or cannot decode the file (nothing playable to keep)', async () => {
+    await expect(convertToMp3(Buffer.alloc(16), missingBinary)).rejects.toBeInstanceOf(HttpError);
+    await expect(convertToMp3(Buffer.alloc(16), async () => Promise.reject(new Error('Invalid data')))).rejects.toBeInstanceOf(HttpError);
+    await expect(convertToMp3(Buffer.alloc(16), async () => Buffer.from('not an mp3'))).rejects.toBeInstanceOf(HttpError);
+  });
+
+  it.runIf(existsSync(FFMPEG_COMMAND))('turns a real m4a recording into an mp3', { timeout: 30_000 }, async () => {
+    const m4a = await spawnFfmpeg(Buffer.alloc(0), [
+      '-hide_banner', '-loglevel', 'error', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=5',
+      '-codec:a', 'aac', '-f', 'ipod', '-movflags', 'frag_keyframe+empty_moov', 'pipe:1',
+    ]);
+    expect(detectAudioFormat(m4a)).toBe('m4a');
+    const { data } = await convertToMp3(m4a);
+    expect(detectMp3(data)).toBe(true);
   });
 });
 

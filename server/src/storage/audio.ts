@@ -22,6 +22,29 @@ export function detectMp3(data: Buffer): boolean {
   return isMpegFrameHeader(data);
 }
 
+/** Audio people have on their phones: iPhone (m4a/aac), WhatsApp (ogg/opus), recorders (wav), lossless (flac). */
+export type AudioFormat = 'mp3' | 'm4a' | 'aac' | 'ogg' | 'wav' | 'flac';
+
+/** MP4 brands of audio files; video brands ("isom", "mp42") are not music and are refused. */
+const AUDIO_MP4_BRANDS = new Set(['M4A ', 'M4B ', 'M4P ', 'mp4a', 'dash']);
+
+/** AAC in an ADTS stream: 12 sync bits and the "layer 00" bits that MPEG audio never uses. */
+function isAdtsHeader(data: Buffer): boolean {
+  return data.length >= 2 && data[0] === 0xff && (data[1]! & 0xf6) === 0xf0;
+}
+
+/** The format by content (magic bytes); the client-sent MIME type and file name are ignored. */
+export function detectAudioFormat(data: Buffer): AudioFormat | null {
+  if (detectMp3(data)) return 'mp3';
+  if (data.length >= 12 && data.toString('latin1', 4, 8) === 'ftyp' && AUDIO_MP4_BRANDS.has(data.toString('latin1', 8, 12))) return 'm4a';
+  if (isAdtsHeader(data)) return 'aac';
+  const head = data.toString('latin1', 0, 4);
+  if (head === 'OggS') return 'ogg';
+  if (head === 'fLaC') return 'flac';
+  if (head === 'RIFF' && data.length >= 12 && data.toString('latin1', 8, 12) === 'WAVE') return 'wav';
+  return null;
+}
+
 /** Runs ffmpeg with `input` on stdin and resolves with stdout. Injectable for tests. */
 export type FfmpegRunner = (input: Buffer, args: readonly string[]) => Promise<Buffer>;
 
@@ -94,3 +117,20 @@ export async function compressMp3(data: Buffer, run: FfmpegRunner = spawnFfmpeg)
     throw new HttpError(400, 'Could not read this mp3 file');
   }
 }
+
+/**
+ * Other formats must become an mp3 (every browser plays it, and it is what we store):
+ * here a missing ffmpeg or an undecodable file is an error, there is no original to fall back to.
+ */
+export async function convertToMp3(data: Buffer, run: FfmpegRunner = spawnFfmpeg): Promise<CompressedAudio> {
+  let converted: Buffer;
+  try {
+    converted = await run(data, COMPRESS_ARGS);
+  } catch (error: unknown) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') logger.error('[audio] ffmpeg is not installed: only mp3 uploads work');
+    throw new HttpError(400, 'Could not convert this audio file');
+  }
+  if (!detectMp3(converted)) throw new HttpError(400, 'Could not convert this audio file');
+  return { data: converted, isCompressed: true };
+}
+

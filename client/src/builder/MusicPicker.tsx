@@ -9,7 +9,7 @@ import { ListenButton } from './ListenButton';
 import { OwnMusicField } from './OwnMusicField';
 import { useTrackPreview } from './useTrackPreview';
 
-type Section = TrackCategory | 'OWN';
+type Section = TrackCategory;
 
 type Props = {
   invitation: OwnerInvitation;
@@ -26,13 +26,13 @@ function trackMusic(track: Track): MusicView {
   return { src: track.file, title: track.title, durationSec: track.durationSec, startSec: 0, isCustom: false };
 }
 
-/** Music field: catalogue by category with "listen", own mp3 upload and the start second. */
+/** Music field: the owner's own song first, then the catalogue by category with "listen", and the start second. */
 export function MusicPicker({ invitation, onChange, beforeUpload }: Props) {
   const { t } = useI18n();
   const tracks = useAsync(useCallback(() => api.listTracks(), []));
   const preview = useTrackPreview();
   const music = invitation.music;
-  const [section, setSection] = useState<Section>(music?.isCustom ? 'OWN' : 'ULUTTUK');
+  const [section, setSection] = useState<Section>('ULUTTUK');
 
   const allTracks = tracks.status === 'success' ? tracks.data : [];
   const sectionTracks = allTracks.filter((track) => track.category === section);
@@ -49,24 +49,18 @@ export function MusicPicker({ invitation, onChange, beforeUpload }: Props) {
     onChange({ patch: { musicStartSec: startSec }, view: { musicStartSec: startSec, music: music && { ...music, startSec } } });
   }
 
-  const sections: { value: Section; label: string }[] = [
-    ...TRACK_CATEGORIES.map((category) => ({ value: category, label: t.musicCategories[category] })),
-    { value: 'OWN', label: t.musicOwnTab },
-  ];
+  const sections: { value: Section; label: string }[] = TRACK_CATEGORIES.map((category) => ({ value: category, label: t.musicCategories[category] }));
 
   return (
     <fieldset className="space-y-3">
       <legend className="mb-1.5 text-sm font-medium text-night/80">{t.fieldMusic}</legend>
 
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
-        {sections.map(({ value, label }) => (
-          <button key={value} type="button" aria-pressed={section === value} onClick={() => setSection(value)} className={chipClass(section === value)}>
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {section === 'OWN' ? (
+      {/* The owner's own song comes first: it is what most people want, and a tab at the end of a scrolling row went unnoticed. */}
+      <section aria-labelledby="own-music-title" className="space-y-3 rounded-2xl bg-brand-soft/60 p-4 ring-1 ring-brand/20">
+        <div>
+          <h3 id="own-music-title" className="font-display text-base font-bold text-night">{t.musicOwnTitle}</h3>
+          <p className="mt-0.5 text-sm text-night/65">{t.musicOwnSubtitle}</p>
+        </div>
         <OwnMusicField
           invitationId={invitation.id}
           music={music}
@@ -75,16 +69,25 @@ export function MusicPicker({ invitation, onChange, beforeUpload }: Props) {
           beforeUpload={beforeUpload}
           onChanged={(update: MusicUpdate) => onChange({ view: update })}
         />
-      ) : (
-        <TrackList
-          tracks={sectionTracks}
-          isLoading={tracks.status === 'loading'}
-          selectedId={music?.isCustom ? null : invitation.musicTrackId}
-          playingSrc={preview.playingSrc}
-          onListen={(src) => void preview.toggle(src)}
-          onChoose={chooseTrack}
-        />
-      )}
+      </section>
+
+      <p className="pt-1 text-sm font-medium text-night/70">{t.musicOrCatalog}</p>
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+        {sections.map(({ value, label }) => (
+          <button key={value} type="button" aria-pressed={section === value} onClick={() => setSection(value)} className={chipClass(section === value)}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <TrackList
+        tracks={sectionTracks}
+        isLoading={tracks.status === 'loading'}
+        selectedId={music?.isCustom ? null : invitation.musicTrackId}
+        playingSrc={preview.playingSrc}
+        onListen={(src) => void preview.toggle(src)}
+        onChoose={chooseTrack}
+      />
 
       <button type="button" aria-pressed={music === null} onClick={() => chooseTrack(null)} className={chipClass(music === null)}>
         {t.musicNone}
