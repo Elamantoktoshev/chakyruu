@@ -18,10 +18,10 @@ const envelope = (status: number, data: unknown) =>
   });
 
 /** Anonymous visitor; the server answers whether Google sign-in is configured. */
-function stubServer({ google }: { google: boolean }) {
+function stubServer({ google, phone = true }: { google: boolean; phone?: boolean }) {
   vi.stubGlobal(
     'fetch',
-    vi.fn(async (url: string) => (url.endsWith('/auth/options') ? envelope(200, { google }) : envelope(401, null))),
+    vi.fn(async (url: string) => (url.endsWith('/auth/options') ? envelope(200, { google, phone }) : envelope(401, null))),
   );
 }
 
@@ -58,5 +58,32 @@ describe('LoginPage — Google sign-in', () => {
     stubServer({ google: true });
     renderLogin('/login?error=google');
     expect((await screen.findByRole('alert')).textContent).toMatch(/Google/);
+  });
+
+  it('shows only Google when phone login is switched off', async () => {
+    stubServer({ google: true, phone: false });
+    renderLogin();
+    expect(await screen.findByRole('link', { name: /Google/ })).toBeTruthy();
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.queryByText('же')).toBeNull();
+  });
+
+  it('still explains a failed Google sign-in in Google-only mode', async () => {
+    stubServer({ google: true, phone: false });
+    renderLogin('/login?error=google');
+    expect((await screen.findByRole('alert')).textContent).toMatch(/Google/);
+  });
+
+  it('tells Instagram users to open the page in a real browser', async () => {
+    stubServer({ google: true, phone: false });
+    const original = navigator.userAgent;
+    Object.defineProperty(navigator, 'userAgent', { value: 'Mozilla/5.0 (iPhone) Instagram 300.0', configurable: true });
+    try {
+      renderLogin();
+      expect(await screen.findByText('Бул жерден Google менен кирүүгө болбойт')).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Шилтемени көчүрүү' })).toBeTruthy();
+    } finally {
+      Object.defineProperty(navigator, 'userAgent', { value: original, configurable: true });
+    }
   });
 });

@@ -33,9 +33,10 @@ class FakeGoogle implements GoogleOAuth {
 
 const PROFILE: GoogleProfile = { sub: 'google-sub-1', email: 'aizada@gmail.com', name: 'Айзада' };
 
-function buildApp(google?: GoogleOAuth, adminEmails: ReadonlySet<string> = new Set()) {
+function buildApp(google?: GoogleOAuth, adminEmails: ReadonlySet<string> = new Set(), isPhoneLoginEnabled = true) {
   return createApp({
     adminEmails,
+    isPhoneLoginEnabled,
     corsOrigin: TEST_ORIGIN,
     otpSecret: TEST_OTP_SECRET,
     isProduction: false,
@@ -64,9 +65,22 @@ afterAll(async () => {
 
 describe('Google sign-in', () => {
   it('reports whether Google sign-in is available', async () => {
-    await request(buildApp()).get('/api/auth/options').expect(200, { success: true, data: { google: false }, error: null });
+    await request(buildApp()).get('/api/auth/options').expect(200, { success: true, data: { google: false, phone: true }, error: null });
     const res = await request(buildApp(new FakeGoogle(PROFILE))).get('/api/auth/options').expect(200);
-    expect(res.body.data).toEqual({ google: true });
+    expect(res.body.data).toEqual({ google: true, phone: true });
+  });
+
+  it('can switch phone login off: no SMS is sent and no code is accepted, Google still works', async () => {
+    const app = buildApp(new FakeGoogle(PROFILE), new Set(), false);
+    expect((await request(app).get('/api/auth/options').expect(200)).body.data).toEqual({ google: true, phone: false });
+    await request(app).post('/api/auth/request-code').set('Origin', TEST_ORIGIN).send({ phone: '+996700123456', elapsedMs: 5000 }).expect(403);
+    await request(app).post('/api/auth/verify').set('Origin', TEST_ORIGIN).send({ phone: '+996700123456', code: '123456' }).expect(403);
+    expect(await prisma.otpCode.count()).toBe(0);
+
+    const agent = request.agent(app);
+    const state = await startSignIn(agent);
+    await agent.get('/api/auth/google/callback').query({ code: VALID_CODE, state }).expect(303);
+    await agent.get('/api/auth/me').expect(200);
   });
 
   it('is a 404 when Google is not configured', async () => {

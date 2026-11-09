@@ -76,6 +76,8 @@ export interface AppConfig {
   testLoginPhones?: ReadonlyMap<string, string>;
   /** Google-verified e-mails that sign in as ADMIN. */
   adminEmails?: ReadonlySet<string>;
+  /** false → sign in with Google only (PHONE_LOGIN_ENABLED). */
+  isPhoneLoginEnabled?: boolean;
   /** Most SMS the site may send per 24 h. */
   smsDailyLimit?: number;
   /** DEV_LOGIN_WITHOUT_SMS: the login code is returned to the browser. Refused in production by index.ts. */
@@ -129,7 +131,7 @@ export function createApp(config: AppConfig): Express {
   app.use(loadUser(auth));
 
   app.get('/api/health', createHealthHandler(config.commitSha));
-  app.use('/api/auth', createAuthRouter({ auth, isProduction, google: config.google, siteUrl: corsOrigin.replace(/\/+$/, '') }));
+  app.use('/api/auth', createAuthRouter({ auth, isProduction, google: config.google, siteUrl: corsOrigin.replace(/\/+$/, ''), isPhoneLoginEnabled: config.isPhoneLoginEnabled }));
   app.use('/api/public/templates', templateRouter);
   app.use('/api/public/invitations', createPublicInvitationRouter({ appUrl: checkout.appUrl }));
   app.use('/api/public/tilekter', createTilekLikeRouter());

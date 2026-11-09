@@ -108,6 +108,7 @@ function buildConfig(env: Env): AppConfig & { port: number } {
     },
     testLoginPhones: env.TEST_LOGIN_PHONES,
     adminEmails: env.ADMIN_EMAILS,
+    isPhoneLoginEnabled: env.PHONE_LOGIN_ENABLED,
     mediaOrigins: env.SPACES_CDN_URL ? [new URL(env.SPACES_CDN_URL).origin] : [],
     smsDailyLimit: env.SMS_DAILY_LIMIT,
   };

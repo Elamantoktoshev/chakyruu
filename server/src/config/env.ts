@@ -13,6 +13,12 @@ const flag = z
   .optional()
   .transform((value) => value === 'true' || value === '1');
 
+/** Like `flag`, but on when unset: "false"/"0" turns it off. */
+const flagOnByDefault = z
+  .enum(['true', 'false', '1', '0', ''])
+  .optional()
+  .transform((value) => value !== 'false' && value !== '0');
+
 const optionalText = z
   .string()
   .trim()
@@ -54,6 +60,8 @@ const baseSchema = z.object({
   /** Header carrying the real client IP from the hosting edge (DigitalOcean: do-connecting-ip). */
   CLIENT_IP_HEADER: unsetIfEmpty(z.string().regex(/^[A-Za-z0-9-]{1,40}$/)),
   DEV_LOGIN_WITHOUT_SMS: flag,
+  /** false → sign-in with Google only: the phone form disappears and no login SMS is sent. */
+  PHONE_LOGIN_ENABLED: flagOnByDefault,
   TEST_LOGIN_PHONES: testLoginPhones,
   ADMIN_PHONE: unsetIfEmpty(z.string().regex(PHONE_PATTERN)),
   /** "a@gmail.com, b@gmail.com": these Google accounts sign in as ADMIN. Empty → nobody by e-mail. */
@@ -123,6 +131,9 @@ function checkCombinations(env: BaseEnv, ctx: z.RefinementCtx): void {
     issue(env.TELEGRAM_BOT_TOKEN ? 'TELEGRAM_CHAT_ID' : 'TELEGRAM_BOT_TOKEN', 'Telegram notifications need both TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID');
   }
 
+  if (!env.PHONE_LOGIN_ENABLED && !env.GOOGLE_CLIENT_ID) {
+    issue('PHONE_LOGIN_ENABLED', 'cannot be false without Google sign-in (GOOGLE_CLIENT_ID): nobody could log in');
+  }
   if (Boolean(env.GOOGLE_CLIENT_ID) !== Boolean(env.GOOGLE_CLIENT_SECRET)) {
     issue(env.GOOGLE_CLIENT_ID ? 'GOOGLE_CLIENT_SECRET' : 'GOOGLE_CLIENT_ID', 'Google sign-in needs both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET');
   }

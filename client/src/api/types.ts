@@ -217,6 +217,8 @@ export interface SessionUser {
 
 export interface AuthOptions {
   google: boolean;
+  /** false → sign in with Google only. */
+  phone: boolean;
 }
 
 export interface OtpRequestResult {

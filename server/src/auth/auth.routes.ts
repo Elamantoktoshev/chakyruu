@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
-import { Router, type CookieOptions, type Request, type Response } from 'express';
+import { Router, type CookieOptions, type Request, type RequestHandler, type Response } from 'express';
 import { sendOk } from '../lib/http.js';
 import { rateLimit } from '../lib/rateLimit.js';
 import { currentUser, readSessionToken, requireAuth, SESSION_COOKIE } from './auth.middleware.js';
@@ -70,14 +70,21 @@ export interface AuthRouterOptions {
   google?: GoogleOAuth;
   /** The site's own address; Google sends people back here. */
   siteUrl: string;
+  /** false → Google only: the SMS code endpoints answer 403 (no SMS cost, no way around the UI). */
+  isPhoneLoginEnabled?: boolean;
 }
 
-export function createAuthRouter({ auth, isProduction, google, siteUrl }: AuthRouterOptions): Router {
+export function createAuthRouter({ auth, isProduction, google, siteUrl, isPhoneLoginEnabled = true }: AuthRouterOptions): Router {
   const router = Router();
   const cookieBase: CookieOptions = { httpOnly: true, sameSite: 'lax', secure: isProduction, path: '/api' };
 
+  const requirePhoneLogin: RequestHandler = (_req, _res, next) => {
+    next(isPhoneLoginEnabled ? undefined : new HttpError(403, 'Phone login is turned off; sign in with Google'));
+  };
+
   router.post(
     '/request-code',
+    requirePhoneLogin,
     rateLimit({ windowMs: WINDOW_MS, max: OTP_REQUESTS_PER_IP }),
     rateLimit({ windowMs: WINDOW_MS, max: OTP_REQUESTS_PER_PHONE, key: phoneKey }),
     async (req, res) => {
@@ -93,7 +100,7 @@ export function createAuthRouter({ auth, isProduction, google, siteUrl }: AuthRo
     },
   );
 
-  router.post('/verify', rateLimit({ windowMs: WINDOW_MS, max: OTP_VERIFIES_PER_IP }), async (req, res) => {
+  router.post('/verify', requirePhoneLogin, rateLimit({ windowMs: WINDOW_MS, max: OTP_VERIFIES_PER_IP }), async (req, res) => {
     const { phone, code } = verifyCodeSchema.parse(req.body);
     const session = await auth.verifyOtp(phone, code);
     res.cookie(SESSION_COOKIE, session.token, { ...cookieBase, expires: session.expiresAt });
@@ -101,7 +108,7 @@ export function createAuthRouter({ auth, isProduction, google, siteUrl }: AuthRo
   });
 
   router.get('/options', (_req, res) => {
-    sendOk(res, { google: Boolean(google) });
+    sendOk(res, { google: Boolean(google), phone: isPhoneLoginEnabled });
   });
 
   const attemptCookie: CookieOptions = { httpOnly: true, sameSite: 'lax', secure: isProduction, path: GOOGLE_COOKIE_PATH };

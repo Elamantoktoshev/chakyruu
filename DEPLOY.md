@@ -270,6 +270,7 @@ npm run uploads:to-spaces -w server                # загрузит файлы
    - **Authorized redirect URIs:** `https://chakyruu.kg/api/auth/google/callback` (и `https://chakyruu-umdne.ondigitalocean.app/api/auth/google/callback`). Адрес должен совпадать с `CLIENT_URL` сайта до символа.
 4. Google покажет **Client ID** и **Client secret**. В **Apps → chakyruu → Settings → web → Environment Variables** добавьте `GOOGLE_CLIENT_ID` и `GOOGLE_CLIENT_SECRET` (secret — с **Encrypt**) → **Save**.
 5. После перезапуска откройте `/login`: должна появиться кнопка Google.
+7. **Только Google:** `PHONE_LOGIN_ENABLED=false` убирает вход по телефону (форма пропадает, SMS для входа не отправляются, сервер отвечает 403). Без настроенного Google сервер с этой настройкой не запустится. Включить телефон обратно — удалить переменную или поставить `true`. Партнёры (тойканалар, тамадалар) привязаны к номеру телефона: пока телефон выключен, они не войдут в кабинет партнёра.
 6. **Админ через Google:** впишите почту в `ADMIN_EMAILS` (несколько — через запятую), например `nyc.elaman@gmail.com`. При следующем входе через Google этот аккаунт получит доступ к `/admin`. Учитывается только почта, которую подтвердил Google.
 
 Как это устроено: сервер отправляет человека на страницу Google и принимает ответ на `/api/auth/google/callback` (код + PKCE, проверка `state`), скриптов Google на страницах нет. Аккаунт определяется по Google ID; у такого пользователя может не быть телефона. Подарочные коды партнёров привязаны к номеру, поэтому их видят только те, кто вошёл по телефону.

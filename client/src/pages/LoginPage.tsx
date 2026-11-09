@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api/client';
+import type { AuthOptions } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
 import { AppHeader } from '../components/AppHeader';
 import { GoogleSignInButton } from '../components/auth/GoogleSignInButton';
+import { InAppBrowserNotice } from '../components/auth/InAppBrowserNotice';
 import { BrandMark } from '../components/ui/BrandLogo';
 import { useI18n } from '../i18n/LanguageContext';
 import { requestErrorMessage, verifyErrorMessage } from './loginErrors';
@@ -30,22 +32,23 @@ function useSecondsUntil(deadline: number): number {
 }
 
 /** Whether the server has Google sign-in configured; the button stays hidden until it says yes. */
-function useGoogleSignIn(): boolean {
-  const [isEnabled, setIsEnabled] = useState(false);
+/** If the server cannot be asked, offer both: it still refuses whatever is switched off. */
+const FALLBACK_OPTIONS: AuthOptions = { google: true, phone: true };
+
+/** Which sign-in methods the server has on; null until it answers (so the phone form never flashes). */
+function useAuthOptions(): AuthOptions | null {
+  const [options, setOptions] = useState<AuthOptions | null>(null);
   useEffect(() => {
     let isCurrent = true;
     api
       .authOptions()
-      .then((options) => {
-        if (isCurrent) setIsEnabled(options.google);
-      })
-      // Without the answer the page still offers phone login, so a failure only hides the button.
-      .catch(() => undefined);
+      .then((answer) => isCurrent && setOptions(answer))
+      .catch(() => isCurrent && setOptions(FALLBACK_OPTIONS));
     return () => {
       isCurrent = false;
     };
   }, []);
-  return isEnabled;
+  return options;
 }
 
 export function LoginPage() {
@@ -62,7 +65,7 @@ export function LoginPage() {
   const [isBusy, setIsBusy] = useState(false);
   // The server sends people back here with ?error=google when Google sign-in did not work.
   const [error, setError] = useState<string | null>(() => (searchParams.get('error') === 'google' ? t.errorGoogle : null));
-  const hasGoogle = useGoogleSignIn();
+  const options = useAuthOptions();
   const resendIn = useSecondsUntil(resendAt);
   // Anti-bot signals checked by the server: time since the form appeared, and a hidden field people never fill.
   const shownAt = useRef(Date.now());
@@ -134,17 +137,25 @@ export function LoginPage() {
         <p className="mt-4 text-center text-night/70">{t.loginSubtitle}</p>
 
         <div className="mt-8 rounded-3xl border border-line bg-white/70 p-6 shadow-sm">
-          {codeSentTo === null && hasGoogle && (
+          {options === null && <p className="py-6 text-center text-sm text-night/50">{t.loading}</p>}
+          {options?.google && codeSentTo === null && (
             <>
+              <InAppBrowserNotice />
               <GoogleSignInButton href={api.googleSignInUrl(next)} label={t.loginWithGoogle} />
-              <div className="my-5 flex items-center gap-3 text-sm text-night/50" aria-hidden="true">
-                <span className="h-px flex-1 bg-line" />
-                {t.loginOr}
-                <span className="h-px flex-1 bg-line" />
-              </div>
+              {options.phone ? (
+                <div className="my-5 flex items-center gap-3 text-sm text-night/50" aria-hidden="true">
+                  <span className="h-px flex-1 bg-line" />
+                  {t.loginOr}
+                  <span className="h-px flex-1 bg-line" />
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <ErrorMessage message={error} />
+                </div>
+              )}
             </>
           )}
-          {codeSentTo === null ? (
+          {!options?.phone ? null : codeSentTo === null ? (
             <form onSubmit={handlePhoneSubmit} noValidate className="space-y-5">
               <label className="block">
                 <span className="mb-1.5 block text-sm font-medium text-night/80">{t.phoneLabel}</span>

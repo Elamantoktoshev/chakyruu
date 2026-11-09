@@ -82,6 +82,9 @@ services:
       # Google accounts that sign in as ADMIN, comma-separated.
       - key: ADMIN_EMAILS
         scope: RUN_TIME
+      # false → sign in with Google only (no phone form, no login SMS).
+      - key: PHONE_LOGIN_ENABLED
+        scope: RUN_TIME
       - key: SENTRY_DSN
         type: SECRET
       - key: UMAMI_WEBSITE_ID

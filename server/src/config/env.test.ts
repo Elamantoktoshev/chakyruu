@@ -77,6 +77,16 @@ describe('parseEnv', () => {
     expect(problemsOf({ ...DEV, ADMIN_PHONE: '+996555000001', TEST_LOGIN_PHONES: '+996555000001:123456' })[0]).toMatch(/ADMIN_PHONE/);
   });
 
+  it('keeps phone login on unless PHONE_LOGIN_ENABLED=false', () => {
+    expect(parseEnv(DEV).PHONE_LOGIN_ENABLED).toBe(true);
+    expect(parseEnv({ ...DEV, PHONE_LOGIN_ENABLED: '' }).PHONE_LOGIN_ENABLED).toBe(true);
+    const google = { GOOGLE_CLIENT_ID: 'abc.apps.googleusercontent.com', GOOGLE_CLIENT_SECRET: 'secret' };
+    expect(parseEnv({ ...DEV, ...google, PHONE_LOGIN_ENABLED: 'false' }).PHONE_LOGIN_ENABLED).toBe(false);
+    // Nobody could log in at all.
+    expect(problemsOf({ ...DEV, PHONE_LOGIN_ENABLED: 'false' })[0]).toMatch(/PHONE_LOGIN_ENABLED/);
+    expect(problemsOf({ ...DEV, PHONE_LOGIN_ENABLED: 'no' })[0]).toMatch(/PHONE_LOGIN_ENABLED/);
+  });
+
   it('reads admin e-mails case-insensitively and rejects anything that is not an e-mail', () => {
     expect([...parseEnv({ ...DEV, ADMIN_EMAILS: ' NYC.Elaman@gmail.com , b@x.kg' }).ADMIN_EMAILS]).toEqual(['nyc.elaman@gmail.com', 'b@x.kg']);
     expect(parseEnv(DEV).ADMIN_EMAILS.size).toBe(0);
